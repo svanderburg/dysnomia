@@ -1,0 +1,13 @@
+#!/bin/bash -e
+
+case "$1" in
+    activate)
+	# Initalize the given schema if the database does not exists
+	
+        ;;
+    deactivate)
+	# A MySQL database cannot be deactivated, we do not want to drop a database
+	# with all data in it, right?
+	echo
+	;;
+esac

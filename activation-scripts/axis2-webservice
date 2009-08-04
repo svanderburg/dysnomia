@@ -1,0 +1,20 @@
+#!/bin/bash -e
+
+servicesStateDir=/var/tomcat/webapps/axis2/WEB-INF/services
+
+case "$1" in
+    activate)
+	# Link all AAR files in the deployment directory, so that they will be activated with hot-deployment
+	find $2/webapps/axis2/WEB-INF/services -name \*.aar | while read i
+	do
+	    ln -sf $i $servicesStateDir/`basename $i`
+	done
+	;;
+    deactivate)
+	# Remove AAR files from the deployment directory, so that they will be deactivated with hot deployment
+	find $2/webapps/axis2/WEB-INF/services -name \*.aar | while read i
+	do
+	    rm -f $servicesStateDir/`basename $i`
+	done
+	;;
+esac
