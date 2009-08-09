@@ -1,1 +1,1 @@
-libexec_SCRIPTS = axis2-webservice mysql-database
+libexec_SCRIPTS = axis2-webservice mysql-database echo
