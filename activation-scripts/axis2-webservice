@@ -1,20 +1,40 @@
-#!/bin/bash -e
+#!/nix/store/fl5c1a3z6njnx8nzan2jsxjj16qwvjkd-bash-4.0-p17/bin/bash -e
 
-servicesStateDir=/var/tomcat/webapps/axis2/WEB-INF/services
+catalinaBaseDir=/var/tomcat
 
 case "$1" in
     activate)
 	# Link all AAR files in the deployment directory, so that they will be activated with hot-deployment
 	find $2/webapps/axis2/WEB-INF/services -name \*.aar | while read i
 	do
-	    ln -sf $i $servicesStateDir/`basename $i`
+	    # Link the web service
+	    ln -sf $i $catalinaBaseDir/webapps/axis2/WEB-INF/services/`basename $i`
+	    
+	    # Link the configuration files if they exist
+	    if [ -d $2/conf/Catalina ]
+	    then
+		for j in $2/conf/Catalina/*
+		do
+		    ln -sf $j $catalinaBaseDir/conf/Catalina/localhost/`basename $j`
+		done
+	    fi
 	done
 	;;
     deactivate)
 	# Remove AAR files from the deployment directory, so that they will be deactivated with hot deployment
 	find $2/webapps/axis2/WEB-INF/services -name \*.aar | while read i
 	do
-	    rm -f $servicesStateDir/`basename $i`
+	    # Remove the web service
+	    rm -f $catalinaBaseDir/webaps/axis2/WEB-INF/services/`basename $i`
+	    
+	    # Also remove the configuration files if they exist
+	    if [ -d $2/conf/Catalina ]
+	    then
+	        for j in $2/conf/Catalina/*
+		do
+		    rm -f $catalinaBaseDir/conf/Catalina/localhost/`basename $j`
+		done
+	    fi
 	done
 	;;
 esac
