@@ -8,14 +8,14 @@ case "$1" in
 	find $2/webapps -name \*.war | while read i
 	do
 	    # Link the web service
-	    ln -sf $i $catalinaBaseDir/webapps/`basename $i`
+	    ln -sfn $i $catalinaBaseDir/webapps/`basename $i`
 	    
 	    # Link the configuration files if they exist
 	    if [ -d $2/conf/Catalina ]
 	    then
 		for j in $2/conf/Catalina/*
 		do
-		    ln -sf $j $catalinaBaseDir/conf/Catalina/localhost/`basename $j`
+		    ln -sfn $j $catalinaBaseDir/conf/Catalina/localhost/`basename $j`
 		done
 	    fi
 	done

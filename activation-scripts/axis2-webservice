@@ -8,14 +8,14 @@ case "$1" in
 	find $2/webapps/axis2/WEB-INF/services -name \*.aar | while read i
 	do
 	    # Link the web service
-	    ln -sf $i $catalinaBaseDir/webapps/axis2/WEB-INF/services/`basename $i`
+	    ln -sfn $i $catalinaBaseDir/webapps/axis2/WEB-INF/services/`basename $i`
 	    
 	    # Link the configuration files if they exist
 	    if [ -d $2/conf/Catalina ]
 	    then
 		for j in $2/conf/Catalina/*
 		do
-		    ln -sf $j $catalinaBaseDir/conf/Catalina/localhost/`basename $j`
+		    ln -sfn $j $catalinaBaseDir/conf/Catalina/localhost/`basename $j`
 		done
 	    fi
 	done
