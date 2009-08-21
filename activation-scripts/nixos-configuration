@@ -1,0 +1,14 @@
+#!/bin/bash -e
+
+# Activation script that activates the given system derivation,
+# which makes it possible to remotely upgrade NixOS
+
+case "$1" in
+    activate)
+        nix-env -p /nix/var/nix/profiles/system --set $2
+	$2/bin/switch-to-configuration switch
+        ;;
+    deactivate)
+        echo
+	;;
+esac
