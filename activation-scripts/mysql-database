@@ -5,12 +5,14 @@ case "$1" in
 	# Initalize the given schema if the database does not exists
 	componentName=`basename $2`
 	dbName=${componentName:33}
-
+	mysqlUsername=$3
+	mysqlPassword=$4
+	
 	if [ "$(echo "show databases" | mysql -u root -N | grep -x $dbName)" = "" ]
 	then
 	    ( echo "create database $dbName;"
 	      echo "use $dbName;"
-	      cat $2/mysql-databases/*.sql ) | mysql -u root -N
+	      cat $2/mysql-databases/*.sql ) | mysql --user=$mysqlUsername --password=$mysqlPassword -N
 	fi
         ;;
     deactivate)
