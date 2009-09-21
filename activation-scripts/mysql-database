@@ -6,7 +6,7 @@ case "$1" in
 	componentName=`basename $2`
 	dbName=${componentName:33}
 	
-	if [ "$(echo "show databases" | mysql -u root -N | grep -x $dbName)" = "" ]
+	if [ "$(echo "show databases" | mysql --user=$mysqlUsername --password=$mysqlPassword -N | grep -x $dbName)" = "" ]
 	then
 	    ( echo "create database $dbName;"
 	      echo "use $dbName;"
