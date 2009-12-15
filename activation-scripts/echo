@@ -10,3 +10,8 @@ case "$1" in
         echo "Echo activation script: Deactivate service: $2"
 	;;
 esac
+
+# Print the environment variables
+
+echo "Environment variables:"
+set
