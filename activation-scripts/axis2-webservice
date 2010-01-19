@@ -5,7 +5,7 @@ catalinaBaseDir=/var/tomcat
 case "$1" in
     activate)
 	# Link all AAR files in the deployment directory, so that they will be activated with hot-deployment
-	find $2/webapps/axis2/WEB-INF/services -name \*.aar | while read i
+	find $(readlink -f $2/webapps/axis2/WEB-INF/services) -name \*.aar | while read i
 	do
 	    # Link the web service
 	    ln -sfn $i $catalinaBaseDir/webapps/axis2/WEB-INF/services/`basename $i`
@@ -22,7 +22,7 @@ case "$1" in
 	;;
     deactivate)
 	# Remove AAR files from the deployment directory, so that they will be deactivated with hot deployment
-	find $2/webapps/axis2/WEB-INF/services -name \*.aar | while read i
+	find $(readlink -f $2/webapps/axis2/WEB-INF/services) -name \*.aar | while read i
 	do
 	    # Remove the web service
 	    rm -f $catalinaBaseDir/webapps/axis2/WEB-INF/services/`basename $i`
