@@ -1,15 +1,15 @@
 #!/bin/bash -e
 
-alias ejabberdctl='ejabberdctl --config-dir /var/ejabberd --logs /var/log/ejabberd --spool /var/lib/ejabberd'
+ejabberdctl='ejabberdctl --config-dir /var/ejabberd --logs /var/log/ejabberd --spool /var/lib/ejabberd'
 
 case "$1" in
     activate)
 	if [ -f $2 ]
 	then
-	    ejabberdctl load $2
+	    $ejabberdctl load $2
 	elif [ -d $2 ]
 	then
-	    ejabberdctl load $2/ejabberd-dump/*
+	    $ejabberdctl load $2/ejabberd-dump/*
 	fi
 	;;
     deactivate)
