@@ -1,6 +1,6 @@
 #!/bin/bash -e
 
-case "$1"
+case "$1" in
     activate)
 	if [ -f $2 ]
 	then
