@@ -1,0 +1,18 @@
+#!/bin/bash -e
+
+case "$1"
+    activate)
+	if [ -f $2 ]
+	then
+	    ejabberdctl load $2
+	elif [ -d $2 ]
+	then
+	    ejabberdctl load $2/ejabberd-dump/*
+	fi
+	;;
+    deactivate)
+	# An ejabberd dump cannot be deactivated, we do not want to drop user accounts
+	# with all data in it, right?
+	echo
+	;;
+esac
