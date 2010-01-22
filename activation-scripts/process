@@ -1,0 +1,12 @@
+#!/bin/bash -e
+
+case "$1" in
+    activate)
+	nohup $2/bin/* > /var/log/$(basename $2).log & pid=$!
+	echo $pid > /var/run/$(basename $2).pid
+	;;
+    deactivate)
+	kill $(cat /var/run/$(basename $2).pid)
+	rm -f /var/run/$(basename $2).pid
+	;;
+esac
