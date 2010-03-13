@@ -13,6 +13,8 @@ case "$1" in
 	    # Link the configuration files if they exist
 	    if [ -d $2/conf/Catalina ]
 	    then
+		mkdir -p $catalinaBaseDir/conf/Catalina/localhost
+		
 		for j in $2/conf/Catalina/*
 		do
 		    ln -sfn $j $catalinaBaseDir/conf/Catalina/localhost/`basename $j`
