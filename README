@@ -1,0 +1,4 @@
+This package contains modules that can be used to activate or deactivate
+services described in a Disnix service module on the NixOS distribution.
+Basically, every type identifier maps to an activation module script in this
+package.
