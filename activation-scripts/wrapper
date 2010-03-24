@@ -1,0 +1,3 @@
+#!/bin/bash -e
+
+$2/bin/wrapper "$1"
