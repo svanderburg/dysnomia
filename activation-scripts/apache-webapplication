@@ -1,0 +1,21 @@
+#!/bin/bash -e
+
+if [ "$documentRoot" = "" ]
+then
+    documentRoot=/var/www
+fi
+
+case "$1" in
+    activate)
+        ls $(readlink -f $2/webapps) | while read i
+	do
+	    ln -sfn $2/webapps/$i $documentRoot
+	done
+        ;;
+    deactivate)
+        ls $(readlink -f $2/webapps) | while read i
+	do
+	    rm -f $documentRoot/$(basename $i)
+	done
+        ;;
+esac
