@@ -7,6 +7,8 @@ fi
 
 case "$1" in
     activate)
+        mkdir -p $documentRoot
+	
         ls $(readlink -f $2/webapps) | while read i
 	do
 	    ln -sfn $2/webapps/$i $documentRoot
