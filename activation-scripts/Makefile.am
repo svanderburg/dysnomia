@@ -17,4 +17,4 @@ endif
 
 libexec_SCRIPTS = apache-webapplication axis2-webservice echo process nixos-configuration wrapper $(ejabberd_dump) $(mysql_database) $(tomcat_webapplication)
 
-EXTRA_DIST = apache-webapplication axis2-webservice echo ejabberd-dump.in mysql-database.in process nixos-configuration tomcat-webapplication wrapper
+EXTRA_DIST = apache-webapplication axis2-webservice echo ejabberd-dump.in mysql-database.in process nixos-configuration tomcat-webapplication.in wrapper
