@@ -1,6 +1,6 @@
 #!/bin/bash -e
 
-catalinaBaseDir=/var/tomcat
+catalinaBaseDir=@CATALINA_BASE@
 
 case "$1" in
     activate)
