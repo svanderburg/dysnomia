@@ -20,11 +20,11 @@ AC_ARG_WITH(CATALINA_HOME, [Location of the Apache Tomcat Catalina servlet conta
 # Checks for programs
 AC_PROG_INSTALL
 
-AS_IF([test "x$with_apache" != "x"],
+AS_IF([test "x$with_apache" != "x" && test "x$with_apache" != "xno"],
       [have_apache=yes],
       [have_apache=no])
 
-AS_IF([test "x$with_axis2" != "x"],
+AS_IF([test "x$with_axis2" != "x" && test "x$with_axis2" != "xno"],
       [have_axis2=yes],
       [have_axis2=no])
 
