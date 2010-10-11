@@ -34,7 +34,7 @@ AS_IF([test "x$with_ejabberd" != "xno"],
 AS_IF([test "x$with_mysql" != "xno"],
       [AC_PATH_PROG(mysql, mysql)])
 
-AS_IF([test "x$with_tomcat" != "x" || test "x$CATALINA_HOME" != "x"],
+AS_IF([test "x$with_tomcat" != "x" && test "x$with_tomcat" != "xno" || test "x$CATALINA_HOME" != "x"],
       [have_tomcat=yes],
       [have_tomcat=no])
 
