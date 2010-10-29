@@ -34,6 +34,11 @@ let
       releaseTools.nixBuild {
         name = "disnix-activation-scripts";
         src = tarball;
+	
+	preConfigure =
+	  ''
+	    ${stdenv.lib.optionalString enableEjabberdDump "export PATH=$PATH:${ejabberd}/sbin"}
+	  '';
 
         configureFlags = 
 	  ''
@@ -83,6 +88,10 @@ let
 	  };
 	  
 	  process = import ./tests/deployment/process.nix {
+	    inherit stdenv;
+	  };
+	  
+	  ejabberd_dump = import ./tests/deployment/ejabberd-dump.nix {
 	    inherit stdenv;
 	  };
 	in
@@ -167,7 +176,7 @@ let
 		}
 		
 		$machine->mustSucceed("mysqlUsername=root mysqlPassword=verysecret ${disnix_activation_scripts}/libexec/disnix/activation-scripts/mysql-database deactivate ${testdb}");
-		
+				
 		# Test Tomcat web application script. Deploys a tomcat web
 		# application, verifies whether it can be accessed and then
 		# undeploys it again and checks whether it becomes inaccessible.
@@ -180,6 +189,17 @@ let
 		$machine->mustSucceed("${disnix_activation_scripts}/libexec/disnix/activation-scripts/tomcat-webapplication deactivate ${tomcat_webapplication}");
 		$machine->mustSucceed("while [ -e /var/tomcat/webapps/tomcat-webapplication ]; do echo 'Waiting to undeploy' >&2; sleep 1; done");
 		$machine->mustFail("curl --fail http://localhost:8080/tomcat-webapplication");
+
+		# Test ejabberd dump activation script. First we check if we can
+		# login with an admin account (which is not the case), then
+		# we activate the dump and we check the admin account again.
+		# Now we should be able to login. This test should succeed.
+		
+		$machine->waitForJob("ejabberd");
+		$machine->mustFail("sleep 3; curl --fail --user admin:admin http://localhost:5280/admin"); # !!! We need to wait for a while even though ejabberd is running
+		$machine->mustSucceed("${disnix_activation_scripts}/libexec/disnix/activation-scripts/ejabberd-dump activate ${ejabberd_dump}");
+		$machine->mustSucceed("curl --fail --user admin:admin http://localhost:5280/admin");
+                $machine->mustSucceed("${disnix_activation_scripts}/libexec/disnix/activation-scripts/ejabberd-dump deactivate ${ejabberd_dump}");
 	      '';
 	  };
 	};

@@ -1,0 +1,154 @@
+{tables,[{local_config,[{record_name,local_config},{attributes,[key,value]}]},
+         {caps_features,[{record_name,caps_features},
+                         {attributes,[node_pair,features]}]},
+         {config,[{record_name,config},{attributes,[key,value]}]},
+         {pubsub_subscription,[{record_name,pubsub_subscription},
+                               {attributes,[subid,options]}]},
+         {privacy,[{record_name,privacy},{attributes,[us,default,lists]}]},
+         {passwd,[{record_name,passwd},{attributes,[us,password]}]},
+         {irc_custom,[{record_name,irc_custom},{attributes,[us_host,data]}]},
+         {roster,[{record_name,roster},
+                  {attributes,[usj,us,jid,name,subscription,ask,groups,
+                               askmessage,xs]}]},
+         {last_activity,[{record_name,last_activity},
+                         {attributes,[us,timestamp,status]}]},
+         {sr_user,[{record_name,sr_user},{attributes,[us,group_host]}]},
+         {roster_version,[{record_name,roster_version},
+                          {attributes,[us,version]}]},
+         {offline_msg,[{record_name,offline_msg},
+                       {attributes,[us,timestamp,expire,from,to,packet]}]},
+         {motd,[{record_name,motd},{attributes,[server,packet]}]},
+         {acl,[{record_name,acl},{attributes,[aclname,aclspec]}]},
+         {vcard,[{record_name,vcard},{attributes,[us,vcard]}]},
+         {pubsub_index,[{record_name,pubsub_index},
+                        {attributes,[index,last,free]}]},
+         {sr_group,[{record_name,sr_group},{attributes,[group_host,opts]}]},
+         {vcard_search,[{record_name,vcard_search},
+                        {attributes,[us,user,luser,fn,lfn,family,lfamily,
+                                     given,lgiven,middle,lmiddle,nickname,
+                                     lnickname,bday,lbday,ctry,lctry,locality,
+                                     llocality,email,lemail,orgname,lorgname,
+                                     orgunit,lorgunit]}]},
+         {motd_users,[{record_name,motd_users},{attributes,[us,dummy]}]},
+         {private_storage,[{record_name,private_storage},
+                           {attributes,[usns,xml]}]},
+         {pubsub_item,[{record_name,pubsub_item},
+                       {attributes,[itemid,creation,modification,payload]}]},
+         {muc_room,[{record_name,muc_room},{attributes,[name_host,opts]}]},
+         {pubsub_state,[{record_name,pubsub_state},
+                        {attributes,[stateid,items,affiliation,
+                                     subscriptions]}]},
+         {muc_registered,[{record_name,muc_registered},
+                          {attributes,[us_host,nick]}]},
+         {pubsub_node,[{record_name,pubsub_node},
+                       {attributes,[nodeid,id,parents,type,owners,
+                                    options]}]}]}.
+{local_config,{auth_method,"localhost"},internal}.
+{local_config,
+    {modules,"localhost"},
+    [{mod_version,[]},
+     {mod_vcard,[]},
+     {mod_time,[]},
+     {mod_stats,[]},
+     {mod_shared_roster,[]},
+     {mod_roster,[]},
+     {mod_register,
+         [{welcome_message,{"Welcome!","Hi.\nWelcome to this XMPP server."}},
+          {access,register}]},
+     {mod_pubsub,
+         [{access_createnode,pubsub_createnode},
+          {ignore_pep_from_offline,true},
+          {last_item_cache,false},
+          {plugins,["flat","hometree","pep"]}]},
+     {mod_private,[]},
+     {mod_privacy,[]},
+     {mod_ping,[]},
+     {mod_offline,[{access_max_user_messages,max_user_offline_messages}]},
+     {mod_muc,
+         [{access,muc},
+          {access_create,muc_create},
+          {access_persistent,muc_create},
+          {access_admin,muc_admin}]},
+     {mod_last,[]},
+     {mod_http_bind,[]},
+     {mod_irc,[]},
+     {mod_disco,[]},
+     {mod_configure,[]},
+     {mod_caps,[]},
+     {mod_announce,[{access,announce}]},
+     {mod_adhoc,[]}]}.
+{local_config,listen,
+              [{{5222,{0,0,0,0},tcp},
+                ejabberd_c2s,
+                [{access,c2s},{shaper,c2s_shaper},{max_stanza_size,65536}]},
+               {{5269,{0,0,0,0},tcp},
+                ejabberd_s2s_in,
+                [{shaper,s2s_shaper},{max_stanza_size,131072}]},
+               {{5280,{0,0,0,0},tcp},
+                ejabberd_http,
+                [captcha,http_bind,http_poll,web_admin]}]}.
+{local_config,max_fsm_queue,1000}.
+{local_config,node_start,{1288,388816,452358}}.
+{config,language,"en"}.
+{config,{access,c2s,global},[{deny,blocked},{allow,all}]}.
+{config,{access,pubsub_createnode,global},[{allow,local}]}.
+{config,{access,s2s_shaper,global},[{fast,all}]}.
+{config,{access,c2s_shaper,global},[{none,admin},{normal,all}]}.
+{config,{access,muc_create,global},[{allow,local}]}.
+{config,hosts,["localhost"]}.
+{config,{access,muc,global},[{allow,all}]}.
+{config,{shaper,fast,global},{maxrate,50000}}.
+{config,{access,max_user_sessions,global},[{10,all}]}.
+{config,{access,configure,global},[{allow,admin}]}.
+{config,{shaper,normal,global},{maxrate,1000}}.
+{config,{access,muc_admin,global},[{allow,admin}]}.
+{config,{access,max_user_offline_messages,global},[{5000,admin},{100,all}]}.
+{config,{access,announce,global},[{allow,admin}]}.
+{config,{access,register,global},[{allow,all}]}.
+{config,{access,local,global},[{allow,local}]}.
+{passwd,{"admin","localhost"},"admin"}.
+{acl,{local,global},{user_regexp,[]}}.
+{acl,{admin,global},{user,"admin","localhost"}}.
+{pubsub_index,node,2,[]}.
+{pubsub_state,{{[],"pubsub.localhost",[]},1},[],owner,[]}.
+{pubsub_state,{{[],"pubsub.localhost",[]},2},[],owner,[]}.
+{pubsub_node,{"pubsub.localhost",<<"/home">>},
+             1,[],"hometree",
+             [{[],"pubsub.localhost",[]}],
+             [{deliver_payloads,true},
+              {notify_config,false},
+              {notify_delete,false},
+              {notify_retract,true},
+              {purge_offline,false},
+              {persist_items,true},
+              {max_items,10},
+              {subscribe,true},
+              {access_model,open},
+              {roster_groups_allowed,[]},
+              {publish_model,publishers},
+              {notification_type,headline},
+              {max_payload_size,60000},
+              {send_last_published_item,on_sub_and_presence},
+              {deliver_notifications,true},
+              {presence_based_delivery,false}]}.
+{pubsub_node,{"pubsub.localhost",<<"/home/localhost">>},
+             2,
+             [<<"/home">>],
+             "hometree",
+             [{[],"pubsub.localhost",[]}],
+             [{deliver_payloads,true},
+              {notify_config,false},
+              {notify_delete,false},
+              {notify_retract,true},
+              {purge_offline,false},
+              {persist_items,true},
+              {max_items,10},
+              {subscribe,true},
+              {access_model,open},
+              {roster_groups_allowed,[]},
+              {publish_model,publishers},
+              {notification_type,headline},
+              {max_payload_size,60000},
+              {send_last_published_item,on_sub_and_presence},
+              {deliver_notifications,true},
+              {presence_based_delivery,false}]}.
