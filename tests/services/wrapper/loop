@@ -1,0 +1,7 @@
+#!/bin/bash -e
+
+while true
+do
+    echo "Loop forever..."
+    sleep 1
+done

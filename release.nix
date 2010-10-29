@@ -64,8 +64,27 @@ let
 	    enableTomcatWebApplication = true;
 	  };
 	  
-	  testdb = import ./tests/deployment/mysql-database.nix { inherit stdenv; };
-	  tomcat_webapplication = import ./tests/deployment/tomcat-webapplication.nix { inherit stdenv jdk; };
+	  # Test services
+	  
+	  testdb = import ./tests/deployment/mysql-database.nix {
+	    inherit stdenv;
+	  };
+	  
+	  tomcat_webapplication = import ./tests/deployment/tomcat-webapplication.nix {
+	    inherit stdenv jdk;
+	  };
+	  
+	  apache_webapplication = import ./tests/deployment/apache-webapplication.nix {
+	    inherit stdenv;
+	  };
+	  
+	  wrapper = import ./tests/deployment/wrapper.nix {
+	    inherit stdenv;
+	  };
+	  
+	  process = import ./tests/deployment/process.nix {
+	    inherit stdenv;
+	  };
 	in
 	
 	with import "${nixos}/lib/testing.nix" { inherit nixpkgs; system = "x86_64-linux"; services = null; };
@@ -84,6 +103,7 @@ let
 		services.httpd = {
 		  enable = true;
 		  adminAddr = "foo@bar.com";
+		  documentRoot = "/var/www";
 		};
 		services.tomcat.enable = true;
 		services.tomcat.axis2.enable = true;
@@ -98,7 +118,40 @@ let
 		# Test echo activation script. Here we just invoke the activate
 		# and deactivation steps. This test should succeed.
 		$machine->mustSucceed("${disnix_activation_scripts}/libexec/disnix/activation-scripts/echo activate hello");
-		$machine->mustSucceed("${disnix_activation_scripts}/libexec/disnix/activation-scripts/echo deactivate hello");
+		$machine->mustSucceed("${disnix_activation_scripts}/libexec/disnix/activation-scripts/echo deactivate hello");				
+		
+		# Test wrapper activation script. Here we invoke the wrapper
+		# of a certain service. This service spawns a process which
+		# loops. We checks whether it is activated.
+		# After a while we deactivate it and we check if it is indeed
+		# deactivated. This test should succeed.
+		
+		$machine->mustSucceed("${disnix_activation_scripts}/libexec/disnix/activation-scripts/wrapper activate ${wrapper}");
+		$machine->mustSucceed("[ \"\$(pgrep -f ${wrapper}/bin/loop)\" != \"\" ]");
+		$machine->mustSucceed("${disnix_activation_scripts}/libexec/disnix/activation-scripts/wrapper deactivate ${wrapper}");
+		$machine->mustSucceed("[ \"\$(pgrep -f ${wrapper}/bin/loop)\" = \"\" ]");
+		
+		# Test process activation script. Here we start a process which
+		# loops forever. We check whether it has been started and
+		# then we deactivate it again and verify whether it has been
+		# stopped. This test should succeed.
+		
+		$machine->mustSucceed("${disnix_activation_scripts}/libexec/disnix/activation-scripts/process activate ${process}");
+		$machine->mustSucceed("[ \"\$(pgrep -f ${process}/bin/loop)\" != \"\" ]");
+		$machine->mustSucceed("${disnix_activation_scripts}/libexec/disnix/activation-scripts/process deactivate ${process}");
+		$machine->mustSucceed("[ \"\$(pgrep -f ${process}/bin/loop)\" = \"\" ]");
+		
+		# Test Apache web application script. Here, we activate a small
+		# static HTML website in the document root of Apache, then we
+		# check whether it is available. Finally, we deactivate it again
+		# and see whether is has become unavailable.
+		# This test should succeed.
+		
+		$machine->waitForJob("httpd");
+		$machine->mustSucceed("documentRoot=/var/www ${disnix_activation_scripts}/libexec/disnix/activation-scripts/apache-webapplication activate ${apache_webapplication}");
+		$machine->mustSucceed("curl --fail http://localhost/test");
+		$machine->mustSucceed("documentRoot=/var/www ${disnix_activation_scripts}/libexec/disnix/activation-scripts/apache-webapplication deactivate ${apache_webapplication}");
+		$machine->mustFail("curl --fail http://localhost/test");
 		
 		# Test MySQL activation script. Here we activate a database and
 		# we check whether it is created. This test should succeed.

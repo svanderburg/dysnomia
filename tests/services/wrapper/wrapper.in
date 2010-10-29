@@ -1,0 +1,10 @@
+#!/bin/bash -e
+
+case "$1" in
+    activate)
+      nohup @loop@ &
+      ;;
+    deactivate)
+      pkill -f @loop@
+      ;;
+esac
