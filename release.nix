@@ -79,6 +79,10 @@ let
 	    inherit stdenv jdk;
 	  };
 	  
+	  axis2_webservice = import ./tests/deployment/axis2-webservice.nix {
+	    inherit stdenv jdk;
+	  };
+	  
 	  apache_webapplication = import ./tests/deployment/apache-webapplication.nix {
 	    inherit stdenv;
 	  };
@@ -189,6 +193,14 @@ let
 		$machine->mustSucceed("${disnix_activation_scripts}/libexec/disnix/activation-scripts/tomcat-webapplication deactivate ${tomcat_webapplication}");
 		$machine->mustSucceed("while [ -e /var/tomcat/webapps/tomcat-webapplication ]; do echo 'Waiting to undeploy' >&2; sleep 1; done");
 		$machine->mustFail("curl --fail http://localhost:8080/tomcat-webapplication");
+
+                # Test Axis2 web service script.
+		
+		$machine->waitForFile("/var/tomcat/webapps/axis2");
+		$machine->mustSucceed("${disnix_activation_scripts}/libexec/disnix/activation-scripts/axis2-webservice activate ${axis2_webservice}");
+		$machine->mustSucceed("sleep 10; curl --fail http://localhost:8080/axis2/services/Test/test"); # !!! We must wait a while to let it become active
+		$machine->mustSucceed("${disnix_activation_scripts}/libexec/disnix/activation-scripts/axis2-webservice deactivate ${axis2_webservice}");
+		$machine->mustFail("sleep 10; curl --fail http://localhost:8080/axis2/services/Test/test"); # !!! We must wait a while to let it become inactive
 
 		# Test ejabberd dump activation script. First we check if we can
 		# login with an admin account (which is not the case), then
