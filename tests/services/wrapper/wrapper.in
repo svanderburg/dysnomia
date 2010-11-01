@@ -2,9 +2,14 @@
 
 case "$1" in
     activate)
-      nohup @loop@ &
-      ;;
+        nohup @loop@ &
+	# Wait until the process actually runs
+        while [ "$(pgrep -f @loop@)" = "" ] 
+        do
+	    sleep 0.5
+        done
+        ;;
     deactivate)
-      pkill -f @loop@
-      ;;
+        pkill -f @loop@
+        ;;
 esac
