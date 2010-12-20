@@ -25,6 +25,7 @@ let
       , enableAxis2WebService ? false
       , enableEjabberdDump ? false
       , enableMySQLDatabase ? false
+      , enablePostgreSQLDatabase ? false
       , enableTomcatWebApplication ? false
       , catalinaBaseDir ? "/var/tomcat"
       }:
@@ -46,12 +47,14 @@ let
 	    ${if enableAxis2WebService then "--with-axis2" else "--without-axis2"}
 	    ${if enableEjabberdDump then "--with-ejabberd" else "--without-ejabberd"}
 	    ${if enableMySQLDatabase then "--with-mysql" else "--without-mysql"}
+	    ${if enablePostgreSQLDatabase then "--with-postgresql" else "--without-postgresql"}
 	    ${if enableTomcatWebApplication then "--with-tomcat=${catalinaBaseDir}" else "--without-tomcat"}
 	  '';
 
         buildInputs = []
 	              ++ stdenv.lib.optional enableEjabberdDump ejabberd
-		      ++ stdenv.lib.optional enableMySQLDatabase mysql;
+		      ++ stdenv.lib.optional enableMySQLDatabase mysql
+		      ++ stdenv.lib.optional enablePostgreSQLDatabase postgresql;
       };
       
       tests = 
@@ -66,12 +69,17 @@ let
 	    enableAxis2WebService = true;
 	    enableEjabberdDump = true;
 	    enableMySQLDatabase = true;
+	    enablePostgreSQLDatabase = true;
 	    enableTomcatWebApplication = true;
 	  };
 	  
 	  # Test services
 	  
-	  testdb = import ./tests/deployment/mysql-database.nix {
+	  mysql_database = import ./tests/deployment/mysql-database.nix {
+	    inherit stdenv;
+	  };
+	  
+	  postgresql_database = import ./tests/deployment/postgresql-database.nix {
 	    inherit stdenv;
 	  };
 	  
@@ -112,6 +120,9 @@ let
 		  enable = true;
 		  rootPassword = pkgs.writeTextFile { name = "mysqlpw"; text = "verysecret"; };
 		};
+		services.postgresql = {
+		  enable = true;
+		};
 		services.ejabberd.enable = true;
 		services.httpd = {
 		  enable = true;
@@ -150,8 +161,10 @@ let
 		# stopped. This test should succeed.
 		
 		$machine->mustSucceed("${disnix_activation_scripts}/libexec/disnix/activation-scripts/process activate ${process}");
+		$machine->mustSucceed("sleep 5");
 		$machine->mustSucceed("[ \"\$(pgrep -f ${process}/bin/loop)\" != \"\" ]");
 		$machine->mustSucceed("${disnix_activation_scripts}/libexec/disnix/activation-scripts/process deactivate ${process}");
+		$machine->mustSucceed("sleep 5");
 		$machine->mustSucceed("[ \"\$(pgrep -f ${process}/bin/loop)\" = \"\" ]");
 		
 		# Test Apache web application script. Here, we activate a small
@@ -170,7 +183,7 @@ let
 		# we check whether it is created. This test should succeed.
 		
 		$machine->waitForJob("mysql");
-		$machine->mustSucceed("mysqlUsername=root mysqlPassword=verysecret ${disnix_activation_scripts}/libexec/disnix/activation-scripts/mysql-database activate ${testdb}");
+		$machine->mustSucceed("mysqlUsername=root mysqlPassword=verysecret ${disnix_activation_scripts}/libexec/disnix/activation-scripts/mysql-database activate ${mysql_database}");
 		my $result = $machine->mustSucceed("echo 'select * from test' | mysql --user=root --password=verysecret -N testdb");
 		
 		if($result =~ /Hello world/) {
@@ -179,8 +192,23 @@ let
 		    die "MySQL table should contain: Hello world!\n";
 		}
 		
-		$machine->mustSucceed("mysqlUsername=root mysqlPassword=verysecret ${disnix_activation_scripts}/libexec/disnix/activation-scripts/mysql-database deactivate ${testdb}");
-				
+		$machine->mustSucceed("mysqlUsername=root mysqlPassword=verysecret ${disnix_activation_scripts}/libexec/disnix/activation-scripts/mysql-database deactivate ${mysql_database}");
+		
+		# Test PostgreSQL activation script. Here we activate a database
+		# and we check whether it is created. This test should succeed.
+		
+		$machine->waitForJob("postgresql");
+		$machine->mustSucceed("postgresqlUsername=root ${disnix_activation_scripts}/libexec/disnix/activation-scripts/postgresql-database activate ${postgresql_database}");
+		my $result = $machine->mustSucceed("echo 'select * from test' | psql --file - testdb");		
+		
+		if($result =~ /Hello world/) {
+		    print "PostgreSQL query returns: Hello world!\n";
+		} else {
+		    die "PostgreSQL table should contain: Hello world!\n";
+		}
+		
+		$machine->mustSucceed("postgresqlUsername=root ${disnix_activation_scripts}/libexec/disnix/activation-scripts/postgresql-database deactivate ${postgresql_database}");
+		
 		# Test Tomcat web application script. Deploys a tomcat web
 		# application, verifies whether it can be accessed and then
 		# undeploys it again and checks whether it becomes inaccessible.

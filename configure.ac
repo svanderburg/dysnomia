@@ -12,6 +12,7 @@ AC_ARG_WITH([apache], AS_HELP_STRING([--with-apache], [Enable Apache HTTP web ap
 AC_ARG_WITH([axis2], AS_HELP_STRING([--with-axis2], [Enable Apache Axis2 activation script. Also requires Tomcat enabled]))
 AC_ARG_WITH([ejabberd], AS_HELP_STRING([--without-ejabberd], [Ignore presence of ejabberd and disable it]))
 AC_ARG_WITH([mysql], AS_HELP_STRING([--without-mysql], [Ignore presence of MySQL and disable it]))
+AC_ARG_WITH([postgresql], AS_HELP_STRING([--without-postgresql], [Ignore presence of PostgreSQL and disable it]))
 AC_ARG_WITH([tomcat], AS_HELP_STRING([--with-tomcat], [Enable Apache Tomcat activation script and specifies location of the Apache Tomcat base directory]))
 
 # Define environment variable options
@@ -34,6 +35,12 @@ AS_IF([test "x$with_ejabberd" != "xno"],
 AS_IF([test "x$with_mysql" != "xno"],
       [AC_PATH_PROG(mysql, mysql)])
 
+AS_IF([test "x$with_postgresql" != "xno"],
+      [AC_PATH_PROG(createdb, createdb)])
+
+AS_IF([test "x$with_postgresql" != "xno"],
+      [AC_PATH_PROG(psql, psql)])
+
 AS_IF([test "x$with_tomcat" != "x" && test "x$with_tomcat" != "xno" || test "x$CATALINA_HOME" != "x"],
       [have_tomcat=yes],
       [have_tomcat=no])
@@ -43,6 +50,7 @@ AM_CONDITIONAL(have_apache, [test x$have_apache != "xno"])
 AM_CONDITIONAL(have_axis2, [test x$have_axis2 != "xno"])
 AM_CONDITIONAL(have_ejabberd, [test x$ejabberdctl != "x"])
 AM_CONDITIONAL(have_mysql, [test x$mysql != "x"])
+AM_CONDITIONAL(have_postgresql, [test x$psql != "x"])
 AM_CONDITIONAL(have_tomcat, [test x$have_tomcat != "xno"])
 
 # CATALINA_BASE setting
@@ -61,6 +69,9 @@ AS_IF([test "x$have_axis2" != "xno"],
 AS_IF([test "x$mysql" != "x"],
       [mysql_database=activation-scripts/mysql-database])
 
+AS_IF([test "x$psql" != "x"],
+      [postgresql_database=activation-scripts/postgresql-database])
+
 AS_IF([test "x$ejabberdctl" != "x"],
       [ejabberd_dump=activation-scripts/ejabberd-dump])
 
@@ -73,6 +84,7 @@ activation-scripts/Makefile
 $axis2_webservice
 $ejabberd_dump
 $mysql_database
+$postgresql_database
 $tomcat_webapplication
 ])
 AC_OUTPUT
