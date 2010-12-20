@@ -14,6 +14,7 @@ AC_ARG_WITH([ejabberd], AS_HELP_STRING([--without-ejabberd], [Ignore presence of
 AC_ARG_WITH([mysql], AS_HELP_STRING([--without-mysql], [Ignore presence of MySQL and disable it]))
 AC_ARG_WITH([postgresql], AS_HELP_STRING([--without-postgresql], [Ignore presence of PostgreSQL and disable it]))
 AC_ARG_WITH([tomcat], AS_HELP_STRING([--with-tomcat], [Enable Apache Tomcat activation script and specifies location of the Apache Tomcat base directory]))
+AC_ARG_WITH([subversion], AS_HELP_STRING([--with-subversion], [Enable subversion repository activation script]))
 
 # Define environment variable options
 AC_ARG_WITH(CATALINA_HOME, [Location of the Apache Tomcat Catalina servlet container])
@@ -41,6 +42,9 @@ AS_IF([test "x$with_postgresql" != "xno"],
 AS_IF([test "x$with_postgresql" != "xno"],
       [AC_PATH_PROG(psql, psql)])
 
+AS_IF([test "x$with_subversion" != "xno"],
+      [AC_PATH_PROG(svnadmin, svnadmin)])
+
 AS_IF([test "x$with_tomcat" != "x" && test "x$with_tomcat" != "xno" || test "x$CATALINA_HOME" != "x"],
       [have_tomcat=yes],
       [have_tomcat=no])
@@ -52,6 +56,7 @@ AM_CONDITIONAL(have_ejabberd, [test x$ejabberdctl != "x"])
 AM_CONDITIONAL(have_mysql, [test x$mysql != "x"])
 AM_CONDITIONAL(have_postgresql, [test x$psql != "x"])
 AM_CONDITIONAL(have_tomcat, [test x$have_tomcat != "xno"])
+AM_CONDITIONAL(have_subversion, [test x$svnadmin != "x"])
 
 # CATALINA_BASE setting
 
@@ -77,7 +82,10 @@ AS_IF([test "x$ejabberdctl" != "x"],
 
 AS_IF([test "x$have_tomcat" != "xno"],
       [tomcat_webapplication=activation-scripts/tomcat-webapplication])
-      
+
+AS_IF([test "x$svnadmin" != "x"],
+      [subversion_repository=activation-scripts/subversion-repository])
+
 AC_CONFIG_FILES([
 Makefile
 activation-scripts/Makefile
@@ -86,5 +94,6 @@ $ejabberd_dump
 $mysql_database
 $postgresql_database
 $tomcat_webapplication
+$subversion_repository
 ])
 AC_OUTPUT

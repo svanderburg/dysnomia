@@ -27,6 +27,7 @@ let
       , enableMySQLDatabase ? false
       , enablePostgreSQLDatabase ? false
       , enableTomcatWebApplication ? false
+      , enableSubversionRepository ? false
       , catalinaBaseDir ? "/var/tomcat"
       }:
 
@@ -49,12 +50,14 @@ let
 	    ${if enableMySQLDatabase then "--with-mysql" else "--without-mysql"}
 	    ${if enablePostgreSQLDatabase then "--with-postgresql" else "--without-postgresql"}
 	    ${if enableTomcatWebApplication then "--with-tomcat=${catalinaBaseDir}" else "--without-tomcat"}
+	    ${if enableSubversionRepository then "--with-subversion" else "--without-subversion"}
 	  '';
 
         buildInputs = []
 	              ++ stdenv.lib.optional enableEjabberdDump ejabberd
 		      ++ stdenv.lib.optional enableMySQLDatabase mysql
-		      ++ stdenv.lib.optional enablePostgreSQLDatabase postgresql;
+		      ++ stdenv.lib.optional enablePostgreSQLDatabase postgresql
+		      ++ stdenv.lib.optional enableSubversionRepository subversion;
       };
       
       tests = 
@@ -71,6 +74,7 @@ let
 	    enableMySQLDatabase = true;
 	    enablePostgreSQLDatabase = true;
 	    enableTomcatWebApplication = true;
+	    enableSubversionRepository = true;
 	  };
 	  
 	  # Test services
@@ -104,6 +108,10 @@ let
 	  };
 	  
 	  ejabberd_dump = import ./tests/deployment/ejabberd-dump.nix {
+	    inherit stdenv;
+	  };
+	  
+	  subversion_repository = import ./tests/deployment/subversion-repository.nix {
 	    inherit stdenv;
 	  };
 	in
@@ -240,6 +248,15 @@ let
 		$machine->mustSucceed("${disnix_activation_scripts}/libexec/disnix/activation-scripts/ejabberd-dump activate ${ejabberd_dump}");
 		$machine->mustSucceed("curl --fail --user admin:admin http://localhost:5280/admin");
                 $machine->mustSucceed("${disnix_activation_scripts}/libexec/disnix/activation-scripts/ejabberd-dump deactivate ${ejabberd_dump}");
+		
+		# Test subversion activation script. We import a repository
+		# then we do a checkout and see whether it succeeds.
+		# This test should succeed.
+		
+		$machine->mustSucceed("svnBaseDir=/repos svnGroup=users ${disnix_activation_scripts}/libexec/disnix/activation-scripts/subversion-repository activate ${subversion_repository}");
+		$machine->mustSucceed("${subversion}/bin/svn co file:///repos/testrepos");
+		$machine->mustSucceed("[ -e testrepos/index.php ]");
+		$machine->mustSucceed("svnBaseDir=/repos svnGroup=users ${disnix_activation_scripts}/libexec/disnix/activation-scripts/subversion-repository deactivate ${subversion_repository}");
 	      '';
 	  };
 	};

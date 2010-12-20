@@ -1,0 +1,47 @@
+SVN-fs-dump-format-version: 2
+
+UUID: 56115d86-0c35-11e0-9b14-257dd1a9621a
+
+Revision-number: 0
+Prop-content-length: 56
+Content-length: 56
+
+K 8
+svn:date
+V 27
+2010-12-20T12:33:23.798885Z
+PROPS-END
+
+Revision-number: 1
+Prop-content-length: 117
+Content-length: 117
+
+K 7
+svn:log
+V 16
+Initial import
+
+
+K 10
+svn:author
+V 6
+sander
+K 8
+svn:date
+V 27
+2010-12-20T12:37:27.779937Z
+PROPS-END
+
+Node-path: index.php
+Node-kind: file
+Node-action: add
+Prop-content-length: 10
+Text-content-length: 32
+Text-content-md5: 18cd915a26a59c4f2bffeefe005ae6ac
+Text-content-sha1: fe0b47dfb08611e934d84776a580bba67557ddd0
+Content-length: 42
+
+PROPS-END
+<?php print("Hello World!"); ?>
+
+

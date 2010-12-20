@@ -1,0 +1,24 @@
+#!/bin/bash -e
+
+case "$1" in
+    # Imports a Subversion dump
+    activate)
+	componentName=`basename $2`
+	repositoryName=${componentName:33}
+
+	if [ ! -e $svnBaseDir/$repositoryName ]
+	then
+	    mkdir -p $svnBaseDir
+	    
+	    @svnadmin@ create $svnBaseDir/$repositoryName
+	    cat $2/subversion-repositories/* | @svnadmin@ load $svnBaseDir/$repositoryName
+	    
+	    chgrp -R $svnGroup $svnBaseDir/$repositoryName
+	    chmod -R g+w $svnBaseDir/$repositoryName
+	    chmod g+s $svnBaseDir/$repositoryName/db
+	fi
+        ;;
+    deactivate)
+	# Does nothing, because we do not want to lose our SVN data
+	;;
+esac
