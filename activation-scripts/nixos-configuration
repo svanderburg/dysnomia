@@ -9,6 +9,7 @@ case "$1" in
 	$2/bin/switch-to-configuration switch
         ;;
     deactivate)
-        echo
+        nix-env -p /nix/var/nix/profiles/system --rollback
+        $2/bin/switch-to-configuration switch
 	;;
 esac
