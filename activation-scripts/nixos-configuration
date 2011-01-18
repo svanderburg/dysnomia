@@ -5,11 +5,19 @@
 
 case "$1" in
     activate)
-        nix-env -p /nix/var/nix/profiles/system --set $2
+	if [ "$disableNixOSSystemProfile" = "" ]
+	then
+            nix-env -p /nix/var/nix/profiles/system --set $2
+	fi
+	
 	$2/bin/switch-to-configuration switch
         ;;
     deactivate)
-        nix-env -p /nix/var/nix/profiles/system --rollback
+	if [ "$disableNixOSSystemProfile" = "" ]
+        then
+	    nix-env -p /nix/var/nix/profiles/system --rollback
+	fi
+	
         $2/bin/switch-to-configuration switch
 	;;
 esac
