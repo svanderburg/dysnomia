@@ -3,14 +3,21 @@
 # Activation script that activates the given system derivation,
 # which makes it possible to remotely upgrade NixOS
 
+if [ "$testNixOS" = "" ]
+then
+    action="switch"
+else
+    action="test"
+fi
+
 case "$1" in
     activate)
 	if [ "$disableNixOSSystemProfile" = "" ]
 	then
             nix-env -p /nix/var/nix/profiles/system --set $2
 	fi
-	
-	$2/bin/switch-to-configuration switch
+		
+	$2/bin/switch-to-configuration $action
         ;;
     deactivate)
 	if [ "$disableNixOSSystemProfile" = "" ]
@@ -18,6 +25,6 @@ case "$1" in
 	    nix-env -p /nix/var/nix/profiles/system --rollback
 	fi
 	
-        $2/bin/switch-to-configuration switch
+        $2/bin/switch-to-configuration $action
 	;;
 esac
