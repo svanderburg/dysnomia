@@ -261,7 +261,6 @@ let
 		# Test NixOS configuration activation script. We activate the current
 		# NixOS configuration
 		
-		$machine->mustSucceed("touch /etc/NIXOS"); # trick the system that it is a NixOS installation
 		$machine->mustSucceed("disableNixOSSystemProfile=1 testNixOS=1 ${disnix_activation_scripts}/libexec/disnix/activation-scripts/nixos-configuration activate /var/run/current-system");
 	      '';
 	  };

@@ -3,6 +3,13 @@
 # Activation script that activates the given system derivation,
 # which makes it possible to remotely upgrade NixOS
 
+# Trick to make activation script believe that it really is NixOS
+
+if [ ! -f /etc/NIXOS ]
+then
+    touch /etc/NIXOS
+fi
+
 if [ "$testNixOS" = "" ]
 then
     action="switch"
