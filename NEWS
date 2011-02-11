@@ -1,0 +1,9 @@
+Version 0.2
+===========
+- Removed the _nixos postfix, because scripts are not limited to NixOS
+
+- Added configure script, which detects supported types and configures activation modules
+
+- Added types for PostgreSQL databases and Subversion repositories
+
+- Added test suite for all activation types
