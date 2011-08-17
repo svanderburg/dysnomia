@@ -1,4 +1,4 @@
-{ nixpkgs ? /etc/nixos/nixpkgs }:
+{ nixpkgs ? <nixpkgs> }:
 
 let
   jobs = rec {
@@ -61,7 +61,7 @@ let
       };
       
       tests = 
-        { nixos ? /etc/nixos/nixos }:
+        { nixos ? <nixos> }:
 	
 	with import nixpkgs {};
 	
