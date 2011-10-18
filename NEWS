@@ -7,3 +7,7 @@ Version 0.2
 - Added types for PostgreSQL databases and Subversion repositories
 
 - Added test suite for all activation types
+
+Version 0.3
+===========
+- Experimental support for MS SQL and IIS activation types

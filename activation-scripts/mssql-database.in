@@ -1,0 +1,25 @@
+#!/bin/bash -e
+
+case "$1" in
+    activate)
+	dbName=${componentName:33}
+	
+	( echo "use master"
+	  echo "select name from sys.databases where name='$dbName'"
+	  echo "go" ) | @osql@ -S ".\\$dbName" -U $msSqlUsername -P $msSqlPassword -n -h-1 | [ "$(grep "$dbName")" != "" ] && createDatabase=1
+	
+	if [ "$createDatabase" = "1" ]
+	then
+	    ( echo "create database $dbName"
+	      echo "use $dbName"
+	      cat $2/mssql-databases/*.sql
+	      echo "go" ) | @osql@ -S ".\\$dbName" -U $msSqlUsername -P $msSqlPassword -n -h-1
+	fi
+	;;
+	
+    deactivate)
+	# A MS SQL database cannot be deactivated, we do not want to drop a database
+	# with all data in it, right?
+	echo
+	;;
+esac

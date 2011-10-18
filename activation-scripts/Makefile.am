@@ -12,6 +12,10 @@ if have_ejabberd
     ejabberd_dump = ejabberd-dump
 endif
 
+if have_mssql
+    mssql_database = mssql-database
+endif
+
 if have_mysql
     mysql_database = mysql-database
 endif
@@ -30,6 +34,6 @@ endif
 
 # Build settings
 
-libexec_SCRIPTS = echo process nixos-configuration wrapper $(apache_webapplication) $(axis2_webservice) $(ejabberd_dump) $(mysql_database) $(tomcat_webapplication) $(postgresql_database) $(subversion_repository)
+libexec_SCRIPTS = echo process nixos-configuration wrapper $(apache_webapplication) $(axis2_webservice) $(ejabberd_dump) $(mysql_database) $(mssql_database) $(tomcat_webapplication) $(postgresql_database) $(subversion_repository)
 
-EXTRA_DIST = apache-webapplication axis2-webservice.in echo ejabberd-dump.in mysql-database.in process nixos-configuration tomcat-webapplication.in wrapper postgresql-database.in subversion-repository.in
+EXTRA_DIST = apache-webapplication axis2-webservice.in echo ejabberd-dump.in mssql-database.in mysql-database.in process nixos-configuration tomcat-webapplication.in wrapper postgresql-database.in subversion-repository.in
