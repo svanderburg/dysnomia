@@ -57,7 +57,7 @@ AS_IF([test "x$with_tomcat" != "x" && test "x$with_tomcat" != "xno" || test "x$C
 AM_CONDITIONAL(have_apache, [test x$have_apache != "xno"])
 AM_CONDITIONAL(have_axis2, [test x$have_axis2 != "xno"])
 AM_CONDITIONAL(have_ejabberd, [test x$ejabberdctl != "x"])
-AM_CONDITIONAL(have_mssql, [test x$osql != "x"])
+AM_CONDITIONAL(have_mssql, [test "x$osql" != "x"])
 AM_CONDITIONAL(have_mysql, [test x$mysql != "x"])
 AM_CONDITIONAL(have_postgresql, [test x$psql != "x"])
 AM_CONDITIONAL(have_tomcat, [test x$have_tomcat != "xno"])
