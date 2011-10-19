@@ -11,6 +11,7 @@ AC_SUBST(libexecdir)
 AC_ARG_WITH([apache], AS_HELP_STRING([--with-apache], [Enable Apache HTTP web application script]))
 AC_ARG_WITH([axis2], AS_HELP_STRING([--with-axis2], [Enable Apache Axis2 activation script. Also requires Tomcat enabled]))
 AC_ARG_WITH([ejabberd], AS_HELP_STRING([--without-ejabberd], [Ignore presence of ejabberd and disable it]))
+AC_ARG_WITH([iis], AS_HELP_STRING([--without-iis], [Ignore presence of Microsoft Internet Information Services]))
 AC_ARG_WITH([mssql], AS_HELP_STRING([--without-mssql], [Ignore presence of Microsoft SQL server and disable it]))
 AC_ARG_WITH([mysql], AS_HELP_STRING([--without-mysql], [Ignore presence of MySQL and disable it]))
 AC_ARG_WITH([postgresql], AS_HELP_STRING([--without-postgresql], [Ignore presence of PostgreSQL and disable it]))
@@ -33,6 +34,9 @@ AS_IF([test "x$with_axis2" != "x" && test "x$with_axis2" != "xno"],
 
 AS_IF([test "x$with_ejabberd" != "xno"],
       [AC_PATH_PROG(ejabberdctl, ejabberdctl)])
+
+AS_IF([test "x$with_iis" != "xno"],
+      [AC_PATH_PROG(msdeploy, msdeploy)])
 
 AS_IF([test "x$with_mssql" != "xno"],
       [AC_PATH_PROG(osql, osql)])
@@ -57,6 +61,7 @@ AS_IF([test "x$with_tomcat" != "x" && test "x$with_tomcat" != "xno" || test "x$C
 AM_CONDITIONAL(have_apache, [test x$have_apache != "xno"])
 AM_CONDITIONAL(have_axis2, [test x$have_axis2 != "xno"])
 AM_CONDITIONAL(have_ejabberd, [test x$ejabberdctl != "x"])
+AM_CONDITIONAL(have_iis, [test "x$msdeploy" != "x"])
 AM_CONDITIONAL(have_mssql, [test "x$osql" != "x"])
 AM_CONDITIONAL(have_mysql, [test x$mysql != "x"])
 AM_CONDITIONAL(have_postgresql, [test x$psql != "x"])
@@ -76,9 +81,12 @@ AS_IF([test "x$with_tomcat" != "x"],
 AS_IF([test "x$have_axis2" != "xno"],
       [axis2_webservice=activation-scripts/axis2-webservice])
 
+AS_IF([test "x$msdeploy" != "x"],
+      [iis_webapplication=activation-scripts/iis-webapplication])
+
 AS_IF([test "x$osql" != "x"],
       [mssql_database=activation-scripts/mssql-database])
-      
+
 AS_IF([test "x$mysql" != "x"],
       [mysql_database=activation-scripts/mysql-database])
 
@@ -99,6 +107,7 @@ Makefile
 activation-scripts/Makefile
 $axis2_webservice
 $ejabberd_dump
+$iis_webapplication
 $mssql_database
 $mysql_database
 $postgresql_database
