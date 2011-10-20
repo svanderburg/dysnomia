@@ -1,12 +1,16 @@
 #!/bin/bash -e
 
-export MSDeployPath=$(cygpath --windows $(dirname @msdeploy@))
+export MSDeployPath=$(cygpath --windows $(dirname "@msdeploy@"))
 
 case "$1" in
     activate)
         cd $2/Package
 	script=$(ls *.deploy.cmd)
 	$script /Y
+	
+	# Copy the package contents manually, because all
+	# the timestamps are 1 hour after 1970-01-01.
+	# MSDeploy does not like that.
 	
 	cd PackageTmp
 	find . -type f ! -name "Web.config" | while read file
@@ -19,6 +23,6 @@ case "$1" in
     deactivate)
         componentName=`basename $2`
 	webappName=${componentName:33}
-        @msdeploy@ -verb:delete -dest:iisapp="$webappName"
+        "@msdeploy@" -verb:delete -dest:iisapp="$webappName"
 	;;
 esac
