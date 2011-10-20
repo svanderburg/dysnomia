@@ -6,7 +6,7 @@ case "$1" in
     activate)
         cd $2/Package
 	script=$(ls *.deploy.cmd)
-	$script /Y
+	./$script /Y
 	
 	# Copy the package contents manually, because all
 	# the timestamps are 1 hour after 1970-01-01.
