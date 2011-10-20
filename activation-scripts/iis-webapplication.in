@@ -1,6 +1,7 @@
 #!/bin/bash -e
 
-export MSDeployPath=$(cygpath --windows $(dirname "@msdeploy@"))
+UNIXMSDeployPath=$(dirname "@msdeploy@")
+export MSDeployPath=$(cygpath --windows "$UNIXMSDeployPath"))
 
 case "$1" in
     activate)
