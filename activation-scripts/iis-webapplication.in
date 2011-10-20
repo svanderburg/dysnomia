@@ -1,10 +1,24 @@
 #!/bin/bash -e
 
+export MSDeployPath=$(cygpath --windows $(dirname @msdeploy@))
+
 case "$1" in
     activate)
-        echo "Echo activation script: Activate service: $2"
+        cd $2/Package
+	script=$(ls *.deploy.cmd)
+	$script /Y
+	
+	cd PackageTmp
+	find . -type f ! -name "Web.config" | while read file
+	do
+	    dir="$(dirname $file)"
+	    mkdir -p "$iisWwwRoot/$dir"
+	    cp "$file" "$iisWwwRoot/$dir"	    
+	done
         ;;
     deactivate)
-        echo "Echo activation script: Deactivate service: $2"
+        componentName=`basename $2`
+	webappName=${componentName:33}
+        @msdeploy@ -verb:delete -dest:iisapp="$webappName"
 	;;
 esac
