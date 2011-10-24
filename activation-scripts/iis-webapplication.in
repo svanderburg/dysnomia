@@ -2,6 +2,8 @@
 
 UNIXMSDeployPath=$(dirname "@msdeploy@")
 export MSDeployPath=$(cygpath --windows "$UNIXMSDeployPath"))
+componentName=`basename $2`
+webappName=${componentName:33}
 
 case "$1" in
     activate)
@@ -17,13 +19,11 @@ case "$1" in
 	find . -type f ! -name "Web.config" | while read file
 	do
 	    dir="$(dirname $file)"
-	    mkdir -p "$iisWwwRoot/$dir"
-	    cp "$file" "$iisWwwRoot/$dir"	    
+	    mkdir -p "$iisWwwRoot/$webappName/$dir"
+	    cp "$file" "$iisWwwRoot/$webappName/$dir"	    
 	done
         ;;
     deactivate)
-        componentName=`basename $2`
-	webappName=${componentName:33}
         "@msdeploy@" -verb:delete -dest:iisapp="$webappName"
 	;;
 esac
