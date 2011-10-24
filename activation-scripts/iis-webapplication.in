@@ -24,6 +24,6 @@ case "$1" in
 	done
         ;;
     deactivate)
-        "@msdeploy@" -verb:delete -dest:iisapp="$webappName"
+	echo \"$(cygpath --windows "@msdeploy@")\" -verb:delete -dest:apphostconfig=\"Default Web Site/$webappName\" | cmd
 	;;
 esac
