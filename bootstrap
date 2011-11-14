@@ -3,6 +3,4 @@
 rm -f config.cache config.log acconfig.h aclocal.m4
 
 mkdir -p config
-aclocal -I .
-autoconf -f
-automake -a
+autoreconf -fvi
