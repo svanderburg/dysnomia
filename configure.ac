@@ -1,7 +1,7 @@
 AC_PREREQ(2.61)
 AC_INIT([disnix-activation-scripts], m4_esyscmd([echo -n $(cat ./version)$VERSION_SUFFIX]))
 AC_CONFIG_AUX_DIR([config])
-AM_INIT_AUTOMAKE([1.7.2 -Wall -Werror])
+AM_INIT_AUTOMAKE([1.7.2 -Wall -Werror -Wno-extra-portability])
 
 # Change libexecdir
 libexecdir=\$\{exec_prefix\}/libexec/disnix/activation-scripts
