@@ -130,6 +130,7 @@ let
                 };
                 services.postgresql = {
                   enable = true;
+                  package = pkgs.postgresql;
                 };
                 services.ejabberd.enable = true;
                 services.httpd = {
