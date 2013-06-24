@@ -1,10 +1,10 @@
 AC_PREREQ(2.61)
-AC_INIT([disnix-activation-scripts], m4_esyscmd([echo -n $(cat ./version)$VERSION_SUFFIX]))
+AC_INIT([dysnomia], m4_esyscmd([echo -n $(cat ./version)$VERSION_SUFFIX]))
 AC_CONFIG_AUX_DIR([config])
 AM_INIT_AUTOMAKE([1.7.2 -Wall -Werror -Wno-extra-portability])
 
 # Change libexecdir
-libexecdir=\$\{exec_prefix\}/libexec/disnix/activation-scripts
+libexecdir=\$\{exec_prefix\}/libexec/dysnomia
 AC_SUBST(libexecdir)
 
 # Define with options
@@ -79,32 +79,32 @@ AS_IF([test "x$with_tomcat" != "x"],
 # Output
 
 AS_IF([test "x$have_axis2" != "xno"],
-      [axis2_webservice=activation-scripts/axis2-webservice])
+      [axis2_webservice=dysnomia-modules/axis2-webservice])
 
 AS_IF([test "x$msdeploy" != "x"],
-      [iis_webapplication=activation-scripts/iis-webapplication])
+      [iis_webapplication=dysnomia-modules/iis-webapplication])
 
 AS_IF([test "x$osql" != "x"],
-      [mssql_database=activation-scripts/mssql-database])
+      [mssql_database=dysnomia-modules/mssql-database])
 
 AS_IF([test "x$mysql" != "x"],
-      [mysql_database=activation-scripts/mysql-database])
+      [mysql_database=dysnomia-modules/mysql-database])
 
 AS_IF([test "x$psql" != "x"],
-      [postgresql_database=activation-scripts/postgresql-database])
+      [postgresql_database=dysnomia-modules/postgresql-database])
 
 AS_IF([test "x$ejabberdctl" != "x"],
-      [ejabberd_dump=activation-scripts/ejabberd-dump])
+      [ejabberd_dump=dysnomia-modules/ejabberd-dump])
 
 AS_IF([test "x$have_tomcat" != "xno"],
-      [tomcat_webapplication=activation-scripts/tomcat-webapplication])
+      [tomcat_webapplication=dysnomia-modules/tomcat-webapplication])
 
 AS_IF([test "x$svnadmin" != "x"],
-      [subversion_repository=activation-scripts/subversion-repository])
+      [subversion_repository=dysnomia-modules/subversion-repository])
 
 AC_CONFIG_FILES([
 Makefile
-activation-scripts/Makefile
+dysnomia-modules/Makefile
 $axis2_webservice
 $ejabberd_dump
 $iis_webapplication

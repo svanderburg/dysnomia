@@ -1,1 +1,1 @@
-SUBDIRS = activation-scripts
+SUBDIRS = dysnomia-modules
