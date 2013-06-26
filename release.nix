@@ -35,6 +35,7 @@ let
 
       releaseTools.nixBuild {
         name = "dysnomia";
+        version = builtins.readFile ./version;
         src = tarball;
         
         preConfigure =

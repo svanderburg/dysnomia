@@ -1,0 +1,139 @@
+#!/bin/bash -e
+
+# Shows the usage of this command to the user
+
+showUsage()
+{
+    echo "Usage: $0 --operation operation --component component --container container"
+    echo "Options:"
+    echo
+    echo "-o,--operation    Specifies the operation to execute on the mutable component, such as activate or deactivate"
+    echo "-c,--component    Name of (or path to) a mutable component to perform a deployment activity on"
+    echo "-C,--container    Name of (or path to) a configuarion describing the container in which the mutable component should be hosted"
+    echo "-h,--help         Shows the usage of this command"
+}
+
+# Autoconf settings
+
+export prefix=@prefix@
+export exec_prefix=@exec_prefix@
+
+# Parse valid argument options
+
+PARAMS=`getopt -n $0 -o o:c:C:h -l operation:,component:,container:,help -- "$@"`
+
+if [ $? != 0 ]
+then
+    showUsage
+    exit 1
+fi
+
+eval set -- "$PARAMS"
+
+# Evaluate valid options
+
+while [ "$1" != "--" ]
+do
+    case "$1" in
+        -o|--operation)
+            operation="$2"
+            ;;
+        
+        -c|--component)
+            component="$(readlink -f "$2")"
+            ;;
+        
+        -C|--container)
+            container="$2"
+            ;;
+        
+        -h|--help)
+            showUsage
+            exit 0
+            ;;
+    esac
+    
+    shift
+done
+
+# Validate options
+
+if [ -z "$operation" ]
+then
+    echo "No operation specified!" >&2
+    exit 1
+fi
+
+if [ ! -e "$component" ]
+then
+    echo "No component is specified or it does not exists!" >&2
+    exit 1
+fi
+
+if [ -z "$container" ]
+then
+    echo "No container specified!" >&2
+    exit 1
+fi
+
+# Determine the container configuration
+
+if [ "${container:0:1}" = "/" ] || [ "${container:0:2}" = "./" ]
+then
+    # File references to containers can be used directly
+    containerConfig="$(readlink -f $container)"
+else
+
+    # For ordinary strings, search for the container configuration in DYSNOMIA_CONTAINERS_PATH
+    DYSNOMIA_CONTAINERS_PATHS=$(echo $DYSNOMIA_CONTAINERS_PATH | tr ':' ' ')
+
+    for i in $DYSNOMIA_CONTAINERS_PATHS
+    do
+        if [ -f "$i" ]
+        then
+            containerConfig=$i
+            break
+        fi
+    done
+
+    if [ ! -f "$containerConfig" ]
+    then
+        echo "No container configuration found for: $container" >&2
+        exit 1
+    fi
+fi
+
+# Extract the container type from the configuration
+
+eval $(grep "^type=" $containerConfig)
+
+if [ -z "$type" ]
+then
+    echo "ERROR: No type specified in the container configuration!" >&2
+    exit 1
+fi
+
+# Search for the activation scripts in the DYSNOMIA_MODULES_PATH and the libexecdir
+
+DYSNOMIA_MODULES_PATHS=$(echo $DYSNOMIA_MODULES_PATH | tr ':' ' ')
+
+for i in $DYSNOMIA_MODULES_PATHS @libexecdir@
+do
+    if [ -x "$i/$type" ]
+    then
+        module=$i/$type
+        break
+    fi
+done
+
+if [ -z $module ]
+then
+    echo "Module: $type cannot be found!" >&2
+    exit 1
+fi
+
+# Forward the requested operation to the Dysnomia module
+
+env -i PATH=$PATH \
+  $(cat $containerConfig) \
+  $module $operation $component

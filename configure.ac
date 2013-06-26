@@ -104,6 +104,8 @@ AS_IF([test "x$svnadmin" != "x"],
 
 AC_CONFIG_FILES([
 Makefile
+scripts/dysnomia
+scripts/Makefile
 dysnomia-modules/Makefile
 $axis2_webservice
 $ejabberd_dump
