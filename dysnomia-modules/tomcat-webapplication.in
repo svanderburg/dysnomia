@@ -23,7 +23,7 @@ case "$1" in
 	done
 	;;
     deactivate)
-	# Remove AAR files from the deployment directory, so that they will be deactivated with hot deployment
+	# Remove WAR files from the deployment directory, so that they will be deactivated with hot deployment
 	find $(readlink -f $2/webapps) -name \*.war | while read i
 	do
 	    # Remove the web service
