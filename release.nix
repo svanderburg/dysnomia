@@ -160,9 +160,11 @@ let
                 # deactivated. This test should succeed.
                 
                 $machine->mustSucceed("${dysnomia}/libexec/dysnomia/wrapper activate ${wrapper}");
-                $machine->mustSucceed("[ \"\$(pgrep -f ${wrapper}/bin/loop)\" != \"\" ]");
+                $machine->mustSucceed("sleep 5");
+                $machine->mustSucceed("[ \"\$(systemctl status disnix-\$(basename ${wrapper}) | grep \"Active: active\")\" != \"\" ]");
                 $machine->mustSucceed("${dysnomia}/libexec/dysnomia/wrapper deactivate ${wrapper}");
-                $machine->mustSucceed("[ \"\$(pgrep -f ${wrapper}/bin/loop)\" = \"\" ]");
+                $machine->mustSucceed("sleep 5");
+                $machine->mustSucceed("[ \"\$(systemctl status disnix-\$(basename ${wrapper}) | grep \"Active: inactive\")\" != \"\" ]");
                 
                 # Test process activation script. Here we start a process which
                 # loops forever. We check whether it has been started and
@@ -171,10 +173,10 @@ let
                 
                 $machine->mustSucceed("${dysnomia}/libexec/dysnomia/process activate ${process}");
                 $machine->mustSucceed("sleep 5");
-                $machine->mustSucceed("[ \"\$(pgrep -f ${process}/bin/loop)\" != \"\" ]");
-                $machine->mustSucceed("${dysnomia}/libexec/dysnomia/process deactivate ${process}");
+                $machine->mustSucceed("[ \"\$(systemctl status disnix-\$(basename ${process}) | grep \"Active: active\")\" != \"\" ]");
                 $machine->mustSucceed("sleep 5");
-                $machine->mustSucceed("[ \"\$(pgrep -f ${process}/bin/loop)\" = \"\" ]");
+                $machine->mustSucceed("${dysnomia}/libexec/dysnomia/process deactivate ${process}");
+                $machine->mustSucceed("[ \"\$(systemctl status disnix-\$(basename ${process}) | grep \"Active: inactive\")\" != \"\" ]");
                 
                 # Test Apache web application script. Here, we activate a small
                 # static HTML website in the document root of Apache, then we

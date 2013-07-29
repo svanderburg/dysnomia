@@ -1,12 +1,43 @@
 #!/bin/bash -e
 
+serviceName=$(basename $2)
+
+# Systemd activation
 case "$1" in
     activate)
-	nohup $2/bin/* > /var/log/$(basename $2).log & pid=$!
-	echo $pid > /var/run/$(basename $2).pid
-	;;
+        ( echo "[Unit]"
+          echo "Description=$serviceName"
+          echo
+          echo "[Service]"
+          echo "Environment=PATH=/run/current-system/sw/bin"
+          echo "ExecStart=$(echo $2/bin/*)"
+          echo "Restart=always"
+          
+          if [ -f $2/systemd-config ]
+          then
+              cat $2/systemd-config
+          fi
+        ) > /run/systemd/system/disnix-$serviceName.service
+        
+        systemctl --system daemon-reload
+        systemctl start disnix-$serviceName.service
+        ;;
+    
     deactivate)
-	kill $(cat /var/run/$(basename $2).pid)
-	rm -f /var/run/$(basename $2).pid
-	;;
+        systemctl stop disnix-$serviceName.service
+        rm /run/systemd/system/disnix-$serviceName.service
+        systemctl --system daemon-reload
+        ;;
 esac
+
+# Direct activation
+#case "$1" in
+#    activate)
+#	nohup $2/bin/* > /var/log/$(basename $2).log & pid=$!
+#	echo $pid > /var/run/$(basename $2).pid
+#	;;
+#    deactivate)
+#	kill $(cat /var/run/$(basename $2).pid)
+#	rm -f /var/run/$(basename $2).pid
+#	;;
+#esac
