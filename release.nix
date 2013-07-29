@@ -154,17 +154,14 @@ let
                 $machine->mustSucceed("${dysnomia}/libexec/dysnomia/echo deactivate hello");
                 
                 # Test wrapper activation script. Here we invoke the wrapper
-                # of a certain service. This service spawns a process which
-                # loops. We checks whether it is activated.
-                # After a while we deactivate it and we check if it is indeed
-                # deactivated. This test should succeed.
+                # of a certain service. On activation it writes a state file in
+                # the temp folder. After a while we deactivate it and we check
+                # if the state file is removed. This test should succeed.
                 
                 $machine->mustSucceed("${dysnomia}/libexec/dysnomia/wrapper activate ${wrapper}");
-                $machine->mustSucceed("sleep 5");
-                $machine->mustSucceed("[ \"\$(systemctl status disnix-\$(basename ${wrapper}) | grep \"Active: active\")\" != \"\" ]");
+                $machine->mustSucceed("sleep 5; [ \"\$(cat /tmp/wrapper.state)\" = \"wrapper active\" ]");
                 $machine->mustSucceed("${dysnomia}/libexec/dysnomia/wrapper deactivate ${wrapper}");
-                $machine->mustSucceed("sleep 5");
-                $machine->mustSucceed("[ \"\$(systemctl status disnix-\$(basename ${wrapper}) | grep \"Active: inactive\")\" != \"\" ]");
+                $machine->mustSucceed("sleep 5; [ ! -f /tmp/wrapper.state ]");
                 
                 # Test process activation script. Here we start a process which
                 # loops forever. We check whether it has been started and

@@ -1,0 +1,10 @@
+#!/bin/bash -e
+
+case "$1" in
+    activate)
+        echo "wrapper active" > /tmp/wrapper.state
+        ;;
+    deactivate)
+        rm /tmp/wrapper.state
+        ;;
+esac
