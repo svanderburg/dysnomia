@@ -8,8 +8,8 @@ showUsage()
     echo "Options:"
     echo
     echo "-o,--operation    Specifies the operation to execute on the mutable component, such as activate or deactivate"
-    echo "-c,--component    Name of (or path to) a mutable component to perform a deployment activity on"
-    echo "-C,--container    Name of (or path to) a configuarion describing the container in which the mutable component should be hosted"
+    echo "-c,--component    Name of (or path to) a component containing the logical state of a mutable component"
+    echo "-C,--container    Name of (or path to) a configuration describing the container in which the mutable component should be hosted"
     echo "-h,--help         Shows the usage of this command"
 }
 
@@ -113,7 +113,7 @@ then
     exit 1
 fi
 
-# Search for the activation scripts in the DYSNOMIA_MODULES_PATH and the libexecdir
+# Search for Dysnomia modules in the DYSNOMIA_MODULES_PATH and the libexecdir
 
 DYSNOMIA_MODULES_PATHS=$(echo $DYSNOMIA_MODULES_PATH | tr ':' ' ')
 

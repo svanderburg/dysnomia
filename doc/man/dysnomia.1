@@ -1,0 +1,55 @@
+.TH "DYSNOMIA" "1" "September 2013" "dysnomia 0.3" "Command Reference"
+.SH "NAME"
+dysnomia \- Deploy mutable components to containers
+.SH "SYNOPSIS"
+\fBdysnomia\fR --operation operation --component component --container container
+.SH "DESCRIPTION"
+Dysnomia is a tool that performs deployment activities related to the deployment
+of mutable components.
+.SH "OPTIONS"
+\fB\-o\fR, \fB\-\-operation\fR
+.RS 4
+Specifies the operation to execute on the mutable component, such as activate or deactivate
+.RE
+.PP
+\fB\-c\fR, \fB\-\-component\fR
+.RS 4
+Name of (or path to) a component containing the logical state of a mutable component
+.RE
+.PP
+\fB\-C\fR, \fB\-\-container\fR
+.RS 4
+Name of (or path to) a configuration describing the container in which the mutable component should be hosted
+.RE
+.PP
+\fB\-h\fR, \fB\-\-help\fR
+.RS 4
+Shows the usage of this command
+.RE
+.PP
+.SH "ENVIRONMENT VARIABLES"
+\fBDYSNOMIA_CONTAINERS_PATH\fR
+.RS 4
+Specifies the search directories of the containers. If the container is an
+ordinary string (not starting with / or ./), Dysnomia searches in the folders
+provided in this colon-separated string.
+.RE
+.PP
+\fBDYSNOMIA_MODULES_PATH\fR
+.RS 4
+Specifies the search directories of the modules. If the module is an
+ordinary string (not starting with / or ./), Dysnomia searches in the folders
+provided in this colon-separated string in addition to its libexec directory.
+.RE
+.PP
+.SH "AUTHOR"
+.PP
+\fBSander van der Burg\fR
+.br
+.RS 4
+Author
+.RE
+.SH "COPYRIGHT"
+.br
+Copyright \(co 2012-2013 Sander van der Burg
+.br

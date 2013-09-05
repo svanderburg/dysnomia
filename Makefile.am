@@ -1,1 +1,1 @@
-SUBDIRS = scripts dysnomia-modules
+SUBDIRS = scripts dysnomia-modules doc

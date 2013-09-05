@@ -107,6 +107,8 @@ Makefile
 scripts/dysnomia
 scripts/Makefile
 dysnomia-modules/Makefile
+doc/Makefile
+doc/man/Makefile
 $axis2_webservice
 $ejabberd_dump
 $iis_webapplication
