@@ -91,16 +91,16 @@ file is a collection of SQL statements setting up the initial schema of the
 database:
 
     create table author
-    ( AUTHOR_ID INTEGER NOT NULL,
-      FirstName VARCHAR(255) NOT NULL,
-      LastName  VARCHAR(255) NOT NULL,
-      PRIMARY KEY(SELLER_ID)
+    ( AUTHOR_ID  INTEGER       NOT NULL,
+      FirstName  VARCHAR(255)  NOT NULL,
+      LastName   VARCHAR(255)  NOT NULL,
+      PRIMARY KEY(AUTHOR_ID)
     );
     
     create table books
-    ( ISBN VARCHAR(255) NOT NULL,
-      Title VARCHAR(255) NOT NULL,
-      AUTHOR_ID VARCHAR(255) NOT NULL,
+    ( ISBN       VARCHAR(255)  NOT NULL,
+      Title      VARCHAR(255)  NOT NULL,
+      AUTHOR_ID  VARCHAR(255)  NOT NULL,
       PRIMARY KEY(ISBN),
       FOREIGN KEY(AUTHOR_ID) references author(AUTHOR_ID) on update cascade on delete cascade
     );
