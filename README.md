@@ -67,7 +67,7 @@ be optionally enabled/disabled:
 * `echo`. Mereley echos the parameters and environment variables used during activation or deactivation. Useful for debugging purposes.
 * `ejabberd-dump`. Activates or deactivates an [Ejabberd](http://www.ejabberd.im) configuration database.
 * `iis-webapplication`. Activates or deactivates a web application in a document root folder of the [Internet Information Services](http://www.iis.net) (IIS) server.
-* `mssql-database`. Imports a database dump inside a [SQL Server](www.microsoft.com/en-us/sqlserver/default.aspx) DBMS instance.
+* `mssql-database`. Imports a database dump inside a [SQL Server](http://www.microsoft.com/en-us/sqlserver/default.aspx) DBMS instance.
 * `mysql-database`. Imports a database dump inside a [MySQL](http://www.mysql.com) DBMS instance.
 * `nixos-configuration`. Activates a specific [NixOS](http://nixos.org/nixos) configuration.
 * `postgresql-database`. Imports a database dump inside a [PostgreSQL](http://www.postgresql.com) DBMS instance.
@@ -187,4 +187,4 @@ environment variables from the container specification.
 
 License
 =======
-This package is released under the MIT license.
+This package is released under the [MIT license](http://opensource.org/licenses/MIT).
