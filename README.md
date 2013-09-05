@@ -52,7 +52,7 @@ executing the deployment steps for certain types of mutable components. The
 to support, by looking at the presence of certain command-line utilities and
 files.
 
-It is also possible to disable certain Dysnomia types or to tune the
+It is also possible to disable certain Dysnomia modules or to tune the
 configuration parameters. More information on this can be found by running:
 
     $ ./configure --help
@@ -71,7 +71,7 @@ be optionally enabled/disabled:
 * `mysql-database`. Imports a database dump inside a [MySQL](http://www.mysql.com) DBMS instance.
 * `nixos-configuration`. Activates a specific [NixOS](http://nixos.org/nixos) configuration.
 * `postgresql-database`. Imports a database dump inside a [PostgreSQL](http://www.postgresql.com) DBMS instance.
-* `process`. Wraps a process inside a [systemd](http://www.freedesktop.org/wiki/Software/systemd) and activates or deactivates it.
+* `process`. Wraps a process inside a [systemd](http://www.freedesktop.org/wiki/Software/systemd) job and activates or deactivates it.
 * `subversion-repository`. Imports a Subversion repository dump into a Subversion working directory.
 * `tomcat-webapplication`. Import a Java Web Application ARchive (WAR) file inside an [Apache Tomcat](http://tomcat.apache.org) servlet container.
 * `wrapper`. Wraps the `bin/wrapper` activation script inside the component into a [systemd](http://www.freedesktop.org/wiki/Software/systemd) job and activates or deactivates it.
@@ -136,9 +136,9 @@ Every component has its own way of representing its logical state and each of
 them require different container settings. For databases, these are typically SQL
 dumps and authentication settings.
 
-Web applications have the archives (WAR/AAR) or collection of web related files
-(HTML, CSS etc.) as representation of their logical state. Consult the actual
-Dysnomia modules for more information.
+Web applications have archive files (WAR/AAR) or a collection of web related
+files (HTML, CSS etc.) as a representation of their logical state. Consult the
+actual Dysnomia modules for more information.
 
 Implementing custom Dysnomia modules
 ====================================
@@ -170,9 +170,9 @@ simply echoes what it's doing:
             ;;
     esac
 
-   # Print the environment variables
-   echo "Environment variables:"
-   set
+    # Print the environment variables
+    echo "Environment variables:"
+    set
 
 Currently, Dysnomia supports four activities:
 
@@ -182,7 +182,7 @@ Currently, Dysnomia supports four activities:
 * `unlock` is invoked by Disnix after the upgrade transition is over. This can be used to notify the component to resume its normal operations.
 
 The above code example is written in Bash, but any lanugage can be used as long
-as the tool provides the same command-line interface and properly used the
+as the tool provides the same command-line interface and properly uses the
 environment variables from the container specification.
 
 License
