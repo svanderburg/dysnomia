@@ -72,7 +72,7 @@ be optionally enabled/disabled:
 * `nixos-configuration`. Activates a specific [NixOS](http://nixos.org/nixos) configuration.
 * `postgresql-database`. Imports a database dump inside a [PostgreSQL](http://www.postgresql.com) DBMS instance.
 * `process`. Wraps a process inside a [systemd](http://www.freedesktop.org/wiki/Software/systemd) job and activates or deactivates it.
-* `subversion-repository`. Imports a Subversion repository dump into a Subversion working directory.
+* `subversion-repository`. Imports a [Subversion](http://subversion.apache.org) repository dump into a Subversion working directory.
 * `tomcat-webapplication`. Import a Java Web Application ARchive (WAR) file inside an [Apache Tomcat](http://tomcat.apache.org) servlet container.
 * `wrapper`. Wraps the `bin/wrapper` activation script inside the component into a [systemd](http://www.freedesktop.org/wiki/Software/systemd) job and activates or deactivates it.
 
