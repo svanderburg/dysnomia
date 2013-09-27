@@ -31,6 +31,3 @@ case "$1" in
         systemctl --system daemon-reload
         ;;
 esac
-
-# Direct activation
-#$2/bin/wrapper "$1"

@@ -1,13 +1,15 @@
 { nixpkgs ? <nixpkgs> }:
 
 let
+  pkgs = import nixpkgs {};
+  
   jobs = rec {
     tarball =
       { dysnomia ? {outPath = ./.; rev = 1234;}
       , officialRelease ? false
       }:
 
-      with import nixpkgs {};
+      with pkgs;
 
       releaseTools.sourceTarball {
         name = "dysnomia-tarball";
@@ -20,7 +22,7 @@ let
 
     build =
       { tarball ? jobs.tarball {}
-      , system ? "x86_64-linux"
+      , systems ? [ "i686-linux" "x86_64-linux" ]
       , enableApacheWebApplication ? false
       , enableAxis2WebService ? false
       , enableEjabberdDump ? false
@@ -31,39 +33,41 @@ let
       , catalinaBaseDir ? "/var/tomcat"
       }:
 
-      with import nixpkgs { inherit system; };
-
-      releaseTools.nixBuild {
-        name = "dysnomia";
-        version = builtins.readFile ./version;
-        src = tarball;
+      pkgs.lib.genAttrs systems (system:
+        with import nixpkgs { inherit system; };
         
-        preConfigure =
-          ''
-            ${stdenv.lib.optionalString enableEjabberdDump "export PATH=$PATH:${ejabberd}/sbin"}
+        releaseTools.nixBuild {
+          name = "dysnomia";
+          version = builtins.readFile ./version;
+          src = tarball;
+        
+          preConfigure =
+            ''
+              ${stdenv.lib.optionalString enableEjabberdDump "export PATH=$PATH:${ejabberd}/sbin"}
+            '';
+
+          configureFlags = ''
+            ${if enableApacheWebApplication then "--with-apache" else "--without-apache"}
+            ${if enableAxis2WebService then "--with-axis2" else "--without-axis2"}
+            ${if enableEjabberdDump then "--with-ejabberd" else "--without-ejabberd"}
+            ${if enableMySQLDatabase then "--with-mysql" else "--without-mysql"}
+            ${if enablePostgreSQLDatabase then "--with-postgresql" else "--without-postgresql"}
+            ${if enableTomcatWebApplication then "--with-tomcat=${catalinaBaseDir}" else "--without-tomcat"}
+            ${if enableSubversionRepository then "--with-subversion" else "--without-subversion"}
           '';
-
-        configureFlags = ''
-          ${if enableApacheWebApplication then "--with-apache" else "--without-apache"}
-          ${if enableAxis2WebService then "--with-axis2" else "--without-axis2"}
-          ${if enableEjabberdDump then "--with-ejabberd" else "--without-ejabberd"}
-          ${if enableMySQLDatabase then "--with-mysql" else "--without-mysql"}
-          ${if enablePostgreSQLDatabase then "--with-postgresql" else "--without-postgresql"}
-          ${if enableTomcatWebApplication then "--with-tomcat=${catalinaBaseDir}" else "--without-tomcat"}
-          ${if enableSubversionRepository then "--with-subversion" else "--without-subversion"}
-        '';
         
-        buildInputs = []
-          ++ stdenv.lib.optional enableEjabberdDump ejabberd
-          ++ stdenv.lib.optional enableMySQLDatabase mysql
-          ++ stdenv.lib.optional enablePostgreSQLDatabase postgresql
-          ++ stdenv.lib.optional enableSubversionRepository subversion;
-      };
+          buildInputs = []
+            ++ stdenv.lib.optional enableEjabberdDump ejabberd
+            ++ stdenv.lib.optional enableMySQLDatabase mysql
+            ++ stdenv.lib.optional enablePostgreSQLDatabase postgresql
+            ++ stdenv.lib.optional enableSubversionRepository subversion;
+        }
+      );
       
       tests = 
         { nixos ? <nixos> }:
         
-        with import nixpkgs {};
+        with pkgs;
         
         let
           dysnomia = build {
