@@ -2,7 +2,7 @@
 .SH "NAME"
 dysnomia \- Deploy mutable components to containers
 .SH "SYNOPSIS"
-\fBdysnomia\fR --operation operation --component component --container container
+\fBdysnomia\fR --operation operation --component component {--container container | --environment} [options]
 .SH "DESCRIPTION"
 Dysnomia is a tool that performs deployment activities related to the deployment
 of mutable components.
@@ -20,6 +20,16 @@ Name of (or path to) a component containing the logical state of a mutable compo
 \fB\-C\fR, \fB\-\-container\fR
 .RS 4
 Name of (or path to) a configuration describing the container in which the mutable component should be hosted
+.RE
+.PP
+\fB\-E\fR, \fB\-\-environment\fR
+.RS 4
+Takes the container settings from the current environment. Be careful with this!
+.RE
+.PP
+\fB\-t\fR, \fB\-\-type\fR
+.RS 4
+Specifies Dysnomia to use the specified Dysnomia module type if none is given. Required to be used in combination with --environment
 .RE
 .PP
 \fB\-h\fR, \fB\-\-help\fR
