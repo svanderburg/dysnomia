@@ -1,4 +1,6 @@
-{ nixpkgs ? <nixpkgs> }:
+{ nixpkgs ? <nixpkgs>
+, systems ? [ "i686-linux" "x86_64-linux" ]
+}:
 
 let
   pkgs = import nixpkgs {};
@@ -22,7 +24,6 @@ let
 
     build =
       { tarball ? jobs.tarball {}
-      , systems ? [ "i686-linux" "x86_64-linux" ]
       , enableApacheWebApplication ? false
       , enableAxis2WebService ? false
       , enableEjabberdDump ? false
@@ -70,8 +71,7 @@ let
         with pkgs;
         
         let
-          dysnomia = build {
-            system = "x86_64-linux";
+          dysnomia = builtins.getAttr (builtins.currentSystem) (build {
             enableApacheWebApplication = true;
             enableAxis2WebService = true;
             enableEjabberdDump = true;
@@ -79,7 +79,7 @@ let
             enablePostgreSQLDatabase = true;
             enableTomcatWebApplication = true;
             enableSubversionRepository = true;
-          };
+          });
           
           # Test services
           
@@ -120,7 +120,7 @@ let
           };
         in
         
-        with import "${nixos}/lib/testing.nix" { system = "x86_64-linux"; };
+        with import "${nixos}/lib/testing.nix" { system = builtins.currentSystem; };
         
         {
           install = simpleTest {
@@ -154,17 +154,17 @@ let
                 
                 # Test echo activation script. Here we just invoke the activate
                 # and deactivation steps. This test should succeed.
-                $machine->mustSucceed("${dysnomia}/libexec/dysnomia/echo activate hello");
-                $machine->mustSucceed("${dysnomia}/libexec/dysnomia/echo deactivate hello");
+                $machine->mustSucceed("dysnomia --type echo --operation activate --component ${wrapper} --environment");
+                $machine->mustSucceed("dysnomia --type echo --operation deactivate --component ${wrapper} --environment");
                 
                 # Test wrapper activation script. Here we invoke the wrapper
                 # of a certain service. On activation it writes a state file in
                 # the temp folder. After a while we deactivate it and we check
                 # if the state file is removed. This test should succeed.
                 
-                $machine->mustSucceed("${dysnomia}/libexec/dysnomia/wrapper activate ${wrapper}");
+                $machine->mustSucceed("dysnomia --type wrapper --operation activate --component ${wrapper} --environment");
                 $machine->mustSucceed("sleep 5; [ \"\$(cat /tmp/wrapper.state)\" = \"wrapper active\" ]");
-                $machine->mustSucceed("${dysnomia}/libexec/dysnomia/wrapper deactivate ${wrapper}");
+                $machine->mustSucceed("dysnomia --type wrapper --operation deactivate --component ${wrapper} --environment");
                 $machine->mustSucceed("sleep 5; [ ! -f /tmp/wrapper.state ]");
                 
                 # Test process activation script. Here we start a process which
@@ -172,11 +172,11 @@ let
                 # then we deactivate it again and verify whether it has been
                 # stopped. This test should succeed.
                 
-                $machine->mustSucceed("${dysnomia}/libexec/dysnomia/process activate ${process}");
+                $machine->mustSucceed("dysnomia --type process --operation activate --component ${process} --environment");
                 $machine->mustSucceed("sleep 5");
                 $machine->mustSucceed("[ \"\$(systemctl status disnix-\$(basename ${process}) | grep \"Active: active\")\" != \"\" ]");
                 $machine->mustSucceed("sleep 5");
-                $machine->mustSucceed("${dysnomia}/libexec/dysnomia/process deactivate ${process}");
+                $machine->mustSucceed("dysnomia --type process --operation deactivate --component ${process} --environment");
                 $machine->mustSucceed("[ \"\$(systemctl status disnix-\$(basename ${process}) | grep \"Active: inactive\")\" != \"\" ]");
                 
                 # Test Apache web application script. Here, we activate a small
@@ -186,16 +186,16 @@ let
                 # This test should succeed.
                 
                 $machine->waitForJob("httpd");
-                $machine->mustSucceed("documentRoot=/var/www ${dysnomia}/libexec/dysnomia/apache-webapplication activate ${apache_webapplication}");
+                $machine->mustSucceed("documentRoot=/var/www dysnomia --type apache-webapplication --operation activate --component ${apache_webapplication} --environment");
                 $machine->mustSucceed("curl --fail http://localhost/test");
-                $machine->mustSucceed("documentRoot=/var/www ${dysnomia}/libexec/dysnomia/apache-webapplication deactivate ${apache_webapplication}");
+                $machine->mustSucceed("documentRoot=/var/www dysnomia --type apache-webapplication --operation deactivate --component ${apache_webapplication} --environment");
                 $machine->mustFail("curl --fail http://localhost/test");
                 
                 # Test MySQL activation script. Here we activate a database and
                 # we check whether it is created. This test should succeed.
                 
                 $machine->waitForJob("mysql");
-                $machine->mustSucceed("mysqlUsername=root mysqlPassword=verysecret ${dysnomia}/libexec/dysnomia/mysql-database activate ${mysql_database}");
+                $machine->mustSucceed("mysqlUsername=root mysqlPassword=verysecret dysnomia --type mysql-database --operation activate --component ${mysql_database} --environment");
                 my $result = $machine->mustSucceed("echo 'select * from test' | mysql --user=root --password=verysecret -N testdb");
                 
                 if($result =~ /Hello world/) {
@@ -204,13 +204,13 @@ let
                     die "MySQL table should contain: Hello world!\n";
                 }
                 
-                $machine->mustSucceed("mysqlUsername=root mysqlPassword=verysecret ${dysnomia}/libexec/dysnomia/mysql-database deactivate ${mysql_database}");
+                $machine->mustSucceed("mysqlUsername=root mysqlPassword=verysecret dysnomia --type mysql-database --operation deactivate --component ${mysql_database} --environment");
                 
                 # Test PostgreSQL activation script. Here we activate a database
                 # and we check whether it is created. This test should succeed.
                 
                 $machine->waitForJob("postgresql");
-                $machine->mustSucceed("postgresqlUsername=root ${dysnomia}/libexec/dysnomia/postgresql-database activate ${postgresql_database}");
+                $machine->mustSucceed("postgresqlUsername=root dysnomia --type postgresql-database --operation activate --component ${postgresql_database} --environment");
                 my $result = $machine->mustSucceed("echo 'select * from test' | psql --file - testdb");
                 
                 if($result =~ /Hello world/) {
@@ -219,7 +219,7 @@ let
                     die "PostgreSQL table should contain: Hello world!\n";
                 }
                 
-                $machine->mustSucceed("postgresqlUsername=root ${dysnomia}/libexec/dysnomia/postgresql-database deactivate ${postgresql_database}");
+                $machine->mustSucceed("postgresqlUsername=root dysnomia --type postgresql-database --operation deactivate --component ${postgresql_database} --environment");
                 
                 # Test Tomcat web application script. Deploys a tomcat web
                 # application, verifies whether it can be accessed and then
@@ -227,19 +227,19 @@ let
                 # This test should succeed.
                 
                 $machine->waitForJob("tomcat");
-                $machine->mustSucceed("${dysnomia}/libexec/dysnomia/tomcat-webapplication activate ${tomcat_webapplication}");
+                $machine->mustSucceed("dysnomia --type tomcat-webapplication --operation activate --component ${tomcat_webapplication} --environment");
                 $machine->waitForFile("/var/tomcat/webapps/tomcat-webapplication");
                 $machine->mustSucceed("curl --fail http://localhost:8080/tomcat-webapplication");
-                $machine->mustSucceed("${dysnomia}/libexec/dysnomia/tomcat-webapplication deactivate ${tomcat_webapplication}");
+                $machine->mustSucceed("dysnomia --type tomcat-webapplication --operation deactivate --component ${tomcat_webapplication} --environment");
                 $machine->mustSucceed("while [ -e /var/tomcat/webapps/tomcat-webapplication ]; do echo 'Waiting to undeploy' >&2; sleep 1; done");
                 $machine->mustFail("curl --fail http://localhost:8080/tomcat-webapplication");
 
                 # Test Axis2 web service script.
                 
                 $machine->waitForFile("/var/tomcat/webapps/axis2");
-                $machine->mustSucceed("${dysnomia}/libexec/dysnomia/axis2-webservice activate ${axis2_webservice}");
+                $machine->mustSucceed("dysnomia --type axis2-webservice --operation activate --component ${axis2_webservice} --environment");
                 $machine->mustSucceed("sleep 10; curl --fail http://localhost:8080/axis2/services/Test/test"); # !!! We must wait a while to let it become active
-                $machine->mustSucceed("${dysnomia}/libexec/dysnomia/axis2-webservice deactivate ${axis2_webservice}");
+                $machine->mustSucceed("dysnomia --type axis2-webservice --operation deactivate --component ${axis2_webservice} --environment");
                 $machine->mustFail("sleep 10; curl --fail http://localhost:8080/axis2/services/Test/test"); # !!! We must wait a while to let it become inactive
 
                 # Test ejabberd dump activation script. First we check if we can
@@ -249,23 +249,23 @@ let
                 
                 $machine->waitForJob("ejabberd");
                 $machine->mustFail("sleep 3; curl --fail --user admin:admin http://localhost:5280/admin"); # !!! We need to wait for a while even though ejabberd is running
-                $machine->mustSucceed("${dysnomia}/libexec/dysnomia/ejabberd-dump activate ${ejabberd_dump}");
+                $machine->mustSucceed("dysnomia --type ejabberd-dump --operation activate --component ${ejabberd_dump} --environment");
                 $machine->mustSucceed("curl --fail --user admin:admin http://localhost:5280/admin");
-                $machine->mustSucceed("${dysnomia}/libexec/dysnomia/ejabberd-dump deactivate ${ejabberd_dump}");
+                $machine->mustSucceed("dysnomia --type ejabberd-dump --operation deactivate --component ${ejabberd_dump} --environment");
                 
                 # Test subversion activation script. We import a repository
                 # then we do a checkout and see whether it succeeds.
                 # This test should succeed.
                 
-                $machine->mustSucceed("svnBaseDir=/repos svnGroup=users ${dysnomia}/libexec/dysnomia/subversion-repository activate ${subversion_repository}");
+                $machine->mustSucceed("svnBaseDir=/repos svnGroup=users dysnomia --type subversion-repository --operation activate --component ${subversion_repository} --environment");
                 $machine->mustSucceed("${subversion}/bin/svn co file:///repos/testrepos");
                 $machine->mustSucceed("[ -e testrepos/index.php ]");
-                $machine->mustSucceed("svnBaseDir=/repos svnGroup=users ${dysnomia}/libexec/dysnomia/subversion-repository deactivate ${subversion_repository}");
+                $machine->mustSucceed("svnBaseDir=/repos svnGroup=users dysnomia --type subversion-repository --operation deactivate --component ${subversion_repository} --environment");
                 
                 # Test NixOS configuration activation script. We activate the current
                 # NixOS configuration
                 
-                $machine->mustSucceed("disableNixOSSystemProfile=1 testNixOS=1 ${dysnomia}/libexec/dysnomia/nixos-configuration activate /var/run/current-system");
+                $machine->mustSucceed("disableNixOSSystemProfile=1 testNixOS=1 dysnomia --type nixos-configuration --operation activate --component /var/run/current-system --environment");
               '';
           };
           

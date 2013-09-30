@@ -4,12 +4,14 @@
 
 showUsage()
 {
-    echo "Usage: $0 --operation operation --component component --container container"
+    echo "Usage: $0 --operation operation --component component {--container container | --environment}"
     echo "Options:"
     echo
     echo "-o,--operation    Specifies the operation to execute on the mutable component, such as activate or deactivate"
     echo "-c,--component    Name of (or path to) a component containing the logical state of a mutable component"
     echo "-C,--container    Name of (or path to) a configuration describing the container in which the mutable component should be hosted"
+    echo "-E,--environment  Takes the container settings from the current environment. Be careful with this!"
+    echo "-t,--type         Specifies Dysnomia to use the specified Dysnomia module type if none is given. Required to be used in combination with --environment"
     echo "-h,--help         Shows the usage of this command"
 }
 
@@ -20,7 +22,7 @@ export exec_prefix=@exec_prefix@
 
 # Parse valid argument options
 
-PARAMS=`getopt -n $0 -o o:c:C:h -l operation:,component:,container:,help -- "$@"`
+PARAMS=`getopt -n $0 -o o:c:C:Et:h -l operation:,component:,container:,environment,type:,help -- "$@"`
 
 if [ $? != 0 ]
 then
@@ -47,6 +49,14 @@ do
             container="$2"
             ;;
         
+        -E|--environment)
+            useEnvironment=1
+            ;;
+        
+        -t|--type)
+            type="$2"
+            ;;
+        
         -h|--help)
             showUsage
             exit 0
@@ -70,46 +80,54 @@ then
     exit 1
 fi
 
-if [ -z "$container" ]
+if [ -n "$container" ] 
 then
-    echo "No container specified!" >&2
-    exit 1
-fi
+    # Determine the container configuration
 
-# Determine the container configuration
-
-if [ "${container:0:1}" = "/" ] || [ "${container:0:2}" = "./" ]
-then
-    # File references to containers can be used directly
-    containerConfig="$(readlink -f $container)"
-else
-
-    # For ordinary strings, search for the container configuration in DYSNOMIA_CONTAINERS_PATH
-    DYSNOMIA_CONTAINERS_PATHS=$(echo $DYSNOMIA_CONTAINERS_PATH | tr ':' ' ')
-
-    for i in $DYSNOMIA_CONTAINERS_PATHS
-    do
-        if [ -f "$i" ]
-        then
-            containerConfig=$i
-            break
-        fi
-    done
-
-    if [ ! -f "$containerConfig" ]
+    if [ "${container:0:1}" = "/" ] || [ "${container:0:2}" = "./" ]
     then
-        echo "No container configuration found for: $container" >&2
+        # File references to containers can be used directly
+        containerConfig="$(readlink -f $container)"
+    else
+
+        # For ordinary strings, search for the container configuration in DYSNOMIA_CONTAINERS_PATH
+        DYSNOMIA_CONTAINERS_PATHS=$(echo $DYSNOMIA_CONTAINERS_PATH | tr ':' ' ')
+
+        for i in $DYSNOMIA_CONTAINERS_PATHS
+        do
+            if [ -f "$i" ]
+            then
+                containerConfig=$i
+                break
+            fi
+        done
+
+        if [ ! -f "$containerConfig" ]
+        then
+            echo "No container configuration found for: $container" >&2
+            exit 1
+        fi
+    fi
+
+    # Extract the container type from the configuration
+
+    eval $(grep "^type=" $containerConfig)
+
+    if [ -z "$type" ]
+    then
+        echo "ERROR: No type specified in the container configuration!" >&2
         exit 1
     fi
-fi
-
-# Extract the container type from the configuration
-
-eval $(grep "^type=" $containerConfig)
-
-if [ -z "$type" ]
+    
+    containerEnv="$(cat $containerConfig)"
+    envFlags="-i"
+    
+elif [ "$useEnvironment" = "1" ]
 then
-    echo "ERROR: No type specified in the container configuration!" >&2
+    containerEnv=""
+    envFlags=""
+else
+    echo "No container file or environment specified!" >&2
     exit 1
 fi
 
@@ -134,6 +152,6 @@ fi
 
 # Forward the requested operation to the Dysnomia module
 
-env -i PATH=$PATH \
-  $(cat $containerConfig) \
+env $envFlags PATH=$PATH \
+  $containerEnv \
   $module $operation $component
