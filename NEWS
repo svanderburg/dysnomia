@@ -1,3 +1,13 @@
+Version 0.3
+===========
+- Experimental support for MS SQL and IIS activation types
+
+- Rebranded the package into Dysnomia, because the modules can be used without Disnix
+
+- Implemented a dysnomia command-line utililty for deploying mutable components
+
+- The process and wrapper types do not activate directly anymore. Instead they compose a systemd or init.d job.
+
 Version 0.2
 ===========
 - Removed the _nixos postfix, because scripts are not limited to NixOS
@@ -7,7 +17,3 @@ Version 0.2
 - Added types for PostgreSQL databases and Subversion repositories
 
 - Added test suite for all activation types
-
-Version 0.3
-===========
-- Experimental support for MS SQL and IIS activation types
