@@ -1,17 +1,30 @@
 #!/bin/bash -e
 
-# Activation script that simply echos the service thats being activated or deactivated
+# Activation script that simply echos the service thats being activated or
+# deactivated
 
 case "$1" in
+    # Executes all steps necessary to activate a service. It returns a zero
+    # exit status in case of success.
     activate)
         echo "Echo activation script: Activate service: $2"
         ;;
+
+    # Executes all steps necessary to deactivate a service. It returns a zero
+    # exit status in case of success.
     deactivate)
         echo "Echo activation script: Deactivate service: $2"
-	;;
+        ;;
+
+    # Notifies a service that an upgrade is performed. A service can use this to
+    # take precautions or to reach quiescence. It can also reject the upgrade by
+    # returning a non-zero exit status.
     lock)
         echo "Echo activation script: Lock service: $2"
         ;;
+
+    # Notifies a service that an upgrade has finished. A services can use this
+    # to resume its normal operations.
     unlock)
         echo "Echo activation script: Unlock service: $2"
         ;;
