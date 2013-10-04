@@ -1,0 +1,7 @@
+[Unit]
+Description=@description@
+
+[Service]
+Environment=PATH=/run/current-system/sw/bin
+ExecStart=@process@
+Restart=always

@@ -1,0 +1,9 @@
+[Unit]
+Description=@description@
+
+[Service]
+Environment=PATH=/run/current-system/sw/bin
+ExecStart=@wrapper@ activate
+ExecStop=@wrapper@ deactivate
+Type=oneshot
+RemainAfterExit=yes

@@ -42,10 +42,7 @@ let
           version = builtins.readFile ./version;
           src = tarball;
         
-          preConfigure =
-            ''
-              ${stdenv.lib.optionalString enableEjabberdDump "export PATH=$PATH:${ejabberd}/sbin"}
-            '';
+          preConfigure = stdenv.lib.optionalString enableEjabberdDump "export PATH=$PATH:${ejabberd}/sbin";
 
           configureFlags = ''
             ${if enableApacheWebApplication then "--with-apache" else "--without-apache"}
@@ -128,6 +125,8 @@ let
               machine = {config, pkgs, ...}:
               
               {
+                virtualisation.memorySize = 1024;
+              
                 services.mysql = {
                   enable = true;
                   rootPassword = pkgs.writeTextFile { name = "mysqlpw"; text = "verysecret"; };

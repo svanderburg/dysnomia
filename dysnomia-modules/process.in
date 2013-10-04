@@ -1,0 +1,54 @@
+#!/bin/bash -e
+
+# Autoconf settings
+export prefix=@prefix@
+
+serviceName=$(basename $2)
+
+# Systemd activation
+case "$1" in
+    activate)
+        if [ "@job_template@" = "systemd" ]
+        then
+            sed -e "s|@name@|disnix-$serviceName|" \
+                -e "s|@description@|$serviceName|" \
+                -e "s|@process@|$(echo $2/bin/*)|" \
+                @datadir@/@PACKAGE@/process.template.systemd > /run/systemd/system/disnix-$serviceName.service
+            
+            if [ -f $2/systemd-config ]
+            then
+                cat $2/systemd-config >> /run/systemd/system/disnix-$serviceName.service
+            fi
+        
+            systemctl --system daemon-reload
+            systemctl start disnix-$serviceName.service
+        elif [ "@job_template@" = "init.d" ]
+        then
+            sed -e "s|@name@|disnix-$serviceName|" \
+                -e "s|@description@|$serviceName|" \
+                -e "s|@process@|$(echo $2/bin/*)|" \
+                @datadir@/@PACKAGE@/process.template.initd > /etc/init.d/$serviceName
+                
+                /etc/init.d/$serviceName start
+        else
+            echo "Unknown job template: @job_template@"
+            exit 1
+        fi
+        ;;
+    
+    deactivate)
+        if [ "@job_template@" = "systemd" ]
+        then
+            systemctl stop disnix-$serviceName.service
+            rm /run/systemd/system/disnix-$serviceName.service
+            systemctl --system daemon-reload
+        elif [ "@job_template@" = "init.d" ]
+        then
+            /etc/init.d/$serviceName stop
+            rm -f /etc/init.d/$serviceName
+        else
+            echo "Unknown job template: @job_template@"
+            exit 1
+        fi
+        ;;
+esac

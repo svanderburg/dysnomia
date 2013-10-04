@@ -17,6 +17,7 @@ AC_ARG_WITH([mysql], AS_HELP_STRING([--without-mysql], [Ignore presence of MySQL
 AC_ARG_WITH([postgresql], AS_HELP_STRING([--without-postgresql], [Ignore presence of PostgreSQL and disable it]))
 AC_ARG_WITH([tomcat], AS_HELP_STRING([--with-tomcat], [Enable Apache Tomcat activation script and specifies location of the Apache Tomcat base directory]))
 AC_ARG_WITH([subversion], AS_HELP_STRING([--with-subversion], [Enable subversion repository activation script]))
+AC_ARG_WITH([job-template], AS_HELP_STRING([--with-job-template], [Specifies which template to use for the wrapper and process modules. Possible options are: 'systemd' (the default) or 'init.d']))
 
 # Define environment variable options
 AC_ARG_WITH(CATALINA_HOME, [Location of the Apache Tomcat Catalina servlet container])
@@ -56,6 +57,13 @@ AS_IF([test "x$with_subversion" != "xno"],
 AS_IF([test "x$with_tomcat" != "x" && test "x$with_tomcat" != "xno" || test "x$CATALINA_HOME" != "x"],
       [have_tomcat=yes],
       [have_tomcat=no])
+
+AS_IF([test "x$with_job_template" = "x"],
+      [job_template=systemd],
+      [job_template=$with_job_template])
+
+# Substitute some variables
+AC_SUBST(job_template)
 
 # Set automake conditionals
 AM_CONDITIONAL(have_apache, [test x$have_apache != "xno"])
@@ -106,9 +114,12 @@ AC_CONFIG_FILES([
 Makefile
 scripts/dysnomia
 scripts/Makefile
+dysnomia-modules/process
+dysnomia-modules/wrapper
 dysnomia-modules/Makefile
 doc/Makefile
 doc/man/Makefile
+data/Makefile
 $axis2_webservice
 $ejabberd_dump
 $iis_webapplication

@@ -1,0 +1,40 @@
+#!/bin/sh
+
+# This is a process init.d template that should work with Debian and Ubuntu.
+# I have tested this on Ubuntu 12.04 LTS
+# This template may have to be adapted to reflect your distribution's style
+# and convention.
+
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+NAME=@name@
+DAEMON=@wrapper@
+DESC=@description@
+
+. /lib/lsb/init-functions
+
+case "$1" in
+    start)
+        echo -n "Starting $DESC: "
+        $DAEMON activate
+        echo "$NAME."
+        ;;
+    
+    stop)
+        echo -n "Stopping $DESC: "
+        $DAEMON deactivate
+        echo "$NAME."
+        ;;
+    
+    restart)
+        $0 stop
+        sleep 1
+        $0 start
+        ;;
+    
+    *)
+        echo "Usage: $NAME {start|stop|restart}" >&2
+        exit 1
+        ;;
+esac
+
+exit 0
