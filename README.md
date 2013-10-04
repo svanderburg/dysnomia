@@ -181,18 +181,17 @@ simply echoes what it's doing:
         unlock)
             echo "Echo activation script: Unlock service: $2"
             ;;
-esac
+    esac
 
-# Print the environment variables
+    # Print the environment variables
 
-echo "Environment variables:"
-set
-
+    echo "Environment variables:"
+    set
 
 Currently, Dysnomia supports four activities:
 
-* `activate` is used to activate the component in a container
-* `deactivate` is used to deactivate the component in a container
+* `activate` is used to activate the component in a container.
+* `deactivate` is used to deactivate the component in a container.
 * `lock` is invoked by Disnix before the upgrade transition starts. This operation can be used to consult a deployed component to determine whether it is safe to upgrade and to take precautions before the upgrade starts (such as queing incoming connections).
 * `unlock` is invoked by Disnix after the upgrade transition is over. This can be used to notify the component to resume its normal operations.
 
