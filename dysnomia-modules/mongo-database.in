@@ -1,0 +1,26 @@
+#!/bin/bash -e
+
+componentName=`basename $2`
+dbName=${componentName:33}
+
+case "$1" in
+    activate)
+        # Nothing needs to be done to create a mongo database. It gets created
+        # automatically once an object is saved.
+        
+        if [ -f $2/mongo-databases/* ]
+        then
+            ( echo "use $dbName;"
+              cat $2/mongo-databases/*
+            ) | mongo
+        fi
+        ;;
+        
+    deactivate)
+        ( cat <<EOF
+use $dbName;
+db.dropDatabase()
+EOF
+) | mongo
+        ;;
+esac
