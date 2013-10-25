@@ -30,6 +30,7 @@ let
       , enableMySQLDatabase ? false
       , enablePostgreSQLDatabase ? false
       , enableTomcatWebApplication ? false
+      , enableMongoDatabase ? false
       , enableSubversionRepository ? false
       , catalinaBaseDir ? "/var/tomcat"
       }:
@@ -50,6 +51,7 @@ let
             ${if enableEjabberdDump then "--with-ejabberd" else "--without-ejabberd"}
             ${if enableMySQLDatabase then "--with-mysql" else "--without-mysql"}
             ${if enablePostgreSQLDatabase then "--with-postgresql" else "--without-postgresql"}
+            ${if enableMongoDatabase then "--with-mongodb" else "--without-mongodb"}
             ${if enableTomcatWebApplication then "--with-tomcat=${catalinaBaseDir}" else "--without-tomcat"}
             ${if enableSubversionRepository then "--with-subversion" else "--without-subversion"}
           '';
@@ -58,6 +60,7 @@ let
             ++ stdenv.lib.optional enableEjabberdDump ejabberd
             ++ stdenv.lib.optional enableMySQLDatabase mysql
             ++ stdenv.lib.optional enablePostgreSQLDatabase postgresql
+            ++ stdenv.lib.optional enableMongoDatabase mongodb
             ++ stdenv.lib.optional enableSubversionRepository subversion;
         }
       );
@@ -74,6 +77,7 @@ let
             enableEjabberdDump = true;
             enableMySQLDatabase = true;
             enablePostgreSQLDatabase = true;
+            enableMongoDatabase = true;
             enableTomcatWebApplication = true;
             enableSubversionRepository = true;
           });
@@ -85,6 +89,10 @@ let
           };
           
           postgresql_database = import ./tests/deployment/postgresql-database.nix {
+            inherit stdenv;
+          };
+          
+          mongo_database = import ./tests/deployment/mongo-database.nix {
             inherit stdenv;
           };
           
@@ -126,7 +134,8 @@ let
               
               {
                 virtualisation.memorySize = 1024;
-              
+                virtualisation.diskSize = 4096;
+                
                 services.mysql = {
                   enable = true;
                   rootPassword = pkgs.writeTextFile { name = "mysqlpw"; text = "verysecret"; };
@@ -135,6 +144,7 @@ let
                   enable = true;
                   package = pkgs.postgresql;
                 };
+                services.mongodb.enable = true;
                 services.ejabberd.enable = true;
                 services.httpd = {
                   enable = true;
@@ -219,6 +229,17 @@ let
                 }
                 
                 $machine->mustSucceed("postgresqlUsername=root dysnomia --type postgresql-database --operation deactivate --component ${postgresql_database} --environment");
+                
+                # Test MongoDB activation scripts. Deploys a MongoDB instance,
+                # inserts some data, verifies whether it can be accessed, then
+                # undeploys it again and checks whether it becomes inaccessible.
+                # This test should succeed.
+                
+                $machine->waitForJob("mongodb");
+                $machine->mustSucceed("dysnomia --type mongo-database --operation activate --component ${mongo_database} --environment");
+                $machine->mustSucceed("[ \"\$((echo 'show dbs;'; echo 'use testdb;'; echo 'db.messages.find();') | mongo | grep 'Hello world')\" != \"\" ]");
+                $machine->mustSucceed("dysnomia --type mongo-database --operation deactivate --component ${mongo_database} --environment");
+                $machine->mustSucceed("[ \"\$((echo 'show dbs;'; echo 'use testdb;'; echo 'db.messages.find();') | mongo | grep 'Hello world')\" = \"\" ]");
                 
                 # Test Tomcat web application script. Deploys a tomcat web
                 # application, verifies whether it can be accessed and then

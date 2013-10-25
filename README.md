@@ -67,14 +67,15 @@ be optionally enabled/disabled:
 * `echo`. Mereley echos the parameters and environment variables used during activation or deactivation. Useful for debugging purposes.
 * `ejabberd-dump`. Activates or deactivates an [Ejabberd](http://www.ejabberd.im) configuration database.
 * `iis-webapplication`. Activates or deactivates a web application in a document root folder of the [Internet Information Services](http://www.iis.net) (IIS) server.
+* `mongo-database`. Activates or deactivate a [MongoDB](http://www.mongodb.org) database inside a MongoDB DBMS instance.
 * `mssql-database`. Imports a database dump inside a [SQL Server](http://www.microsoft.com/en-us/sqlserver/default.aspx) DBMS instance.
 * `mysql-database`. Imports a database dump inside a [MySQL](http://www.mysql.com) DBMS instance.
 * `nixos-configuration`. Activates a specific [NixOS](http://nixos.org/nixos) configuration.
 * `postgresql-database`. Imports a database dump inside a [PostgreSQL](http://www.postgresql.com) DBMS instance.
-* `process`. Wraps a process inside a [systemd](http://www.freedesktop.org/wiki/Software/systemd) job and activates or deactivates it.
+* `process`. Wraps a process inside a [systemd](http://www.freedesktop.org/wiki/Software/systemd) or init.d job and activates or deactivates it.
 * `subversion-repository`. Imports a [Subversion](http://subversion.apache.org) repository dump into a Subversion working directory.
 * `tomcat-webapplication`. Import a Java Web Application ARchive (WAR) file inside an [Apache Tomcat](http://tomcat.apache.org) servlet container.
-* `wrapper`. Wraps the `bin/wrapper` activation script inside the component into a [systemd](http://www.freedesktop.org/wiki/Software/systemd) job and activates or deactivates it.
+* `wrapper`. Wraps the `bin/wrapper` activation script inside the component into a [systemd](http://www.freedesktop.org/wiki/Software/systemd) or init.d job and activates or deactivates it.
 
 Usage
 =====

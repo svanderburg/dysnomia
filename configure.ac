@@ -15,6 +15,7 @@ AC_ARG_WITH([iis], AS_HELP_STRING([--without-iis], [Ignore presence of Microsoft
 AC_ARG_WITH([mssql], AS_HELP_STRING([--without-mssql], [Ignore presence of Microsoft SQL server and disable it]))
 AC_ARG_WITH([mysql], AS_HELP_STRING([--without-mysql], [Ignore presence of MySQL and disable it]))
 AC_ARG_WITH([postgresql], AS_HELP_STRING([--without-postgresql], [Ignore presence of PostgreSQL and disable it]))
+AC_ARG_WITH([mongodb], AS_HELP_STRING([--without-mongodb], [Ignore presence of MongoDB and disable it]))
 AC_ARG_WITH([tomcat], AS_HELP_STRING([--with-tomcat], [Enable Apache Tomcat activation script and specifies location of the Apache Tomcat base directory]))
 AC_ARG_WITH([subversion], AS_HELP_STRING([--with-subversion], [Enable subversion repository activation script]))
 AC_ARG_WITH([job-template], AS_HELP_STRING([--with-job-template], [Specifies which template to use for the wrapper and process modules. Possible options are: 'systemd' (the default) or 'init.d']))
@@ -51,6 +52,9 @@ AS_IF([test "x$with_postgresql" != "xno"],
 AS_IF([test "x$with_postgresql" != "xno"],
       [AC_PATH_PROG(psql, psql)])
 
+AS_IF([test "x$with_mongo" != "xno"],
+      [AC_PATH_PROG(mongo, mongo)])
+
 AS_IF([test "x$with_subversion" != "xno"],
       [AC_PATH_PROG(svnadmin, svnadmin)])
 
@@ -73,6 +77,7 @@ AM_CONDITIONAL(have_iis, [test "x$msdeploy" != "x"])
 AM_CONDITIONAL(have_mssql, [test "x$osql" != "x"])
 AM_CONDITIONAL(have_mysql, [test x$mysql != "x"])
 AM_CONDITIONAL(have_postgresql, [test x$psql != "x"])
+AM_CONDITIONAL(have_mongodb, [test x$mongo != "x"])
 AM_CONDITIONAL(have_tomcat, [test x$have_tomcat != "xno"])
 AM_CONDITIONAL(have_subversion, [test x$svnadmin != "x"])
 
@@ -101,6 +106,9 @@ AS_IF([test "x$mysql" != "x"],
 AS_IF([test "x$psql" != "x"],
       [postgresql_database=dysnomia-modules/postgresql-database])
 
+AS_IF([test "x$mongo" != "x"],
+      [mongo_database=dysnomia-modules/mongo-database])
+
 AS_IF([test "x$ejabberdctl" != "x"],
       [ejabberd_dump=dysnomia-modules/ejabberd-dump])
 
@@ -126,6 +134,7 @@ $iis_webapplication
 $mssql_database
 $mysql_database
 $postgresql_database
+$mongo_database
 $tomcat_webapplication
 $subversion_repository
 ])
