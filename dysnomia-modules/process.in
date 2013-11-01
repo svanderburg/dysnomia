@@ -5,11 +5,11 @@ export prefix=@prefix@
 
 serviceName=$(basename $2)
 
-# Systemd activation
 case "$1" in
     activate)
         if [ "@job_template@" = "systemd" ]
         then
+            # Systemd activation
             sed -e "s|@name@|disnix-$serviceName|" \
                 -e "s|@description@|$serviceName|" \
                 -e "s|@process@|$(echo $2/bin/*)|" \
@@ -24,6 +24,7 @@ case "$1" in
             systemctl start disnix-$serviceName.service
         elif [ "@job_template@" = "init.d" ]
         then
+            # init.d activation
             sed -e "s|@name@|disnix-$serviceName|" \
                 -e "s|@description@|$serviceName|" \
                 -e "s|@process@|$(echo $2/bin/*)|" \
@@ -39,11 +40,13 @@ case "$1" in
     deactivate)
         if [ "@job_template@" = "systemd" ]
         then
+            # Systemd deactivation
             systemctl stop disnix-$serviceName.service
             rm /run/systemd/system/disnix-$serviceName.service
             systemctl --system daemon-reload
         elif [ "@job_template@" = "init.d" ]
         then
+            # init.d deactivation
             /etc/init.d/$serviceName stop
             rm -f /etc/init.d/$serviceName
         else
