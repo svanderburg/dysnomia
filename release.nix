@@ -1,6 +1,4 @@
-{ nixpkgs ? <nixpkgs>
-, systems ? [ "i686-linux" "x86_64-linux" ]
-}:
+{ nixpkgs ? <nixpkgs> }:
 
 let
   pkgs = import nixpkgs {};
@@ -33,45 +31,42 @@ let
       , enableMongoDatabase ? false
       , enableSubversionRepository ? false
       , catalinaBaseDir ? "/var/tomcat"
+      , system ? builtins.currentSystem
       }:
 
-      pkgs.lib.genAttrs systems (system:
-        with import nixpkgs { inherit system; };
+      with import nixpkgs { inherit system; };
         
-        releaseTools.nixBuild {
-          name = "dysnomia";
-          version = builtins.readFile ./version;
-          src = tarball;
+      releaseTools.nixBuild {
+        name = "dysnomia";
+        version = builtins.readFile ./version;
+        src = tarball;
         
-          preConfigure = stdenv.lib.optionalString enableEjabberdDump "export PATH=$PATH:${ejabberd}/sbin";
+        preConfigure = stdenv.lib.optionalString enableEjabberdDump "export PATH=$PATH:${ejabberd}/sbin";
 
-          configureFlags = ''
-            ${if enableApacheWebApplication then "--with-apache" else "--without-apache"}
-            ${if enableAxis2WebService then "--with-axis2" else "--without-axis2"}
-            ${if enableEjabberdDump then "--with-ejabberd" else "--without-ejabberd"}
-            ${if enableMySQLDatabase then "--with-mysql" else "--without-mysql"}
-            ${if enablePostgreSQLDatabase then "--with-postgresql" else "--without-postgresql"}
-            ${if enableMongoDatabase then "--with-mongodb" else "--without-mongodb"}
-            ${if enableTomcatWebApplication then "--with-tomcat=${catalinaBaseDir}" else "--without-tomcat"}
-            ${if enableSubversionRepository then "--with-subversion" else "--without-subversion"}
-          '';
+        configureFlags = ''
+          ${if enableApacheWebApplication then "--with-apache" else "--without-apache"}
+          ${if enableAxis2WebService then "--with-axis2" else "--without-axis2"}
+          ${if enableEjabberdDump then "--with-ejabberd" else "--without-ejabberd"}
+          ${if enableMySQLDatabase then "--with-mysql" else "--without-mysql"}
+          ${if enablePostgreSQLDatabase then "--with-postgresql" else "--without-postgresql"}
+          ${if enableMongoDatabase then "--with-mongodb" else "--without-mongodb"}
+          ${if enableTomcatWebApplication then "--with-tomcat=${catalinaBaseDir}" else "--without-tomcat"}
+          ${if enableSubversionRepository then "--with-subversion" else "--without-subversion"}
+        '';
         
-          buildInputs = []
-            ++ stdenv.lib.optional enableEjabberdDump ejabberd
-            ++ stdenv.lib.optional enableMySQLDatabase mysql
-            ++ stdenv.lib.optional enablePostgreSQLDatabase postgresql
-            ++ stdenv.lib.optional enableMongoDatabase mongodb
-            ++ stdenv.lib.optional enableSubversionRepository subversion;
-        }
-      );
+        buildInputs = []
+          ++ stdenv.lib.optional enableEjabberdDump ejabberd
+          ++ stdenv.lib.optional enableMySQLDatabase mysql
+          ++ stdenv.lib.optional enablePostgreSQLDatabase postgresql
+          ++ stdenv.lib.optional enableMongoDatabase mongodb
+          ++ stdenv.lib.optional enableSubversionRepository subversion;
+      };
       
       tests = 
-        { nixos ? <nixos> }:
-        
         with pkgs;
         
         let
-          dysnomia = builtins.getAttr (builtins.currentSystem) (build {
+          dysnomia = jobs.build {
             enableApacheWebApplication = true;
             enableAxis2WebService = true;
             enableEjabberdDump = true;
@@ -80,7 +75,7 @@ let
             enableMongoDatabase = true;
             enableTomcatWebApplication = true;
             enableSubversionRepository = true;
-          });
+          };
           
           # Test services
           
@@ -125,7 +120,7 @@ let
           };
         in
         
-        with import "${nixos}/lib/testing.nix" { system = builtins.currentSystem; };
+        with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem; };
         
         {
           install = simpleTest {
