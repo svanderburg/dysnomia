@@ -23,8 +23,18 @@ AC_ARG_WITH([job-template], AS_HELP_STRING([--with-job-template], [Specifies whi
 # Define environment variable options
 AC_ARG_WITH(CATALINA_HOME, [Location of the Apache Tomcat Catalina servlet container])
 
+# Checks for installed programs
+AC_DEFUN([NEED_PROG],
+[
+AC_PATH_PROG($1, $2)
+if test -z "$$1"; then
+    AC_MSG_ERROR([$2 is required])
+fi
+])
+
 # Checks for programs
 AC_PROG_INSTALL
+NEED_PROG(getopt, getopt)
 
 AS_IF([test "x$with_apache" != "x" && test "x$with_apache" != "xno"],
       [have_apache=yes],

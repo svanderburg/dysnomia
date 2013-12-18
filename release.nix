@@ -17,7 +17,7 @@ let
         src = dysnomia;
         inherit officialRelease;
 
-        buildInputs = [];
+        buildInputs = [ getopt ];
       };
 
     build =
@@ -54,7 +54,7 @@ let
           ${if enableSubversionRepository then "--with-subversion" else "--without-subversion"}
         '';
         
-        buildInputs = []
+        buildInputs = [ getopt ]
           ++ stdenv.lib.optional enableEjabberdDump ejabberd
           ++ stdenv.lib.optional enableMySQLDatabase mysql
           ++ stdenv.lib.optional enablePostgreSQLDatabase postgresql
