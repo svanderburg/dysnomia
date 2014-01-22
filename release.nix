@@ -1,4 +1,6 @@
-{ nixpkgs ? <nixpkgs> }:
+{ nixpkgs ? <nixpkgs>
+, systems ? [ "i686-linux" "x86_64-linux" ]
+}:
 
 let
   pkgs = import nixpkgs {};
@@ -8,16 +10,14 @@ let
       { dysnomia ? {outPath = ./.; rev = 1234;}
       , officialRelease ? false
       }:
-
-      with pkgs;
-
-      releaseTools.sourceTarball {
+      
+      pkgs.releaseTools.sourceTarball {
         name = "dysnomia-tarball";
         version = builtins.readFile ./version;
         src = dysnomia;
         inherit officialRelease;
 
-        buildInputs = [ getopt ];
+        buildInputs = [ pkgs.getopt ];
       };
 
     build =
@@ -31,42 +31,43 @@ let
       , enableMongoDatabase ? false
       , enableSubversionRepository ? false
       , catalinaBaseDir ? "/var/tomcat"
-      , system ? builtins.currentSystem
       }:
 
-      with import nixpkgs { inherit system; };
-        
-      releaseTools.nixBuild {
-        name = "dysnomia";
-        version = builtins.readFile ./version;
-        src = tarball;
-        
-        preConfigure = stdenv.lib.optionalString enableEjabberdDump "export PATH=$PATH:${ejabberd}/sbin";
+      pkgs.lib.genAttrs systems (system:
+      
+        with import nixpkgs { inherit system; };
 
-        configureFlags = ''
-          ${if enableApacheWebApplication then "--with-apache" else "--without-apache"}
-          ${if enableAxis2WebService then "--with-axis2" else "--without-axis2"}
-          ${if enableEjabberdDump then "--with-ejabberd" else "--without-ejabberd"}
-          ${if enableMySQLDatabase then "--with-mysql" else "--without-mysql"}
-          ${if enablePostgreSQLDatabase then "--with-postgresql" else "--without-postgresql"}
-          ${if enableMongoDatabase then "--with-mongodb" else "--without-mongodb"}
-          ${if enableTomcatWebApplication then "--with-tomcat=${catalinaBaseDir}" else "--without-tomcat"}
-          ${if enableSubversionRepository then "--with-subversion" else "--without-subversion"}
-        '';
+        releaseTools.nixBuild {
+          name = "dysnomia";
+          version = builtins.readFile ./version;
+          src = tarball;
         
-        buildInputs = [ getopt ]
-          ++ stdenv.lib.optional enableEjabberdDump ejabberd
-          ++ stdenv.lib.optional enableMySQLDatabase mysql
-          ++ stdenv.lib.optional enablePostgreSQLDatabase postgresql
-          ++ stdenv.lib.optional enableMongoDatabase mongodb
-          ++ stdenv.lib.optional enableSubversionRepository subversion;
-      };
+          preConfigure = stdenv.lib.optionalString enableEjabberdDump "export PATH=$PATH:${ejabberd}/sbin";
+
+          configureFlags = ''
+            ${if enableApacheWebApplication then "--with-apache" else "--without-apache"}
+            ${if enableAxis2WebService then "--with-axis2" else "--without-axis2"}
+            ${if enableEjabberdDump then "--with-ejabberd" else "--without-ejabberd"}
+            ${if enableMySQLDatabase then "--with-mysql" else "--without-mysql"}
+            ${if enablePostgreSQLDatabase then "--with-postgresql" else "--without-postgresql"}
+            ${if enableMongoDatabase then "--with-mongodb" else "--without-mongodb"}
+            ${if enableTomcatWebApplication then "--with-tomcat=${catalinaBaseDir}" else "--without-tomcat"}
+            ${if enableSubversionRepository then "--with-subversion" else "--without-subversion"}
+          '';
+        
+          buildInputs = [ getopt ]
+            ++ stdenv.lib.optional enableEjabberdDump ejabberd
+            ++ stdenv.lib.optional enableMySQLDatabase mysql
+            ++ stdenv.lib.optional enablePostgreSQLDatabase postgresql
+            ++ stdenv.lib.optional enableMongoDatabase mongodb
+            ++ stdenv.lib.optional enableSubversionRepository subversion;
+        });
       
       tests = 
         with pkgs;
         
         let
-          dysnomia = jobs.build {
+          dysnomia = builtins.getAttr (builtins.currentSystem) (jobs.build {
             enableApacheWebApplication = true;
             enableAxis2WebService = true;
             enableEjabberdDump = true;
@@ -75,7 +76,7 @@ let
             enableMongoDatabase = true;
             enableTomcatWebApplication = true;
             enableSubversionRepository = true;
-          };
+          });
           
           # Test services
           
