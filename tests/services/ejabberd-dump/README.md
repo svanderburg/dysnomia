@@ -4,20 +4,20 @@ How to create/reproduce the ejabberd dump file
 
 ```
 services.ejabberd.enable = true;
-'''
+```
 
 - Deploy the NixOS configuration:
 
 ```
 $ nixos-rebuild switch
-'''
+```
 
 - Create an admin account:
 
 ```
 $ ejabberdctl='ejabberctl --spool /var/lib/ejabberd'
 $ $ejabberdctl register admin local admin
-'''
+```
 
 - Grant the admin user, administration privileges:
   * Open `/var/ejabberd/ejabberd.cfg` in a text editor
@@ -26,14 +26,14 @@ $ $ejabberdctl register admin local admin
 
 ```
 {acl, admin, {user, "admin", "localhost"}}.
-'''
+```
 
 - Restart ejabberd:
 
 ```
 $ stop ejabberd
 $ start ejabberd
-'''
+```
 
 - Verify whether you can access the admin web GUI:
   * Open in your browser: `http://localhost:5280/admin`
@@ -45,6 +45,6 @@ $ start ejabberd
 
 ```
 $ $ejabberdctl dump $(pwd)/ejabberdcfg.dump
-'''
+```
 
 - This is it!
