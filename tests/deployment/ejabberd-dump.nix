@@ -5,6 +5,6 @@ stdenv.mkDerivation {
   src = ../services/ejabberd-dump;
   buildCommand = ''
     ensureDir $out/ejabberd-dump
-    cp $src/* $out/ejabberd-dump
+    cp $src/*.dump $out/ejabberd-dump
   '';
 }
