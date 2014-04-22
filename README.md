@@ -77,6 +77,28 @@ be optionally enabled/disabled:
 * `tomcat-webapplication`. Import a Java Web Application ARchive (WAR) file inside an [Apache Tomcat](http://tomcat.apache.org) servlet container.
 * `wrapper`. Wraps the `bin/wrapper` activation script inside the component into a [systemd](http://www.freedesktop.org/wiki/Software/systemd) or init.d job and activates or deactivates it.
 
+Configuration of the process and wrapper modules
+------------------------------------------------
+The `process` and `wrapper` modules are supposed to use the host system's
+"service manager". Unfortunately, this component differs among operating systems
+and system distributions.
+
+By default, Dysnomia is preconfigured to use NixOS' service manager, namely
+`systemd`, which expects runtime state files to reside in `/run/systemd` and sets
+`/run/current-system/sw/bin` as the default `PATH` for services.
+
+If you are planning to use a different Linux distribution, these settings can be
+changed through the `--with-systemd-rundir` and `--with-systemd-path` configure
+parameters.
+
+Apart from `systemd`, Dysnomia can also be used to generate plain old `init.d`
+scripts instead. The template that is used to generate these scripts reside in
+`data/*.template.initd` of the source distribution. By default, it's configured
+to generate an `init.d` script for Ubuntu 12.04 LTS.
+
+To support other kinds of Linux distributions, you need to adapt this template to
+match your distribution's convention.
+
 Usage
 =====
 In order to use Dysnomia to deploy mutable components, we require two kinds of
