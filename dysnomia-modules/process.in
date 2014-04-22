@@ -13,11 +13,12 @@ case "$1" in
             sed -e "s|@name@|disnix-$serviceName|" \
                 -e "s|@description@|$serviceName|" \
                 -e "s|@process@|$(echo $2/bin/*)|" \
-                @datadir@/@PACKAGE@/process.template.systemd > /run/systemd/system/disnix-$serviceName.service
+                -e "s|@""systemd_path@|@systemd_path@|" \
+                @datadir@/@PACKAGE@/process.template.systemd > @systemd_rundir@/system/disnix-$serviceName.service
             
             if [ -f $2/systemd-config ]
             then
-                cat $2/systemd-config >> /run/systemd/system/disnix-$serviceName.service
+                cat $2/systemd-config >> @systemd_rundir@/system/disnix-$serviceName.service
             fi
         
             systemctl --system daemon-reload
@@ -28,9 +29,9 @@ case "$1" in
             sed -e "s|@name@|disnix-$serviceName|" \
                 -e "s|@description@|$serviceName|" \
                 -e "s|@process@|$(echo $2/bin/*)|" \
-                @datadir@/@PACKAGE@/process.template.initd > /etc/init.d/$serviceName
+                @datadir@/@PACKAGE@/process.template.initd > @sysvinit_initd_dir@/$serviceName
                 
-                /etc/init.d/$serviceName start
+                @sysvinit_initd_dir@/$serviceName start
         else
             echo "Unknown job template: @job_template@"
             exit 1
@@ -42,13 +43,13 @@ case "$1" in
         then
             # Systemd deactivation
             systemctl stop disnix-$serviceName.service
-            rm /run/systemd/system/disnix-$serviceName.service
+            rm @systemd_rundir@/system/disnix-$serviceName.service
             systemctl --system daemon-reload
         elif [ "@job_template@" = "init.d" ]
         then
             # init.d deactivation
-            /etc/init.d/$serviceName stop
-            rm -f /etc/init.d/$serviceName
+            @sysvinit_initd_dir@/$serviceName stop
+            rm -f @sysvinit_initd_dir@/$serviceName
         else
             echo "Unknown job template: @job_template@"
             exit 1

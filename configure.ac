@@ -19,6 +19,9 @@ AC_ARG_WITH([mongodb], AS_HELP_STRING([--without-mongodb], [Ignore presence of M
 AC_ARG_WITH([tomcat], AS_HELP_STRING([--with-tomcat], [Enable Apache Tomcat activation script and specifies location of the Apache Tomcat base directory]))
 AC_ARG_WITH([subversion], AS_HELP_STRING([--with-subversion], [Enable subversion repository activation script]))
 AC_ARG_WITH([job-template], AS_HELP_STRING([--with-job-template], [Specifies which template to use for the wrapper and process modules. Possible options are: 'systemd' (the default) or 'init.d']))
+AC_ARG_WITH([systemd-rundir], AS_HELP_STRING([--with-systemd-rundir], [Specifies the state directory of systemd. Defaults to: '/run/systemd']))
+AC_ARG_WITH([systemd-path], AS_HELP_STRING([--with-systemd-path], [Specifies the path of the composed systemd jobs. Defaults to: '/run/current-system/sw/bin']))
+AC_ARG_WITH([sysvinit-initd-dir], AS_HELP_STRING([--with-sysvinit-initd-dir], [Specifies the init.d directory in which sysvinit init scripts are stored. Defaults to: '/etc/init.d']))
 
 # Define environment variable options
 AC_ARG_WITH(CATALINA_HOME, [Location of the Apache Tomcat Catalina servlet container])
@@ -76,8 +79,23 @@ AS_IF([test "x$with_job_template" = "x"],
       [job_template=systemd],
       [job_template=$with_job_template])
 
+AS_IF([test "x$with_systemd_rundir" = "x"],
+      [systemd_rundir=/run/systemd],
+      [systemd_rundir=$with_systemd_rundir])
+
+AS_IF([test "x$with_systemd_path" = "x"],
+      [systemd_path=/run/current-system/sw/bin],
+      [systemd_path=$with_systemd_path])
+
+AS_IF([test "x$with_sysvinit_initd_dir" = "x"],
+      [sysvinit_initd_dir=/etc/init.d],
+      [sysvinit_initd_dir=$sysvinit_initd_dir])
+
 # Substitute some variables
 AC_SUBST(job_template)
+AC_SUBST(systemd_rundir)
+AC_SUBST(systemd_path)
+AC_SUBST(sysvinit_initd_dir)
 
 # Set automake conditionals
 AM_CONDITIONAL(have_apache, [test x$have_apache != "xno"])

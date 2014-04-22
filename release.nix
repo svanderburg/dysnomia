@@ -88,7 +88,7 @@ let
         frontend = import ./tests/frontend.nix {
           inherit nixpkgs dysnomia;
         };
-    };
+      };
   };
 in
 jobs

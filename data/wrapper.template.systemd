@@ -2,7 +2,7 @@
 Description=@description@
 
 [Service]
-Environment=PATH=/run/current-system/sw/bin
+Environment=PATH=@systemd_path@
 ExecStart=@wrapper@ activate
 ExecStop=@wrapper@ deactivate
 Type=oneshot
