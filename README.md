@@ -79,7 +79,8 @@ be optionally enabled/disabled:
 
 Usage
 =====
-In order to use Dysnomia to deploy mutable components, we require two dependencies:
+In order to use Dysnomia to deploy mutable components, we require two kinds of
+dependencies:
 
 * A component containing a logical snapshot of the initial state of a mutable component
 * A configuration file capturing properties of the container in which the component must be deployed
@@ -177,7 +178,7 @@ simply echoes what it's doing:
             echo "Echo activation script: Lock service: $2"
             ;;
             
-        # Notifies a service that an upgrade has finished. A services can use this
+        # Notifies a service that an upgrade has finished. A service can use this
         # to resume its normal operations.
         unlock)
             echo "Echo activation script: Unlock service: $2"
@@ -189,16 +190,17 @@ simply echoes what it's doing:
     echo "Environment variables:"
     set
 
-Currently, Dysnomia supports four activities:
+Currently, Dysnomia supports four types of activities:
 
 * `activate` is used to activate the component in a container.
 * `deactivate` is used to deactivate the component in a container.
 * `lock` is invoked by Disnix before the upgrade transition starts. This operation can be used to consult a deployed component to determine whether it is safe to upgrade and to take precautions before the upgrade starts (such as queing incoming connections).
 * `unlock` is invoked by Disnix after the upgrade transition is over. This can be used to notify the component to resume its normal operations.
 
-The above code example is written in Bash, but any lanugage can be used as long
-as the tool provides the same command-line interface and properly uses the
-environment variables from the container specification.
+The above code example is written in [bash](http://www.gnu.org/software/bash),
+but any lanugage can be used as long as the tool provides the same command-line
+interface and properly uses the environment variables from the container
+specification.
 
 License
 =======
