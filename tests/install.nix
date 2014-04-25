@@ -47,35 +47,34 @@ let
   };
 
 in
-{
-  install = makeTest {
-    nodes = {
-      machine = {config, pkgs, ...}:
+makeTest {
+  nodes = {
+    machine = {config, pkgs, ...}:
       
-      {
-        virtualisation.memorySize = 1024;
-        virtualisation.diskSize = 4096;
+    {
+      virtualisation.memorySize = 1024;
+      virtualisation.diskSize = 4096;
         
-        services.mysql = {
-          enable = true;
-          package = pkgs.mysql;
-          rootPassword = pkgs.writeTextFile { name = "mysqlpw"; text = "verysecret"; };
-        };
-        services.postgresql = {
-          enable = true;
-          package = pkgs.postgresql;
-        };
-        services.mongodb.enable = true;
-        services.ejabberd.enable = true;
-        services.httpd = {
-          enable = true;
-          adminAddr = "foo@bar.com";
-          documentRoot = "/var/www";
-        };
-        services.tomcat.enable = true;
-        services.tomcat.axis2.enable = true;
+      services.mysql = {
+        enable = true;
+        package = pkgs.mysql;
+        rootPassword = pkgs.writeTextFile { name = "mysqlpw"; text = "verysecret"; };
+      };
+      services.postgresql = {
+        enable = true;
+        package = pkgs.postgresql;
+      };
+      services.mongodb.enable = true;
+      services.ejabberd.enable = true;
+      services.httpd = {
+        enable = true;
+        adminAddr = "foo@bar.com";
+        documentRoot = "/var/www";
+      };
+      services.tomcat.enable = true;
+      services.tomcat.axis2.enable = true;
         
-        environment.systemPackages = [ dysnomia ];
+      environment.systemPackages = [ dysnomia ];
     };
   };
   
@@ -210,5 +209,4 @@ in
         
       $machine->mustSucceed("disableNixOSSystemProfile=1 testNixOS=1 dysnomia --type nixos-configuration --operation activate --component /var/run/current-system --environment");
     '';
-  };
 }
