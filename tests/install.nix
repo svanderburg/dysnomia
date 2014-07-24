@@ -161,7 +161,6 @@ makeTest {
       $machine->mustSucceed("dysnomia --type mongo-database --operation activate --component ${mongo_database} --environment");
       $machine->mustSucceed("[ \"\$((echo 'show dbs;'; echo 'use testdb;'; echo 'db.messages.find();') | mongo | grep 'Hello world')\" != \"\" ]");
       $machine->mustSucceed("dysnomia --type mongo-database --operation deactivate --component ${mongo_database} --environment");
-      $machine->mustSucceed("[ \"\$((echo 'show dbs;'; echo 'use testdb;'; echo 'db.messages.find();') | mongo | grep 'Hello world')\" = \"\" ]");
         
       # Test Tomcat web application script. Deploys a tomcat web
       # application, verifies whether it can be accessed and then
