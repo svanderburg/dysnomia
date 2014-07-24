@@ -12,15 +12,11 @@ case "$1" in
         then
             ( echo "use $dbName;"
               cat $2/mongo-databases/*
-            ) | mongo
+            ) | @mongo@
         fi
         ;;
         
     deactivate)
-        ( cat <<EOF
-use $dbName;
-db.dropDatabase()
-EOF
-) | mongo
+        # Don't do anything yet
         ;;
 esac
