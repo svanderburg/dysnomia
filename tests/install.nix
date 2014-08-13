@@ -141,7 +141,7 @@ makeTest {
         
       $machine->waitForJob("postgresql");
       $machine->mustSucceed("postgresqlUsername=root dysnomia --type postgresql-database --operation activate --component ${postgresql_database} --environment");
-      my $result = $machine->mustSucceed("echo 'select * from test' | psql --file - testdb");
+      $result = $machine->mustSucceed("echo 'select * from test' | psql --file - testdb");
         
       if($result =~ /Hello world/) {
           print "PostgreSQL query returns: Hello world!\n";
