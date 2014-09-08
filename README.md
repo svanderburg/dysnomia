@@ -96,8 +96,12 @@ scripts instead. The template that is used to generate these scripts reside in
 `data/*.template.initd` of the source distribution. By default, it's configured
 to generate an `init.d` script for Ubuntu 12.04 LTS.
 
-To support other kinds of Linux distributions, you need to adapt this template to
-match your distribution's convention.
+If none of the operating system's service manager can be used, Dysnomia can also
+activate and deactive service directly. To accomplish this use the `direct`
+template option.
+
+To support other kinds of Linux distributions, you need to adapt these templates
+to match your distribution's convention.
 
 Usage
 =====

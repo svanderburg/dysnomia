@@ -33,8 +33,9 @@ case "$1" in
                 
                 @sysvinit_initd_dir@/$serviceName start
         else
-            echo "Unknown job template: @job_template@"
-            exit 1
+            # Direct activation
+            nohup $2/bin/* > /var/log/$serviceName.log & pid=$!
+            echo $pid > /var/run/$serviceName.pid
         fi
         ;;
     
@@ -51,8 +52,9 @@ case "$1" in
             @sysvinit_initd_dir@/$serviceName stop
             rm -f @sysvinit_initd_dir@/$serviceName
         else
-            echo "Unknown job template: @job_template@"
-            exit 1
+            # Direct deactivation
+            kill $(cat /var/run/$serviceName.pid)
+            rm -f /var/run/$serviceName.pid
         fi
         ;;
 esac

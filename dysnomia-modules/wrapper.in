@@ -33,8 +33,8 @@ case "$1" in
                 
                 @sysvinit_initd_dir@/$serviceName start
         else
-            echo "Unknown job template: @job_template@"
-            exit 1
+            # Direct activation
+            $2/bin/wrapper activate
         fi
         ;;
     
@@ -51,8 +51,8 @@ case "$1" in
             @sysvinit_initd_dir@/$serviceName stop
             rm -f @sysvinit_initd_dir@/$serviceName
         else
-            echo "Unknown job template: @job_template@"
-            exit 1
+            # Direct deactivation
+            $2/bin/wrapper deactivate
         fi
         ;;
 esac
