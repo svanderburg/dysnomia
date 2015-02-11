@@ -3,38 +3,70 @@
 # Autoconf settings
 export prefix=@prefix@
 
+# Import access control
+source @datadir@/@PACKAGE@/access
+
 serviceName=$(basename $2)
+
+# Open container configuration file if it exists
+if [ -f "$2/etc/process_config" ]
+then
+    source $2/etc/process_config
+fi
 
 case "$1" in
     activate)
+        createUnprivilegedUserAndGroup
+        
+        # Determine which process to run
+        
+        if [ "$container_process" = "" ]
+        then
+            runProcess="$(echo $2/bin/*)" # Do a guess which process to run if none is specified
+        else
+            runProcess="$container_process" # Otherwise use specified one
+        fi
+    
         if [ "@job_template@" = "systemd" ]
         then
             # Systemd activation
             sed -e "s|@name@|disnix-$serviceName|" \
                 -e "s|@description@|$serviceName|" \
-                -e "s|@process@|$(echo $2/bin/*)|" \
+                -e "s|@process@|$runProcess|" \
                 -e "s|@""systemd_path@|@systemd_path@|" \
                 @datadir@/@PACKAGE@/process.template.systemd > @systemd_rundir@/system/disnix-$serviceName.service
             
-            if [ -f $2/systemd-config ]
+            addUserSettingsToSystemdConfig @systemd_rundir@/system/disnix-$serviceName.service
+            if [ -f $2/etc/systemd-config ]
             then
-                cat $2/systemd-config >> @systemd_rundir@/system/disnix-$serviceName.service
+                cat $2/etc/systemd-config >> @systemd_rundir@/system/disnix-$serviceName.service
             fi
         
             systemctl --system daemon-reload
             systemctl start disnix-$serviceName.service
         elif [ "@job_template@" = "init.d" ]
         then
+            if [ "$container_username" != "" ]
+            then
+                runProcess="su $container_username -c \"$runProcess\""
+            fi
+            
             # init.d activation
             sed -e "s|@name@|disnix-$serviceName|" \
                 -e "s|@description@|$serviceName|" \
-                -e "s|@process@|$(echo $2/bin/*)|" \
+                -e "s|@process@|$runProcess|" \
                 @datadir@/@PACKAGE@/process.template.initd > @sysvinit_initd_dir@/$serviceName
                 
                 @sysvinit_initd_dir@/$serviceName start
         else
             # Direct activation
-            nohup $2/bin/* > /var/log/$serviceName.log & pid=$!
+            if [ "$container_username" = "" ]
+            then
+                nohup $runProcess > /var/log/$serviceName.log & pid=$!
+            else
+                su $container_username -c "nohup $runProcess > /var/log/$serviceName.log" & pid=$!
+            fi
+            
             echo $pid > /var/run/$serviceName.pid
         fi
         ;;
@@ -56,5 +88,7 @@ case "$1" in
             kill $(cat /var/run/$serviceName.pid)
             rm -f /var/run/$serviceName.pid
         fi
+        
+        removeUnprivilegedUserAndGroup
         ;;
 esac

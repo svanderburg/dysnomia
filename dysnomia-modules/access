@@ -1,0 +1,86 @@
+#!/bin/bash -e
+
+createUnprivilegedUserAndGroup()
+{
+    # Create unprivileged group that runs the process, if requested
+    if [ "$container_group" != "" ]
+    then
+        params=""
+        
+        if [ "$container_gid" != "" ]
+        then
+            params="$params -g $container_gid"
+        fi
+        
+        params="$params $container_group"
+        groupadd $params
+    fi
+    
+    # Create unprivileged user that runs the process, if requested
+    if [ "$container_username" != "" ]
+    then
+        params=""
+        
+        if [ "$container_uid" != "" ]
+        then
+            params="$params -u $container_uid"
+        fi
+        
+        if [ "$container_group" != "" ]
+        then
+            params="$params -g $container_group"
+        fi
+        
+        if [ "$container_homeDir" = "" ]
+        then
+            params="$params -d /dev/null"
+        else
+            params="$params -d $container_homeDir"
+        fi
+        
+        if [ "$container_createHomeDir" != "" ]
+        then
+            params="$params -m"
+        fi
+        
+        if [ "$container_shell" = "" ]
+        then
+            params="$params -s /bin/sh"
+        else
+            params="$params -s $container_shell"
+        fi
+        
+        params="$params $container_username"
+        useradd $params
+    fi
+}
+
+removeUnprivilegedUserAndGroup()
+{
+    # Remove unprivileged user, if requested
+    
+    if [ "$container_username" != "" ]
+    then
+        userdel $container_username
+    fi
+    
+    # Remove unprivileged group, if requested
+    
+    if [ "$container_group" != "" ]
+    then
+        groupdel $container_group
+    fi
+}
+
+addUserSettingsToSystemdConfig()
+{
+    if [ "$container_group" != "" ]
+    then
+        echo "Group=$container_group" >> $1
+    fi
+    
+    if [ "$container_username" != "" ]
+    then
+        echo "User=$container_username" >> $1
+    fi
+}

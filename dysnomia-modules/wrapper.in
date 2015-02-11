@@ -3,10 +3,21 @@
 # Autoconf settings
 export prefix=@prefix@
 
+# Import access control
+source @datadir@/@PACKAGE@/access
+
 serviceName=$(basename $2)
+
+# Open container configuration file if it exists
+if [ -f "$2/etc/wrapper_config" ]
+then
+    source $2/etc/wrapper_config
+fi
 
 case "$1" in
     activate)
+        createUnprivilegedUserAndGroup
+        
         if [ "@job_template@" = "systemd" ]
         then
             # Systemd activation
@@ -16,25 +27,39 @@ case "$1" in
                 -e "s|@""systemd_path@|@systemd_path@|" \
                 @datadir@/@PACKAGE@/wrapper.template.systemd > @systemd_rundir@/system/disnix-$serviceName.service
             
-            if [ -f $2/systemd-config ]
+            addUserSettingsToSystemdConfig @systemd_rundir@/system/disnix-$serviceName.service
+            if [ -f $2/etc/systemd-config ]
             then
-                cat $2/systemd-config >> /run/systemd/system/disnix-$serviceName.service
+                cat $2/etc/systemd-config >> /run/systemd/system/disnix-$serviceName.service
             fi
         
             systemctl --system daemon-reload
             systemctl start disnix-$serviceName.service
         elif [ "@job_template@" = "init.d" ]
         then
+            runProcess="$(echo $2/bin/wrapper)"
+            
+            if [ "$container_username" != "" ]
+            then
+                runProcess="su $container_username -c \"$runProcess\""
+            fi
+            
             # init.d activation
             sed -e "s|@name@|disnix-$serviceName|" \
                 -e "s|@description@|$serviceName|" \
-                -e "s|@process@|$(echo $2/bin/wrapper)|" \
+                -e "s|@process@|$runProcess|" \
                 @datadir@/@PACKAGE@/wrapper.template.initd > @sysvinit_initd_dir@/$serviceName
                 
                 @sysvinit_initd_dir@/$serviceName start
         else
             # Direct activation
-            $2/bin/wrapper activate
+            
+            if [ "$container_username" = "" ]
+            then
+                $2/bin/wrapper activate
+            else
+                su $container_username -c "$2/bin/wrapper activate"
+            fi
         fi
         ;;
     
@@ -52,7 +77,15 @@ case "$1" in
             rm -f @sysvinit_initd_dir@/$serviceName
         else
             # Direct deactivation
-            $2/bin/wrapper deactivate
+            
+            if [ "$container_username" = "" ]
+            then
+                $2/bin/wrapper deactivate
+            else
+                su $container_username -c "$2/bin/wrapper deactivate"
+            fi
         fi
+        
+        removeUnprivilegedUserAndGroup
         ;;
 esac

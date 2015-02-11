@@ -14,7 +14,7 @@ stdenv.mkDerivation {
   '';
   installPhase =
   ''
-    ensureDir $out/webapps
+    mkdir -p $out/webapps
     cp *.war $out/webapps
   '';
 }

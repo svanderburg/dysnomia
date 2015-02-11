@@ -5,7 +5,7 @@ stdenv.mkDerivation {
   src = ../services/subversion-repository;
   buildCommand =
   ''
-    ensureDir $out/subversion-repositories
+    mkdir -p $out/subversion-repositories
     cp $src/*.dump $out/subversion-repositories
   '';
 }

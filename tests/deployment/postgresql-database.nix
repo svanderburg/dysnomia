@@ -5,7 +5,7 @@ stdenv.mkDerivation {
   src = ../services/mysql-database;
   buildCommand =
   ''
-    ensureDir $out/postgresql-databases
+    mkdir -p $out/postgresql-databases
     cp $src/*.sql $out/postgresql-databases
   '';
 }
