@@ -34,7 +34,7 @@ case "$1" in
             fi
         
             systemctl --system daemon-reload
-            systemctl start disnix-$serviceName.service || (removeUnprivilegedUserAndGroup; false)
+            systemctl start disnix-$serviceName.service || (rm -f disnix-$serviceName.service; removeUnprivilegedUserAndGroup; false)
         elif [ "@job_template@" = "init.d" ]
         then
             runProcess="$(echo $2/bin/wrapper)"
