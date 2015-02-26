@@ -43,7 +43,7 @@ case "$1" in
             fi
         
             systemctl --system daemon-reload
-            systemctl start disnix-$serviceName.service
+            systemctl start disnix-$serviceName.service || (removeUnprivilegedUserAndGroup; false)
         elif [ "@job_template@" = "init.d" ]
         then
             if [ "$container_username" != "" ]
@@ -57,7 +57,7 @@ case "$1" in
                 -e "s|@process@|$runProcess|" \
                 @datadir@/@PACKAGE@/process.template.initd > @sysvinit_initd_dir@/$serviceName
                 
-                @sysvinit_initd_dir@/$serviceName start
+                @sysvinit_initd_dir@/$serviceName start || (removeUnprivilegedUserAndGroup; false)
         else
             # Direct activation
             if [ "$container_username" = "" ]

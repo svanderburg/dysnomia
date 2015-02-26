@@ -34,7 +34,7 @@ case "$1" in
             fi
         
             systemctl --system daemon-reload
-            systemctl start disnix-$serviceName.service
+            systemctl start disnix-$serviceName.service || (removeUnprivilegedUserAndGroup; false)
         elif [ "@job_template@" = "init.d" ]
         then
             runProcess="$(echo $2/bin/wrapper)"
@@ -50,7 +50,7 @@ case "$1" in
                 -e "s|@process@|$runProcess|" \
                 @datadir@/@PACKAGE@/wrapper.template.initd > @sysvinit_initd_dir@/$serviceName
                 
-                @sysvinit_initd_dir@/$serviceName start
+                @sysvinit_initd_dir@/$serviceName start || (removeUnprivilegedUserAndGroup; false)
         else
             # Direct activation
             
@@ -58,7 +58,7 @@ case "$1" in
             then
                 $2/bin/wrapper activate
             else
-                su $container_username -c "$2/bin/wrapper activate"
+                su $container_username -c "$2/bin/wrapper activate" || (removeUnprivilegedUserAndGroup; false)
             fi
         fi
         ;;

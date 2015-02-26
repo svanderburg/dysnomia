@@ -8,6 +8,10 @@ Version 0.3
 
 - The process and wrapper types do not activate directly anymore. Instead they compose a systemd or init.d job.
 
+- Added mongo-database support
+
+- Support unprivileged user processes for wrapper and process types
+
 Version 0.2
 ===========
 - Removed the _nixos postfix, because scripts are not limited to NixOS
