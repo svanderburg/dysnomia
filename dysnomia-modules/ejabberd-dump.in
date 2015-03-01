@@ -5,13 +5,19 @@ ejabberdctl='@ejabberdctl@ --config-dir /var/ejabberd --logs /var/log/ejabberd -
 case "$1" in
     activate)
         # Wait until the ejabberd daemon is available
-        while ! ejabberdctl status
+        count=0
+        while ! $ejabberdctl status
         do
             if [ $count -eq 30 ]
             then
                 echo "Tried 30 times, giving up..."
                 exit 1
-        fi
+            fi
+            
+            echo "Ejabberd daemon not yet started. Waiting for 1 second..."
+            count=$((count++))
+            sleep 1
+        done
         
         # Load the dump
         if [ -f $2 ]
