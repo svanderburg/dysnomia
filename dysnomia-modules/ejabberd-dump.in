@@ -1,22 +1,30 @@
 #!/bin/bash -e
 
-export PATH=/run/current-system/sw/bin:$PATH
-
 ejabberdctl='@ejabberdctl@ --config-dir /var/ejabberd --logs /var/log/ejabberd --spool /var/lib/ejabberd'
 
 case "$1" in
     activate)
-	if [ -f $2 ]
-	then
-	    $ejabberdctl load $2
-	elif [ -d $2 ]
-	then
-	    $ejabberdctl load $2/ejabberd-dump/*
-	fi
-	;;
+        # Wait until the ejabberd daemon is available
+        while ! ejabberdctl status
+        do
+            if [ $count -eq 30 ]
+            then
+                echo "Tried 30 times, giving up..."
+                exit 1
+        fi
+        
+        # Load the dump
+        if [ -f $2 ]
+        then
+            $ejabberdctl load $2
+        elif [ -d $2 ]
+        then
+            $ejabberdctl load $2/ejabberd-dump/*
+        fi
+        ;;
     deactivate)
-	# An ejabberd dump cannot be deactivated, we do not want to drop user accounts
-	# with all data in it, right?
-	echo
-	;;
+        # An ejabberd dump cannot be deactivated, we do not want to drop user accounts
+        # with all data in it, right?
+        echo
+        ;;
 esac
