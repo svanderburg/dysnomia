@@ -64,6 +64,8 @@ case "$1" in
             then
                 nohup $runProcess > /var/log/$serviceName.log & pid=$!
             else
+                touch /var/log/$serviceName.log
+                chown $container_username /var/log/$serviceName.log
                 su $container_username -c "nohup $runProcess > /var/log/$serviceName.log" & pid=$!
             fi
             

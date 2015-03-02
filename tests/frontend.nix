@@ -1,5 +1,10 @@
-{ nixpkgs, dysnomia }:
+{ nixpkgs, buildFun }:
 
+let
+  dysnomia = buildFun {
+    system = builtins.currentSystem;
+  };
+in
 with import nixpkgs {};
 with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem; };
 

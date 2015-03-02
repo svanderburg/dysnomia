@@ -8,8 +8,7 @@ let
   pkgs = import nixpkgs {};
   
   buildFun =
-    { tarball ? jobs.tarball {}
-    , enableApacheWebApplication ? false
+    { enableApacheWebApplication ? false
     , enableAxis2WebService ? false
     , enableEjabberdDump ? false
     , enableMySQLDatabase ? false
@@ -18,6 +17,7 @@ let
     , enableMongoDatabase ? false
     , enableSubversionRepository ? false
     , catalinaBaseDir ? "/var/tomcat"
+    , jobTemplate ? "systemd"
     , system
     }:
 
@@ -26,20 +26,21 @@ let
     releaseTools.nixBuild {
       name = "dysnomia";
       version = builtins.readFile ./version;
-      src = tarball;
+      src = jobs.tarball;
         
       preConfigure = stdenv.lib.optionalString enableEjabberdDump "export PATH=$PATH:${ejabberd}/sbin";
 
-      configureFlags = ''
-        ${if enableApacheWebApplication then "--with-apache" else "--without-apache"}
-        ${if enableAxis2WebService then "--with-axis2" else "--without-axis2"}
-        ${if enableEjabberdDump then "--with-ejabberd" else "--without-ejabberd"}
-        ${if enableMySQLDatabase then "--with-mysql" else "--without-mysql"}
-        ${if enablePostgreSQLDatabase then "--with-postgresql" else "--without-postgresql"}
-        ${if enableMongoDatabase then "--with-mongodb" else "--without-mongodb"}
-        ${if enableTomcatWebApplication then "--with-tomcat=${catalinaBaseDir}" else "--without-tomcat"}
-        ${if enableSubversionRepository then "--with-subversion" else "--without-subversion"}
-      '';
+      configureFlags = [
+        (if enableApacheWebApplication then "--with-apache" else "--without-apache")
+        (if enableAxis2WebService then "--with-axis2" else "--without-axis2")
+        (if enableEjabberdDump then "--with-ejabberd" else "--without-ejabberd")
+        (if enableMySQLDatabase then "--with-mysql" else "--without-mysql")
+        (if enablePostgreSQLDatabase then "--with-postgresql" else "--without-postgresql")
+        (if enableMongoDatabase then "--with-mongodb" else "--without-mongodb")
+        (if enableTomcatWebApplication then "--with-tomcat=${catalinaBaseDir}" else "--without-tomcat")
+        (if enableSubversionRepository then "--with-subversion" else "--without-subversion")
+        "--with-job-template=${jobTemplate}"
+      ];
         
       buildInputs = [ getopt ]
         ++ stdenv.lib.optional enableEjabberdDump ejabberd
@@ -82,11 +83,19 @@ let
       in
       {
         install = import ./tests/install.nix {
-          inherit nixpkgs dysnomia;
+          inherit nixpkgs buildFun;
         };
         
         frontend = import ./tests/frontend.nix {
-          inherit nixpkgs dysnomia;
+          inherit nixpkgs buildFun;
+        };
+        
+        processes_systemd = import ./tests/processes-systemd.nix {
+          inherit nixpkgs buildFun;
+        };
+        
+        processes_direct = import ./tests/processes-direct.nix {
+          inherit nixpkgs buildFun;
         };
       };
   };
