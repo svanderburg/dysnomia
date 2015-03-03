@@ -86,10 +86,6 @@ let
           inherit nixpkgs buildFun;
         };
         
-        frontend = import ./tests/frontend.nix {
-          inherit nixpkgs buildFun;
-        };
-        
         processes_systemd = import ./tests/processes-systemd.nix {
           inherit nixpkgs buildFun;
         };
