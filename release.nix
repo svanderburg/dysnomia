@@ -62,7 +62,7 @@ let
 
     build = pkgs.lib.genAttrs systems (system: 
       buildFun {
-        inherit tarball system;
+        inherit system;
       }
     );
       
