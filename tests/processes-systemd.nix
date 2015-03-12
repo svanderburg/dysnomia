@@ -51,27 +51,62 @@ makeTest {
       
       # Test wrapper activation script. Here we invoke the wrapper
       # of a certain service. On activation it writes a state file in
-      # the temp folder. After a while we deactivate it and we check
-      # if the state file is removed. We also check whether the file is owned
-      # by root.
+      # the temp folder.
       # This test should succeed.
         
       $machine->mustSucceed("dysnomia --type wrapper --operation activate --component ${wrapper} --environment");
       $machine->mustSucceed("sleep 5; [ \"\$(cat /tmp/wrapper.state)\" = \"wrapper active\" ]");
       $machine->mustSucceed("[ \"\$(stat -c %U /tmp/wrapper.state)\" = \"root\" ]");
+
+      # Test wrapper activation script. Here we invoke the lock
+      # operation of a certain service. It should write a lock file
+      # into the temp dir and it should be owned by root.
+      # This test should succeed.
+      
+      $machine->mustSucceed("dysnomia --type wrapper --operation lock --component ${wrapper} --environment");
+      $machine->mustSucceed("[ \"\$(stat -c %U /tmp/wrapper.lock)\" = \"root\" ]");
+      
+      # Test wrapper activation script. Here we invoke the unlock
+      # operation of a certain service. The lock file should be removed.
+      # This test should succeed.
+      
+      $machine->mustSucceed("dysnomia --type wrapper --operation unlock --component ${wrapper} --environment");
+      $machine->mustSucceed("[ ! -f /tmp/wrapper.lock ]");
+
+      # Deactivate the wrapper script. We also check whether the file created
+      # on activation is owned by root.
+      # This test should succeed.
       $machine->mustSucceed("dysnomia --type wrapper --operation deactivate --component ${wrapper} --environment");
       $machine->mustSucceed("sleep 5; [ ! -f /tmp/wrapper.state ]");
       
       # Test wrapper activation script. Here we invoke the wrapper
       # of a certain service. On activation it writes a state file in
-      # the temp folder. After a while we deactivate it and we check
-      # if the state file is removed. We also check whether the file is owned
-      # by an unprivileged user.
+      # the temp folder.
       # This test should succeed.
       
       $machine->mustSucceed("dysnomia --type wrapper --operation activate --component ${wrapper_unprivileged} --environment");
       $machine->mustSucceed("sleep 5; [ \"\$(cat /tmp/wrapper.state)\" = \"wrapper active\" ]");
       $machine->mustSucceed("[ \"\$(stat -c %U /tmp/wrapper.state)\" = \"unprivileged\" ]");
+      
+      # Test wrapper activation script. Here we invoke the lock
+      # operation of a certain service. It should write a lock file
+      # into the temp dir and it should be owned by an unprivileged user.
+      # This test should succeed.
+      
+      $machine->mustSucceed("dysnomia --type wrapper --operation lock --component ${wrapper_unprivileged} --environment");
+      $machine->mustSucceed("[ \"\$(stat -c %U /tmp/wrapper.lock)\" = \"unprivileged\" ]");
+      
+      # Test wrapper activation script. Here we invoke the unlock
+      # operation of a certain service. The lock file should be removed.
+      # This test should succeed.
+      
+      $machine->mustSucceed("dysnomia --type wrapper --operation unlock --component ${wrapper_unprivileged} --environment");
+      $machine->mustSucceed("[ ! -f /tmp/wrapper.lock ]");
+      
+      # Deactivate the wrapper script. We also check whether the file created
+      # on activation is owned by the unprivileged user.
+      # This test should succeed.
+      
       $machine->mustSucceed("dysnomia --type wrapper --operation deactivate --component ${wrapper_unprivileged} --environment");
       $machine->mustSucceed("sleep 5; [ ! -f /tmp/wrapper.state ]");
       

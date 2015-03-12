@@ -7,4 +7,15 @@ case "$1" in
     deactivate)
         rm /tmp/wrapper.state
         ;;
+    lock)
+        if [ -f /tmp/wrapper.lock ]
+        then
+            exit 1
+        else
+            echo "1" > /tmp/wrapper.lock
+        fi
+        ;;
+    unlock)
+        rm -f /tmp/wrapper.lock
+        ;;
 esac

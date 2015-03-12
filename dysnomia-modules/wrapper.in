@@ -88,4 +88,22 @@ case "$1" in
         
         removeUnprivilegedUserAndGroup
         ;;
+    
+    lock)
+        if [ "$container_username" = "" ]
+        then
+            $2/bin/wrapper lock
+        else
+            su $container_username -c "$2/bin/wrapper lock"
+        fi
+        ;;
+    
+    unlock)
+        if [ "$container_username" = "" ]
+        then
+            $2/bin/wrapper unlock
+        else
+            su $container_username -c "$2/bin/wrapper unlock"
+        fi
+        ;;
 esac
