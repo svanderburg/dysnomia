@@ -11,11 +11,11 @@ let
     { enableApacheWebApplication ? false
     , enableAxis2WebService ? false
     , enableEjabberdDump ? false
-    , enableMySQLDatabase ? true
-    , enablePostgreSQLDatabase ? true
+    , enableMySQLDatabase ? false
+    , enablePostgreSQLDatabase ? false
     , enableTomcatWebApplication ? false
-    , enableMongoDatabase ? true
-    , enableSubversionRepository ? true
+    , enableMongoDatabase ? false
+    , enableSubversionRepository ? false
     , catalinaBaseDir ? "/var/tomcat"
     , jobTemplate ? "systemd"
     , system
@@ -82,6 +82,10 @@ let
         };
       in
       {
+        frontend = import ./tests/frontend.nix {
+          inherit nixpkgs buildFun;
+        };
+        
         install = import ./tests/install.nix {
           inherit nixpkgs buildFun;
         };
