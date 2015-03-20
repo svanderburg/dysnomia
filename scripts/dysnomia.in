@@ -171,6 +171,6 @@ fi
 
 # Forward the requested operation to the Dysnomia module
 
-env $envFlags PATH=$PATH \
+env $envFlags PATH=$PATH DYSNOMIA_STATEDIR=$DYSNOMIA_STATEDIR \
   $containerEnv \
   $module $operation $component

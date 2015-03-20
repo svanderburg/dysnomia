@@ -11,11 +11,11 @@ let
     { enableApacheWebApplication ? false
     , enableAxis2WebService ? false
     , enableEjabberdDump ? false
-    , enableMySQLDatabase ? false
-    , enablePostgreSQLDatabase ? false
+    , enableMySQLDatabase ? true
+    , enablePostgreSQLDatabase ? true
     , enableTomcatWebApplication ? false
-    , enableMongoDatabase ? false
-    , enableSubversionRepository ? false
+    , enableMongoDatabase ? true
+    , enableSubversionRepository ? true
     , catalinaBaseDir ? "/var/tomcat"
     , jobTemplate ? "systemd"
     , system

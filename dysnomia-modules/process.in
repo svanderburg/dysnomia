@@ -3,8 +3,8 @@
 # Autoconf settings
 export prefix=@prefix@
 
-# Import access control
-source @datadir@/@PACKAGE@/access
+# Import utility functions
+source @datadir@/@PACKAGE@/util
 
 serviceName=$(basename $2)
 

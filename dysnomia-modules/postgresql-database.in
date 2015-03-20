@@ -1,20 +1,62 @@
 #!/bin/bash -e
 
+# Autoconf settings
+export prefix=@prefix@
+
+# Import utility functions
+source @datadir@/@PACKAGE@/util
+
+determineComponentName $2
+checkStateDir
+determineTypeIdentifier $0
+composeSnapshotsPath
+composeGarbagePath
+
 case "$1" in
     activate)
-	# Initalize the given schema if the database does not exists
-	componentName=`basename $2`
-	dbName=${componentName:33}
-	
-	if [ "$(@psql@ -l | grep -x $dbName)" = "" ]
-	then
-	    su $postgresqlUsername -c "@createdb@ $dbName"
-	    su $postgresqlUsername -c "psql --file $2/postgresql-databases/*.sql $dbName"
-	fi
+        # Initalize the given schema if the database does not exists
+        if [ "$(@psql@ -l | grep -x $componentName)" = "" ]
+        then
+            su $postgresqlUsername -c "@createdb@ $componentName"
+            
+            if [ -d $2/postgresql-databases ]
+            then
+                su $postgresqlUsername -c "psql --file $2/postgresql-databases/*.sql $componentName"
+            fi
+        fi
+        unmarkStateAsGarbage
         ;;
     deactivate)
-	# A PostgreSQL database cannot be deactivated, we do not want to drop a database
-	# with all data in it, right?
-	echo
-	;;
+        markStateAsGarbage
+        ;;
+    snapshot)
+        tmpdir=$(mktemp -d)
+        cd $tmpdir
+        
+        @pg_dump@ $componentName | xz > dump.pgsql.xz
+        hash=$(cat dump.pgsql.xz | sha256sum)
+        hash=${hash:0:64}
+        
+        if [ -d $snapshotsPath/*-$hash ]
+        then
+            rm -Rf $tmpdir
+        else
+            now=$(date +%s)
+            
+            mkdir -p $snapshotsPath/$now-$hash
+            mv dump.pgsql.xz $snapshotsPath/$now-$hash
+            rmdir $tmpdir
+        fi
+        ;;
+    restore)
+        determineLastSnapshot
+        su $postgresqlUsername -c "xzcat $snapshotsPath/$lastSnapshot/dump.pgsql.xz | @pg_restore@ -d $componentName"
+        ;;
+    collect-garbage)
+        if [ -f $garbagePath ]
+        then
+            su $postgresqlUsername -c "dropdb $componentName"
+            unmarkStateAsGarbage
+        fi
+        ;;
 esac

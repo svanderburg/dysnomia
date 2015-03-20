@@ -1,22 +1,76 @@
 #!/bin/bash -e
 
-componentName=`basename $2`
-dbName=${componentName:33}
+# Autoconf settings
+export prefix=@prefix@
+
+# Import utility functions
+source @datadir@/@PACKAGE@/util
+
+determineComponentName $2
+checkStateDir
+determineTypeIdentifier $0
+composeSnapshotsPath
+composeGarbagePath
 
 case "$1" in
     activate)
         # Nothing needs to be done to create a mongo database. It gets created
         # automatically once an object is saved.
         
-        if [ -f $2/mongo-databases/* ]
+        if [ -d $2/mongo-databases ]
         then
-            ( echo "use $dbName;"
+            ( echo "use $componentName;"
               cat $2/mongo-databases/*
             ) | @mongo@
         fi
+        
+        unmarkStateAsGarbage
         ;;
         
     deactivate)
-        # Don't do anything yet
+        markStateAsGarbage
+        ;;
+    snapshot)
+        tmpdir=$(mktemp -d)
+        cd $tmpdir
+        
+        @mongodump@ -d $componentName -o .
+        hash=$((for i in $componentName/*; do cat $i; done) | sha256sum)
+        hash=${hash:0:64}
+        
+        if [ -d $snapshotsPath/*-$hash ]
+        then
+            rm -Rf $tmpdir
+        else
+            now=$(date +%s)
+            
+            mkdir -p $snapshotsPath/$now-$hash
+            mv $componentName $snapshotsPath/$now-$hash
+            rmdir $tmpdir
+        fi
+        ;;
+    restore)
+         numOfLines=$(( echo "use $componentName;"
+           echo "show collections;"
+         ) | mongo | wc -l)
+         
+         if [ "$numOfLines" = "4" ]
+         then
+             determineLastSnapshot
+             @mongorestore@ -d $componentName $snapshotsPath/$lastSnapshot/$componentName
+         else
+             echo "ERROR: A mongo database with collections exists. Refusing to restore dump!" >&2
+             exit 1
+         fi
+        ;;
+    collect-garbage)
+        if [ -f $garbagePath ]
+        then
+            ( echo "use $componentName;"
+              echo "db.dropDatabase();"
+            ) | @mongo@
+            
+            unmarkStateAsGarbage
+        fi
         ;;
 esac

@@ -59,14 +59,21 @@ AS_IF([test "x$with_mssql" != "xno"],
 AS_IF([test "x$with_mysql" != "xno"],
       [AC_PATH_PROG(mysql, mysql)])
 
+AC_PATH_PROG(mysqldump, mysqldump)
+
 AS_IF([test "x$with_postgresql" != "xno"],
       [AC_PATH_PROG(createdb, createdb)])
 
 AS_IF([test "x$with_postgresql" != "xno"],
       [AC_PATH_PROG(psql, psql)])
 
+AC_PATH_PROG(pg_dump, pg_dump)
+
 AS_IF([test "x$with_mongo" != "xno"],
       [AC_PATH_PROG(mongo, mongo)])
+
+AC_PATH_PROG(mongodump, mongodump)
+AC_PATH_PROG(mongorestore, mongorestore)
 
 AS_IF([test "x$with_subversion" != "xno"],
       [AC_PATH_PROG(svnadmin, svnadmin)])

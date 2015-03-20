@@ -103,3 +103,53 @@ addUserSettingsToSystemdConfig()
         echo "User=$container_username" >> $1
     fi
 }
+
+checkStateDir()
+{
+    if [ "$DYSNOMIA_STATEDIR" = "" ]
+    then
+        DYSNOMIA_STATEDIR="/var/dysnomia"
+    fi
+}
+
+determineComponentName()
+{
+    componentName=$(basename "$1")
+    storePrefix="/nix/store/"
+
+    if [ "${1:0:${#storePrefix}}" = "$storePrefix" ]
+    then
+        componentName="${componentName:33}"
+    fi
+}
+
+determineTypeIdentifier()
+{
+    typeIdentifier=$(basename "$1")
+}
+
+markStateAsGarbage()
+{
+    mkdir -p $DYSNOMIA_STATEDIR/garbage/$typeIdentifier
+    touch $garbagePath
+}
+
+unmarkStateAsGarbage()
+{
+    rm -f $garbagePath
+}
+
+determineLastSnapshot()
+{
+    lastSnapshot=$(ls $snapshotsPath | sort -n | tail -1)
+}
+
+composeSnapshotsPath()
+{
+    snapshotsPath=$DYSNOMIA_STATEDIR/snapshots/$typeIdentifier/$componentName
+}
+
+composeGarbagePath()
+{
+    garbagePath=$DYSNOMIA_STATEDIR/garbage/$typeIdentifier/$componentName
+}

@@ -1,24 +1,62 @@
 #!/bin/bash -e
 
-case "$1" in
-    # Imports a Subversion dump
-    activate)
-	componentName=`basename $2`
-	repositoryName=${componentName:33}
+# Autoconf settings
+export prefix=@prefix@
 
-	if [ ! -e $svnBaseDir/$repositoryName ]
-	then
-	    mkdir -p $svnBaseDir
-	    
-	    @svnadmin@ create $svnBaseDir/$repositoryName
-	    cat $2/subversion-repositories/* | @svnadmin@ load $svnBaseDir/$repositoryName
-	    
-	    chgrp -R $svnGroup $svnBaseDir/$repositoryName
-	    chmod -R g+w $svnBaseDir/$repositoryName
-	    chmod g+s $svnBaseDir/$repositoryName/db
-	fi
+# Import utility functions
+source @datadir@/@PACKAGE@/util
+
+determineComponentName $2
+checkStateDir
+determineTypeIdentifier $0
+composeSnapshotsPath
+composeGarbagePath
+
+case "$1" in
+    # Creates a Subversion repository and imports a Subversion dump if provided
+    activate)
+        if [ ! -e $svnBaseDir/$componentName ]
+        then
+            mkdir -p $svnBaseDir
+            
+            @svnadmin@ create $svnBaseDir/$componentName
+            if [ -d $2/subversion-repositories ]
+            then
+                cat $2/subversion-repositories/* | @svnadmin@ load $svnBaseDir/$componentName
+            fi
+            
+            chgrp -R $svnGroup $svnBaseDir/$componentName
+            chmod -R g+w $svnBaseDir/$componentName
+            chmod g+s $svnBaseDir/$componentName/db
+        fi
+        unmarkStateAsGarbage
         ;;
     deactivate)
-	# Does nothing, because we do not want to lose our SVN data
-	;;
+        markStateAsGarbage
+        ;;
+    snapshot)
+        rev=$(cat $svnBaseDir/$componentName/db/current)
+        
+        if [ ! -d $snapshotsPath/$rev ]
+        then
+            mkdir -p $snapshotsPath/$rev
+            @svnadmin@ dump -r $rev $svnBaseDir/$componentName | xz > $snapshotsPath/$rev/dump.xz
+        fi
+        ;;
+    restore)
+        rev=$(cat $svnBaseDir/$componentName/db/current)
+        determineLastSnapshot
+        
+        if [ "$rev" != "$lastSnapshot" ]
+        then
+            xzcat $snapshotsPath/$lastSnapshot/dump.xz | @svnadmin@ load $svnBaseDir/$componentName
+        fi
+        ;;
+    collect-garbage)
+        if [ -f $garbagePath ]
+        then
+            rm -Rf $svnBaseDir/$componentName
+            unmarkStateAsGarbage
+        fi
+        ;;
 esac
