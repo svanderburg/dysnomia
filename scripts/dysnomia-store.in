@@ -1,0 +1,150 @@
+#!/bin/bash -e
+# Copyright (c) 2009-2015 Sander van der Burg
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+# THE SOFTWARE.
+
+# Autoconf settings
+export prefix=@prefix@
+
+# Import utility functions
+source @datadir@/@PACKAGE@/util
+
+# Shows the usage of this command to the user
+
+showUsage()
+{
+    echo "$0"
+}
+
+checkStateDir
+
+# Parse valid argument options
+
+PARAMS=`@getopt@ -n $0 -o h -l print-missing,query-latest,query-all,gc,help -- "$@"`
+
+if [ $? != 0 ]
+then
+    showUsage
+    exit 1
+fi
+
+eval set -- "$PARAMS"
+
+# Evaluate valid options
+
+while [ "$1" != "--" ]
+do
+    case "$1" in
+        --query-latest)
+            operation="query-latest"
+            ;;
+        --query-all)
+            operation="query-all"
+            ;;
+        --print-missing)
+            operation="print-missing"
+            ;;
+        --gc)
+            operation="gc"
+            ;;
+        -h|--help)
+            showUsage
+            exit 0
+            ;;
+    esac
+    
+    shift
+done
+
+shift
+
+# Validate options
+
+if [ -z "$operation" ]
+then
+    echo "No operation specified!" >&2
+    exit 1
+fi
+
+# Execute operation
+
+case "$operation" in
+    query-latest)
+        if [ -d $DYSNOMIA_STATEDIR/snapshots ]
+        then
+            for container in $(ls $DYSNOMIA_STATEDIR/snapshots)
+            do
+                for component in $(ls $DYSNOMIA_STATEDIR/snapshots/$container)
+                do
+                    lastSnapshot=$(ls $DYSNOMIA_STATEDIR/snapshots/$container/$component | sort -n | tail -1)
+                    
+                    if [ "$lastSnapshot" != "" ]
+                    then
+                        echo $DYSNOMIA_STATEDIR/snapshots/$container/$component/$lastSnapshot
+                    fi
+                done
+            done
+        fi
+        ;;
+    query-all)
+        if [ -d $DYSNOMIA_STATEDIR/snapshots ]
+        then
+            for container in $(ls $DYSNOMIA_STATEDIR/snapshots)
+            do
+                for component in $(ls $DYSNOMIA_STATEDIR/snapshots/$container)
+                do
+                    for snapshot in $(ls $DYSNOMIA_STATEDIR/snapshots/$container/$component)
+                    do
+                        echo $DYSNOMIA_STATEDIR/snapshots/$container/$component/$snapshot
+                    done
+                done
+            done
+        fi
+        ;;
+    print-missing)
+        for i in $@
+        do
+            if [ "${i:${#DYSNOMIA_STATEDIR}}" != "$DYSNOMIA_STATEDIR" ] && [ ! -e $i ]
+            then
+                echo $i
+            fi
+        done
+        ;;
+    gc)
+        if [ -d $DYSNOMIA_STATEDIR/snapshots ]
+        then
+            for container in $(ls $DYSNOMIA_STATEDIR/snapshots)
+            do
+                for component in $(ls $DYSNOMIA_STATEDIR/snapshots/$container)
+                do
+                    count=$(ls $DYSNOMIA_STATEDIR/snapshots/$container/$component | wc -l)
+                
+                    if [ $count -gt 1 ]
+                    then
+                        for i in $(ls $DYSNOMIA_STATEDIR/snapshots/$container/$component | sort -n | head -n -1)
+                        do
+                            echo "Removing old snapshot: $DYSNOMIA_STATEDIR/snapshots/$container/$component/$i" >&2
+                            rm -Rf $DYSNOMIA_STATEDIR/snapshots/$container/$component/$i
+                        done
+                    fi
+                done
+            done
+        fi
+        ;;
+esac

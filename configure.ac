@@ -156,6 +156,7 @@ AS_IF([test "x$svnadmin" != "x"],
 AC_CONFIG_FILES([
 Makefile
 scripts/dysnomia
+scripts/dysnomia-store
 scripts/Makefile
 dysnomia-modules/process
 dysnomia-modules/wrapper
