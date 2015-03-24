@@ -36,7 +36,7 @@ checkStateDir
 
 # Parse valid argument options
 
-PARAMS=`@getopt@ -n $0 -o h -l print-missing,query-latest,query-all,gc,help -- "$@"`
+PARAMS=`@getopt@ -n $0 -o C:c:h -l print-missing,query-latest,query-all,gc,container:,component:,help -- "$@"`
 
 if [ $? != 0 ]
 then
@@ -63,6 +63,12 @@ do
         --gc)
             operation="gc"
             ;;
+        -C|--container)
+            container=$2
+            ;;
+        -c|--component)
+            component=$2
+            ;;
         -h|--help)
             showUsage
             exit 0
@@ -88,15 +94,37 @@ case "$operation" in
     query-latest)
         if [ -d $DYSNOMIA_STATEDIR/snapshots ]
         then
-            for container in $(ls $DYSNOMIA_STATEDIR/snapshots)
+            if [ -z "$container" ]
+            then
+                containers=$(ls $DYSNOMIA_STATEDIR/snapshots)
+            else
+                containers=$container
+            fi
+            
+            for container in $containers
             do
-                for component in $(ls $DYSNOMIA_STATEDIR/snapshots/$container)
-                do
-                    lastSnapshot=$(ls $DYSNOMIA_STATEDIR/snapshots/$container/$component | sort -n | tail -1)
-                    
-                    if [ "$lastSnapshot" != "" ]
+                if [ -z "$component" ]
+                then
+                    if [ -d $DYSNOMIA_STATEDIR/snapshots/$container ]
                     then
-                        echo $DYSNOMIA_STATEDIR/snapshots/$container/$component/$lastSnapshot
+                        components=$(ls $DYSNOMIA_STATEDIR/snapshots/$container)
+                    else
+                        components=""
+                    fi
+                else
+                    components=$component
+                fi
+                
+                for component in $components
+                do
+                    if [ -d $DYSNOMIA_STATEDIR/snapshots/$container/$component ]
+                    then
+                        lastSnapshot=$(ls $DYSNOMIA_STATEDIR/snapshots/$container/$component | sort -n | tail -1)
+                    
+                        if [ "$lastSnapshot" != "" ]
+                        then
+                            echo $DYSNOMIA_STATEDIR/snapshots/$container/$component/$lastSnapshot
+                        fi
                     fi
                 done
             done
@@ -105,14 +133,36 @@ case "$operation" in
     query-all)
         if [ -d $DYSNOMIA_STATEDIR/snapshots ]
         then
-            for container in $(ls $DYSNOMIA_STATEDIR/snapshots)
+            if [ -z "$container" ]
+            then
+                containers=$(ls $DYSNOMIA_STATEDIR/snapshots)
+            else
+                containers=$container
+            fi
+            
+            for container in $containers
             do
-                for component in $(ls $DYSNOMIA_STATEDIR/snapshots/$container)
+                if [ -z "$component" ]
+                then
+                    if [ -d $DYSNOMIA_STATEDIR/snapshots/$container ]
+                    then
+                        components=$(ls $DYSNOMIA_STATEDIR/snapshots/$container)
+                    else
+                        components=""
+                    fi
+                else
+                    components=$component
+                fi
+                
+                for component in $components
                 do
-                    for snapshot in $(ls $DYSNOMIA_STATEDIR/snapshots/$container/$component)
-                    do
-                        echo $DYSNOMIA_STATEDIR/snapshots/$container/$component/$snapshot
-                    done
+                    if [ -d $DYSNOMIA_STATEDIR/snapshots/$container/$component ]
+                    then
+                        for snapshot in $(ls $DYSNOMIA_STATEDIR/snapshots/$container/$component)
+                        do
+                            echo $DYSNOMIA_STATEDIR/snapshots/$container/$component/$snapshot
+                        done
+                    fi
                 done
             done
         fi
