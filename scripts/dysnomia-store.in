@@ -170,7 +170,7 @@ case "$operation" in
     print-missing)
         for i in $@
         do
-            if [ "${i:${#DYSNOMIA_STATEDIR}}" != "$DYSNOMIA_STATEDIR" ] && [ ! -e $i ]
+            if [ "${i:0:${#DYSNOMIA_STATEDIR}}" = "$DYSNOMIA_STATEDIR" ] && [ ! -e $i ]
             then
                 echo $i
             fi
