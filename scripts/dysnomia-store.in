@@ -217,7 +217,7 @@ case "$operation" in
         
         for i in $@
         do
-            mv $i/* $DYSNOMIA_STATEDIR/snapshots/$container/$component
+            mv $i $DYSNOMIA_STATEDIR/snapshots/$container/$component
         done
         ;;
 esac
