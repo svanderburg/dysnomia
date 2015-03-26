@@ -36,7 +36,7 @@ checkStateDir
 
 # Parse valid argument options
 
-PARAMS=`@getopt@ -n $0 -o C:c:h -l print-missing,query-latest,query-all,gc,container:,component:,help -- "$@"`
+PARAMS=`@getopt@ -n $0 -o C:c:h -l print-missing,query-latest,query-all,gc,import,container:,component:,help -- "$@"`
 
 if [ $? != 0 ]
 then
@@ -62,6 +62,9 @@ do
             ;;
         --gc)
             operation="gc"
+            ;;
+        --import)
+            operation="import"
             ;;
         -C|--container)
             container=$2
@@ -196,5 +199,25 @@ case "$operation" in
                 done
             done
         fi
+        ;;
+    import)
+        if [ -z "$container" ]
+        then
+            echo "ERROR: No container specified!" >&2
+            exit 1
+        fi
+        
+        if [ -z "$component" ]
+        then
+            echo "ERROR: No component specified!" >&2
+            exit 1
+        fi
+        
+        mkdir -p $DYSNOMIA_STATEDIR/snapshots/$container/$component
+        
+        for i in $@
+        do
+            mv $i/* $DYSNOMIA_STATEDIR/snapshots/$container/$component
+        done
         ;;
 esac
