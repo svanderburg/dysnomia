@@ -36,7 +36,7 @@ checkStateDir
 
 # Parse valid argument options
 
-PARAMS=`@getopt@ -n $0 -o C:c:h -l print-missing,query-latest,query-all,gc,import,container:,component:,help -- "$@"`
+PARAMS=`@getopt@ -n $0 -o C:c:h -l print-missing,query-latest,query-all,gc,import,resolve,container:,component:,help -- "$@"`
 
 if [ $? != 0 ]
 then
@@ -65,6 +65,9 @@ do
             ;;
         --import)
             operation="import"
+            ;;
+        --resolve)
+            operation="resolve"
             ;;
         -C|--container)
             container=$2
@@ -126,7 +129,7 @@ case "$operation" in
                     
                         if [ "$lastSnapshot" != "" ]
                         then
-                            echo $DYSNOMIA_STATEDIR/snapshots/$container/$component/$lastSnapshot
+                            echo $container/$component/$lastSnapshot
                         fi
                     fi
                 done
@@ -163,7 +166,7 @@ case "$operation" in
                     then
                         for snapshot in $(ls $DYSNOMIA_STATEDIR/snapshots/$container/$component)
                         do
-                            echo $DYSNOMIA_STATEDIR/snapshots/$container/$component/$snapshot
+                            echo $container/$component/$snapshot
                         done
                     fi
                 done
@@ -173,7 +176,7 @@ case "$operation" in
     print-missing)
         for i in $@
         do
-            if [ "${i:0:${#DYSNOMIA_STATEDIR}}" = "$DYSNOMIA_STATEDIR" ] && [ ! -e $i ]
+            if [ ! -e $DYSNOMIA_STATEDIR/snapshots/$i ]
             then
                 echo $i
             fi
@@ -192,7 +195,7 @@ case "$operation" in
                     then
                         for i in $(ls $DYSNOMIA_STATEDIR/snapshots/$container/$component | sort -n | head -n -1)
                         do
-                            echo "Removing old snapshot: $DYSNOMIA_STATEDIR/snapshots/$container/$component/$i" >&2
+                            echo "Removing old snapshot: $container/$component/$i" >&2
                             rm -Rf $DYSNOMIA_STATEDIR/snapshots/$container/$component/$i
                         done
                     fi
@@ -218,6 +221,12 @@ case "$operation" in
         for i in $@
         do
             mv $i $DYSNOMIA_STATEDIR/snapshots/$container/$component
+        done
+        ;;
+    resolve)
+        for i in $@
+        do
+            echo $DYSNOMIA_STATEDIR/snapshots/$i
         done
         ;;
 esac
