@@ -96,6 +96,8 @@ fi
 
 # Execute operation
 
+determineComponentName
+
 case "$operation" in
     query-latest)
         if [ -d $DYSNOMIA_STATEDIR/snapshots ]
@@ -109,7 +111,7 @@ case "$operation" in
             
             for container in $containers
             do
-                if [ -z "$component" ]
+                if [ -z "$componentName" ]
                 then
                     if [ -d $DYSNOMIA_STATEDIR/snapshots/$container ]
                     then
@@ -118,7 +120,7 @@ case "$operation" in
                         components=""
                     fi
                 else
-                    components=$component
+                    components=$componentName
                 fi
                 
                 for component in $components
@@ -148,7 +150,7 @@ case "$operation" in
             
             for container in $containers
             do
-                if [ -z "$component" ]
+                if [ -z "$componentName" ]
                 then
                     if [ -d $DYSNOMIA_STATEDIR/snapshots/$container ]
                     then
@@ -157,7 +159,7 @@ case "$operation" in
                         components=""
                     fi
                 else
-                    components=$component
+                    components=$componentName
                 fi
                 
                 for component in $components
@@ -210,17 +212,17 @@ case "$operation" in
             exit 1
         fi
         
-        if [ -z "$component" ]
+        if [ -z "$componentName" ]
         then
             echo "ERROR: No component specified!" >&2
             exit 1
         fi
         
-        mkdir -p $DYSNOMIA_STATEDIR/snapshots/$container/$component
+        mkdir -p $DYSNOMIA_STATEDIR/snapshots/$container/$componentName
         
         for i in $@
         do
-            mv $i $DYSNOMIA_STATEDIR/snapshots/$container/$component
+            mv $i $DYSNOMIA_STATEDIR/snapshots/$container/$componentName
         done
         ;;
     resolve)
