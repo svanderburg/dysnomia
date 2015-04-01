@@ -96,7 +96,7 @@ fi
 
 # Execute operation
 
-determineComponentName
+determineComponentName $component
 
 case "$operation" in
     query-latest)

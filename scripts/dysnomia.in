@@ -89,13 +89,13 @@ done
 
 if [ -z "$operation" ]
 then
-    echo "No operation specified!" >&2
+    echo "ERROR: No operation specified!" >&2
     exit 1
 fi
 
-if [ ! -e "$component" ]
+if [ -z "$component" ]
 then
-    echo "No component is specified or it does not exists!" >&2
+    echo "ERROR: No component is specified!" >&2
     exit 1
 fi
 
