@@ -32,9 +32,25 @@ case "$1" in
         markStateAsGarbage
         ;;
     snapshot)
-        now=$(date +%s)
-        mkdir -p $snapshotsPath/$now
-        @mysqldump@ --single-transaction --quick --user=$mysqlUsername --password=$mysqlPassword $componentName | xz > $snapshotsPath/$now/dump.sql.xz
+        tmpdir=$(mktemp -d)
+        cd $tmpdir
+        # Dump the MySQL database in a single transaction. Chop off the last
+        # line because that contains a comment with a timestamp Without it we
+        # can compare output hashes to see whether dumps are identical
+        @mysqldump@ --single-transaction --quick --user=$mysqlUsername --password=$mysqlPassword $componentName | head -n-1 | xz > dump.sql.xz
+        hash=$(cat dump.sql.xz | sha256sum)
+        hash=${hash:0:64}
+        
+        if [ -d $snapshotsPath/*-$hash ]
+        then
+            rm -Rf $tmpdir
+        else
+            now=$(date +%s)
+            
+            mkdir -p $snapshotsPath/$now-$hash
+            mv dump.sql.xz $snapshotsPath/$now-$hash
+            rmdir $tmpdir
+        fi
         ;;
     restore)
         determineLastSnapshot
