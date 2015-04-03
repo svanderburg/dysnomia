@@ -1,3 +1,7 @@
+Version 0.4
+===========
+- Added dysnomia-store utility and snapshotting facilities
+
 Version 0.3
 ===========
 - Experimental support for MS SQL and IIS activation types

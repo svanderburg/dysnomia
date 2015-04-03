@@ -176,13 +176,16 @@ case "$operation" in
         fi
         ;;
     print-missing)
-        for i in $@
-        do
-            if [ ! -e $DYSNOMIA_STATEDIR/snapshots/$i ]
-            then
-                echo $i
-            fi
-        done
+        if [ ! -z "$@" ]
+        then
+            for i in $@
+            do
+                if [ ! -e $DYSNOMIA_STATEDIR/snapshots/$i ]
+                then
+                    echo $i
+                fi
+            done
+        fi
         ;;
     gc)
         if [ -d $DYSNOMIA_STATEDIR/snapshots ]
@@ -218,17 +221,23 @@ case "$operation" in
             exit 1
         fi
         
-        mkdir -p $DYSNOMIA_STATEDIR/snapshots/$container/$componentName
-        
-        for i in $@
-        do
-            mv $i $DYSNOMIA_STATEDIR/snapshots/$container/$componentName
-        done
+        if [ ! -z "$@" ]
+        then
+            mkdir -p $DYSNOMIA_STATEDIR/snapshots/$container/$componentName
+            
+            for i in $@
+            do
+                mv $i $DYSNOMIA_STATEDIR/snapshots/$container/$componentName
+            done
+        fi
         ;;
     resolve)
-        for i in $@
-        do
-            echo $DYSNOMIA_STATEDIR/snapshots/$i
-        done
+        if [ ! -z "$@" ]
+        then
+            for i in $@
+            do
+                echo $DYSNOMIA_STATEDIR/snapshots/$i
+            done
+        fi
         ;;
 esac
