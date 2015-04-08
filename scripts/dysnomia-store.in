@@ -176,7 +176,7 @@ case "$operation" in
         fi
         ;;
     print-missing)
-        if [ ! -z "$@" ]
+        if [[ ! -z "$@" ]]
         then
             for i in $@
             do
@@ -221,7 +221,7 @@ case "$operation" in
             exit 1
         fi
         
-        if [ ! -z "$@" ]
+        if [[ ! -z "$@" ]]
         then
             mkdir -p $DYSNOMIA_STATEDIR/snapshots/$container/$componentName
             
@@ -232,7 +232,7 @@ case "$operation" in
         fi
         ;;
     resolve)
-        if [ ! -z "$@" ]
+        if [[ ! -z "$@" ]]
         then
             for i in $@
             do
