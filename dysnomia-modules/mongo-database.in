@@ -50,18 +50,11 @@ case "$1" in
         fi
         ;;
     restore)
-         numOfLines=$(( echo "use $componentName;"
-           echo "show collections;"
-         ) | mongo | wc -l)
-         
-         if [ "$numOfLines" = "4" ]
-         then
-             determineLastSnapshot
-             @mongorestore@ -d $componentName $snapshotsPath/$lastSnapshot/$componentName
-         else
-             echo "ERROR: A mongo database with collections exists. Refusing to restore dump!" >&2
-             exit 1
-         fi
+        ( echo "use $componentName;"
+          echo "db.dropDatabase();"
+        ) | @mongo@
+        determineLastSnapshot
+        @mongorestore@ -d $componentName $snapshotsPath/$lastSnapshot/$componentName
         ;;
     collect-garbage)
         if [ -f $garbagePath ]
