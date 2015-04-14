@@ -35,7 +35,7 @@ case "$1" in
         cd $tmpdir
         
         @mongodump@ -d $componentName -o .
-        hash=$((for i in $componentName/*; do cat $i; done) | sha256sum)
+        hash=$((for i in $componentName/*; do echo $i; cat $i; done) | sha256sum)
         hash=${hash:0:64}
         
         if [ -d $snapshotsPath/*-$hash ]
