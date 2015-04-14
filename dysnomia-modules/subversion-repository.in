@@ -47,7 +47,7 @@ case "$1" in
         rev=$(cat $svnBaseDir/$componentName/db/current)
         determineLastSnapshot
         
-        if [ "$rev" != "$lastSnapshot" ]
+        if [ "$lastSnapshot" != "" ] && [ "$rev" != "$lastSnapshot" ]
         then
             xzcat $snapshotsPath/$lastSnapshot/dump.xz | @svnadmin@ load $svnBaseDir/$componentName
         fi

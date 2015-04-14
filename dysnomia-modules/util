@@ -141,7 +141,12 @@ unmarkStateAsGarbage()
 
 determineLastSnapshot()
 {
-    lastSnapshot=$(ls $snapshotsPath | sort -n | tail -1)
+    if [ -d $snapshotsPath ]
+    then
+        lastSnapshot=$(ls $snapshotsPath | sort -n | tail -1)
+    else
+        lastSnapshot=""
+    fi
 }
 
 composeSnapshotsPath()

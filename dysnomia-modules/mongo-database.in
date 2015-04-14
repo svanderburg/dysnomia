@@ -50,11 +50,15 @@ case "$1" in
         fi
         ;;
     restore)
-        ( echo "use $componentName;"
-          echo "db.dropDatabase();"
-        ) | @mongo@
         determineLastSnapshot
-        @mongorestore@ -d $componentName $snapshotsPath/$lastSnapshot/$componentName
+        
+        if [ "$lastSnapshot" != "" ]
+        then
+            ( echo "use $componentName;"
+              echo "db.dropDatabase();"
+            ) | @mongo@
+            @mongorestore@ -d $componentName $snapshotsPath/$lastSnapshot/$componentName
+        fi
         ;;
     collect-garbage)
         if [ -f $garbagePath ]

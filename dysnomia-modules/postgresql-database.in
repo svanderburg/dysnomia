@@ -50,7 +50,11 @@ case "$1" in
         ;;
     restore)
         determineLastSnapshot
-        su $postgresqlUsername -c "xzcat $snapshotsPath/$lastSnapshot/dump.pgsql.xz | @pg_restore@ -d $componentName"
+        
+        if [ "$lastSnapshot" != "" ]
+        then
+            su $postgresqlUsername -c "xzcat $snapshotsPath/$lastSnapshot/dump.pgsql.xz | @pg_restore@ -d $componentName"
+        fi
         ;;
     collect-garbage)
         if [ -f $garbagePath ]

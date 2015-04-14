@@ -55,9 +55,12 @@ case "$1" in
     restore)
         determineLastSnapshot
         
-        ( echo "use $componentName;"
-          xzcat $snapshotsPath/$lastSnapshot/dump.sql.xz
-        ) | @mysql@ --user=$mysqlUsername --password=$mysqlPassword -N
+        if [ "$lastSnapshot" != "" ]
+        then
+            ( echo "use $componentName;"
+              xzcat $snapshotsPath/$lastSnapshot/dump.sql.xz
+            ) | @mysql@ --user=$mysqlUsername --password=$mysqlPassword -N
+        fi
         ;;
     collect-garbage)
         if [ -f $garbagePath ]
