@@ -11,6 +11,7 @@ checkStateDir
 determineTypeIdentifier $0
 composeSnapshotsPath
 composeGarbagePath
+composeGenerationsPath
 
 case "$1" in
     # Creates a Subversion repository and imports a Subversion dump if provided
@@ -41,6 +42,7 @@ case "$1" in
         then
             mkdir -p $snapshotsPath/$rev
             @svnadmin@ dump -r $rev $svnBaseDir/$componentName | xz > $snapshotsPath/$rev/dump.xz
+            createGenerationSymlink $snapshotsPath/$hash
         fi
         ;;
     restore)

@@ -100,11 +100,11 @@ determineComponentName $component
 
 case "$operation" in
     query-latest)
-        if [ -d $DYSNOMIA_STATEDIR/snapshots ]
+        if [ -d $DYSNOMIA_STATEDIR/generations ]
         then
             if [ -z "$container" ]
             then
-                containers=$(ls $DYSNOMIA_STATEDIR/snapshots)
+                containers=$(ls $DYSNOMIA_STATEDIR/generations)
             else
                 containers=$container
             fi
@@ -113,9 +113,9 @@ case "$operation" in
             do
                 if [ -z "$componentName" ]
                 then
-                    if [ -d $DYSNOMIA_STATEDIR/snapshots/$container ]
+                    if [ -d $DYSNOMIA_STATEDIR/generations/$container ]
                     then
-                        components=$(ls $DYSNOMIA_STATEDIR/snapshots/$container)
+                        components=$(ls $DYSNOMIA_STATEDIR/generations/$container)
                     else
                         components=""
                     fi
@@ -125,13 +125,14 @@ case "$operation" in
                 
                 for component in $components
                 do
-                    if [ -d $DYSNOMIA_STATEDIR/snapshots/$container/$component ]
+                    if [ -d $DYSNOMIA_STATEDIR/generations/$container/$component ]
                     then
-                        lastSnapshot=$(ls $DYSNOMIA_STATEDIR/snapshots/$container/$component | sort -n | tail -1)
+                        lastGeneration=$(ls $DYSNOMIA_STATEDIR/generations/$container/$component | sort -n | tail -1)
                     
-                        if [ "$lastSnapshot" != "" ]
+                        if [ "$lastGeneration" != "" ]
                         then
-                            echo $container/$component/$lastSnapshot
+                            lastSnapshot=$(readlink -f $DYSNOMIA_STATEDIR/generations/$container/$component/$lastGeneration)
+                            echo $container/$component/$(basename $lastSnapshot)
                         fi
                     fi
                 done
@@ -188,20 +189,38 @@ case "$operation" in
         fi
         ;;
     gc)
-        if [ -d $DYSNOMIA_STATEDIR/snapshots ]
+        # Remove dangling symlinks
+        if [ -d $DYSNOMIA_STATEDIR/generations ]
         then
-            for container in $(ls $DYSNOMIA_STATEDIR/snapshots)
+            for i in $DYSNOMIA_STATEDIR/generations/*
             do
-                for component in $(ls $DYSNOMIA_STATEDIR/snapshots/$container)
+                if [ ! -e "$i" ]
+                then
+                     echo "Remove dangling generation symlink: $DYSNOMIA_STATEDIR/generations/$i" >&2
+                     rm $DYSNOMIA_STATEDIR/generations/$i
+                fi
+            done
+        fi
+        
+        # Remove snapshots
+        if [ -d $DYSNOMIA_STATEDIR/generations ]
+        then
+            for container in $(ls $DYSNOMIA_STATEDIR/generations)
+            do
+                for component in $(ls $DYSNOMIA_STATEDIR/generations/$container)
                 do
-                    count=$(ls $DYSNOMIA_STATEDIR/snapshots/$container/$component | wc -l)
+                    count=$(ls $DYSNOMIA_STATEDIR/generations/$container/$component | wc -l)
                 
                     if [ $count -gt 1 ]
                     then
-                        for i in $(ls $DYSNOMIA_STATEDIR/snapshots/$container/$component | sort -n | head -n -1)
+                        for i in $(ls $DYSNOMIA_STATEDIR/generations/$container/$component | sort -n | head -n -1)
                         do
-                            echo "Removing old snapshot: $container/$component/$i" >&2
-                            rm -Rf $DYSNOMIA_STATEDIR/snapshots/$container/$component/$i
+                            snapshot=$(readlink -f $DYSNOMIA_STATEDIR/generations/$container/$component/$i)
+                            echo "Removing old snapshot: $snapshot" >&2
+                            rm -Rf $snapshot
+                            
+                            echo "Removing old generation: $container/$component/$i" >&2
+                            rm $DYSNOMIA_STATEDIR/generations/$container/$component/$i
                         done
                     fi
                 done
@@ -229,6 +248,9 @@ case "$operation" in
             do
                 mv $i $DYSNOMIA_STATEDIR/snapshots/$container/$componentName
             done
+            
+            generationsPath=$DYSNOMIA_STATEDIR/generations/$container/$componentName
+            createGenerationSymlink $DYSNOMIA_STATEDIR/snapshots/$container/$componentName/$(basename $i)
         fi
         ;;
     resolve)

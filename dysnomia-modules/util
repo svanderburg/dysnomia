@@ -141,9 +141,16 @@ unmarkStateAsGarbage()
 
 determineLastSnapshot()
 {
-    if [ -d $snapshotsPath ]
+    if [ -d $generationsPath ]
     then
-        lastSnapshot=$(ls $snapshotsPath | sort -n | tail -1)
+        lastGeneration=$(ls $generationsPath | sort -n | tail -1)
+        
+        if [ "$lastGeneration" = "" ]
+        then
+            lastSnapshot=""
+        else
+            lastSnapshot=$(basename $(readlink -f $generationsPath/$lastGeneration))
+        fi
     else
         lastSnapshot=""
     fi
@@ -157,4 +164,28 @@ composeSnapshotsPath()
 composeGarbagePath()
 {
     garbagePath=$DYSNOMIA_STATEDIR/garbage/$typeIdentifier/$componentName
+}
+
+composeGenerationsPath()
+{
+    generationsPath=$DYSNOMIA_STATEDIR/generations/$typeIdentifier/$componentName
+}
+
+createGenerationSymlink()
+{
+    if [ -d $generationsPath ]
+    then
+        lastGeneration=$(ls $generationsPath | sort -n | tail -1)
+        
+        if [ "$lastGeneration" = "" ]
+        then
+            lastGeneration=0
+        fi
+    else
+        mkdir -p $generationsPath
+        lastGeneration=0
+    fi
+    
+    newGeneration=$((lastGeneration+1))
+    ln -s "$1" $generationsPath/$newGeneration
 }

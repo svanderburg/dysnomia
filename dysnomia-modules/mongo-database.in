@@ -11,6 +11,7 @@ checkStateDir
 determineTypeIdentifier $0
 composeSnapshotsPath
 composeGarbagePath
+composeGenerationsPath
 
 case "$1" in
     activate)
@@ -38,16 +39,15 @@ case "$1" in
         hash=$((for i in $componentName/*; do echo $i; cat $i; done) | sha256sum)
         hash=${hash:0:64}
         
-        if [ -d $snapshotsPath/*-$hash ]
+        if [ -d $snapshotsPath/$hash ]
         then
             rm -Rf $tmpdir
         else
-            now=$(date +%s)
-            
-            mkdir -p $snapshotsPath/$now-$hash
-            mv $componentName $snapshotsPath/$now-$hash
+            mkdir -p $snapshotsPath/$hash
+            mv $componentName $snapshotsPath/$hash
             rmdir $tmpdir
         fi
+        createGenerationSymlink $snapshotsPath/$hash
         ;;
     restore)
         determineLastSnapshot

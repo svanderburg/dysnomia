@@ -11,6 +11,7 @@ checkStateDir
 determineTypeIdentifier $0
 composeSnapshotsPath
 composeGarbagePath
+composeGenerationsPath
 
 case "$1" in
     activate)
@@ -37,16 +38,16 @@ case "$1" in
         hash=$(cat dump.pgsql.xz | sha256sum)
         hash=${hash:0:64}
         
-        if [ -d $snapshotsPath/*-$hash ]
+        if [ -d $snapshotsPath/$hash ]
         then
             rm -Rf $tmpdir
         else
-            now=$(date +%s)
-            
-            mkdir -p $snapshotsPath/$now-$hash
-            mv dump.pgsql.xz $snapshotsPath/$now-$hash
+            mkdir -p $snapshotsPath/$hash
+            mv dump.pgsql.xz $snapshotsPath/$hash
             rmdir $tmpdir
+            
         fi
+        createGenerationSymlink $snapshotsPath/$hash
         ;;
     restore)
         determineLastSnapshot
