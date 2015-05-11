@@ -39,6 +39,8 @@ case "$1" in
         # line because that contains a comment with a timestamp Without it we
         # can compare output hashes to see whether dumps are identical
         @mysqldump@ --single-transaction --quick --user=$mysqlUsername --password=$mysqlPassword $componentName | head -n-1 | xz > dump.sql.xz
+        [ "$PIPESTATUS" != "0" ] && exit 1
+        
         hash=$(cat dump.sql.xz | sha256sum)
         hash=${hash:0:64}
         
