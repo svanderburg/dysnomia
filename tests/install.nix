@@ -115,6 +115,7 @@ makeTest {
       # Take a snapshot of the MySQL database.
       # This test should succeed.
       $machine->mustSucceed("mysqlUsername=root mysqlPassword=verysecret dysnomia --type mysql-database --operation snapshot --component ${mysql_database} --environment");
+      $machine->mustSucceed("[ \"\$(ls /var/dysnomia/snapshots/mysql-database/* | wc -l)\" = \"1\" ]");
       
       # Take another snapshot of the MySQL database. Because nothing changed, no
       # new snapshot is supposed to be taken. This test should succeed.
@@ -167,20 +168,105 @@ makeTest {
       } else {
           die "PostgreSQL table should contain: Hello world!\n";
       }
-        
+      
+      # Take a snapshot of the PostgreSQL database.
+      # This test should succeed.
+      $machine->mustSucceed("postgresqlUsername=root dysnomia --type postgresql-database --operation snapshot --component ${postgresql_database} --environment");
+      $machine->mustSucceed("[ \"\$(ls /var/dysnomia/snapshots/postgresql-database/* | wc -l)\" = \"1\" ]");
+      
+      # Take another snapshot of the PostgreSQL database. Because nothing
+      # changed, no new snapshot is supposed to be taken. This test should
+      # succeed.
+      $machine->mustSucceed("postgresqlUsername=root dysnomia --type postgresql-database --operation snapshot --component ${postgresql_database} --environment");
+      $machine->mustSucceed("[ \"\$(ls /var/dysnomia/snapshots/postgresql-database/* | wc -l)\" = \"1\" ]");
+      
+      # Make a modification and take another snapshot. Because something
+      # changed, a new snapshot is supposed to be taken. This test should
+      # succeed.
+      $machine->mustSucceed("echo \"insert into test values ('Bye world');\" | psql --file - testdb");
+      $machine->mustSucceed("postgresqlUsername=root dysnomia --type postgresql-database --operation snapshot --component ${postgresql_database} --environment");
+      $machine->mustSucceed("[ \"\$(ls /var/dysnomia/snapshots/postgresql-database/* | wc -l)\" = \"2\" ]");
+      
+      # Run the garbage collect operation. Since the database is not considered
+      # garbage yet, it should not be removed.
+      $machine->mustSucceed("postgresqlUsername=root dysnomia --type postgresql-database --operation collect-garbage --component ${postgresql_database} --environment");
+      $machine->mustSucceed("echo 'select * from test;' | psql --file - testdb");
+      
+      # Deactivate the PostgreSQL database again. This test should succeed.
       $machine->mustSucceed("postgresqlUsername=root dysnomia --type postgresql-database --operation deactivate --component ${postgresql_database} --environment");
-        
+      
+      # Run the garbage collect operation. Since the database has been
+      # deactivated it is considered garbage, so it should be removed.
+      $machine->mustSucceed("postgresqlUsername=root dysnomia --type postgresql-database --operation collect-garbage --component ${postgresql_database} --environment");
+      $machine->mustFail("echo 'select * from test;' | psql --file - testdb");
+      
+      # Activate the PostgreSQL database again. This test should succeed.
+      $machine->mustSucceed("postgresqlUsername=root dysnomia --type postgresql-database --operation activate --component ${postgresql_database} --environment");
+      
+      # Restore the last snapshot and check whether it contains the recently
+      # added record. This test should succeed.
+      $machine->mustSucceed("postgresqlUsername=root dysnomia --type postgresql-database --operation restore --component ${postgresql_database} --environment");
+      $result = $machine->mustSucceed("echo 'select * from test' | psql --file - testdb");
+      
+      if($result =~ /Bye world/) {
+          print "PostgreSQL query returns: Bye world!\n";
+      } else {
+          die "PostgreSQL table should contain: Bye world!\n";
+      }
+      
       # Test MongoDB activation scripts. Deploys a MongoDB instance,
-      # inserts some data, verifies whether it can be accessed, then
-      # undeploys it again and checks whether it becomes inaccessible.
+      # inserts some data and verifies whether it can be accessed.
       # This test should succeed.
         
       $machine->waitForJob("mongodb");
       $machine->mustSucceed("sleep 100"); # !!! We need some delay to run this smoothly
       $machine->mustSucceed("dysnomia --type mongo-database --operation activate --component ${mongo_database} --environment");
       $machine->mustSucceed("[ \"\$((echo 'show dbs;'; echo 'use testdb;'; echo 'db.messages.find();') | mongo | grep 'Hello world')\" != \"\" ]");
+      
+      # Take a snapshot of the Mongo database.
+      # This test should succeed.
+      $machine->mustSucceed("dysnomia --type mongo-database --operation snapshot --component ${mongo_database} --environment");
+      $machine->mustSucceed("[ \"\$(ls /var/dysnomia/snapshots/mongo-database/* | wc -l)\" = \"1\" ]");
+      
+      # Take another snapshot of the Mongo database. Because nothing changed, no
+      # new snapshot is supposed to be taken. This test should succeed.
+      $machine->mustSucceed("dysnomia --type mongo-database --operation snapshot --component ${mongo_database} --environment");
+      $machine->mustSucceed("[ \"\$(ls /var/dysnomia/snapshots/mongo-database/* | wc -l)\" = \"1\" ]");
+      
+      # Make a modification and take another snapshot. Because something
+      # changed, a new snapshot is supposed to be taken. This test should
+      # succeed.
+      $machine->mustSucceed("(echo 'use testdb;'; echo 'db.messages.save({ \"test\": \"test123\" });') | mongo");
+      $machine->mustSucceed("dysnomia --type mongo-database --operation snapshot --component ${mongo_database} --environment");
+      $machine->mustSucceed("[ \"\$(ls /var/dysnomia/snapshots/mongo-database/* | wc -l)\" = \"2\" ]");
+      
+      # Run the garbage collect operation. Since the database is not considered
+      # garbage yet, it should not be removed.
+      $machine->mustSucceed("dysnomia --type mongo-database --operation collect-garbage --component ${mongo_database} --environment");
+      $machine->mustSucceed("[ \"\$((echo 'show dbs;'; echo 'use testdb;'; echo 'db.messages.find();') | mongo | grep 'Hello world')\" != \"\" ]");
+      
+      # Deactivate the mongo database. This test should succeed.
       $machine->mustSucceed("dysnomia --type mongo-database --operation deactivate --component ${mongo_database} --environment");
-        
+      
+      # Run the garbage collect operation. Since the database has been
+      # deactivated it is considered garbage, so it should be removed.
+      $machine->mustSucceed("dysnomia --type mongo-database --operation collect-garbage --component ${mongo_database} --environment");
+      $machine->mustFail("[ \"\$((echo 'show dbs;'; echo 'use testdb;'; echo 'db.messages.find();') | mongo | grep 'Hello world')\" != \"\" ]");
+      
+      # Activate the mongo database again. This test should succeed.
+      $machine->mustSucceed("dysnomia --type mongo-database --operation activate --component ${mongo_database} --environment");
+      
+      # Restore the last snapshot and check whether it contains the recently
+      # added record. This test should succeed.
+      $machine->mustSucceed("dysnomia --type mongo-database --operation restore --component ${mongo_database} --environment");
+      $result = $machine->mustSucceed("(echo 'show dbs;'; echo 'use testdb;'; echo 'db.messages.find();') | mongo");
+      
+      if($result =~ /test123/) {
+          print "mongo query returns: test123!\n";
+      } else {
+          die "mongo collection should contain: test123!\n";
+      }
+      
       # Test Tomcat web application script. Deploys a tomcat web
       # application, verifies whether it can be accessed and then
       # undeploys it again and checks whether it becomes inaccessible.

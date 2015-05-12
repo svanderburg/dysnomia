@@ -18,7 +18,7 @@ case "$1" in
         # Initalize the given schema if the database does not exists
         if [ "$(@psql@ -l | grep -x $componentName)" = "" ]
         then
-            su $postgresqlUsername -c "@createdb@ $componentName"
+            @createdb@ -O $postgresqlUsername $componentName
             
             if [ -d $2/postgresql-databases ]
             then
@@ -35,6 +35,8 @@ case "$1" in
         cd $tmpdir
         
         @pg_dump@ $componentName | xz > dump.pgsql.xz
+        [ "$PIPESTATUS" != "0" ] && exit 1
+        
         hash=$(cat dump.pgsql.xz | sha256sum)
         hash=${hash:0:64}
         
@@ -54,13 +56,15 @@ case "$1" in
         
         if [ "$lastSnapshot" != "" ]
         then
-            su $postgresqlUsername -c "xzcat $snapshotsPath/$lastSnapshot/dump.pgsql.xz | @pg_restore@ -d $componentName"
+            dropdb $componentName
+            @createdb@ -O $postgresqlUsername $componentName
+            su $postgresqlUsername -c "xzcat $snapshotsPath/$lastSnapshot/dump.pgsql.xz | psql --file - $componentName"
         fi
         ;;
     collect-garbage)
         if [ -f $garbagePath ]
         then
-            su $postgresqlUsername -c "dropdb $componentName"
+            dropdb $componentName
             unmarkStateAsGarbage
         fi
         ;;
