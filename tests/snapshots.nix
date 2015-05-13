@@ -71,7 +71,7 @@ makeTest {
       
       # Query all snapshots and check if there are actually three of them
       
-      $result = $machine->mustSucceed("dysnomia-store --query-all --container mysql-database --component ${mysql_database} | wc -l");
+      $result = $machine->mustSucceed("dysnomia-snapshots --query-all --container mysql-database --component ${mysql_database} | wc -l");
       
       if($result == 3) {
           print "We have three snapshots!\n";
@@ -81,14 +81,14 @@ makeTest {
       
       # Query latest snapshot and check if the 'Three' record is in it
       
-      my $lastSnapshot = $machine->mustSucceed("dysnomia-store --query-latest --container mysql-database --component ${mysql_database}");
-      my $lastResolvedSnapshot = $machine->mustSucceed("dysnomia-store --resolve ".$lastSnapshot);
+      my $lastSnapshot = $machine->mustSucceed("dysnomia-snapshots --query-latest --container mysql-database --component ${mysql_database}");
+      my $lastResolvedSnapshot = $machine->mustSucceed("dysnomia-snapshots --resolve ".$lastSnapshot);
       $machine->mustSucceed("[ \"\$(xzgrep 'Three' ".(substr $lastResolvedSnapshot, 0, -1)."/dump.sql.xz)\" != \"\" ]");
       
       # Print missing snapshot paths. The former path should exist, the latter
       # should not.
       
-      $result = $machine->mustSucceed("dysnomia-store --print-missing ".(substr $lastSnapshot, 0, -1)." mysql-database/testdb/foo");
+      $result = $machine->mustSucceed("dysnomia-snapshots --print-missing ".(substr $lastSnapshot, 0, -1)." mysql-database/testdb/foo");
       
       if((substr $result, 0, -1) eq "mysql-database/testdb/foo") {
           print "Invalid path contains the foo path!\n";
@@ -98,8 +98,8 @@ makeTest {
       
       # Run the garbage collector and check whether only the last snapshot exists
       
-      $machine->mustSucceed("dysnomia-store --gc");
-      $result = $machine->mustSucceed("dysnomia-store --query-all --container mysql-database --component ${mysql_database} | wc -l");
+      $machine->mustSucceed("dysnomia-snapshots --gc");
+      $result = $machine->mustSucceed("dysnomia-snapshots --query-all --container mysql-database --component ${mysql_database} | wc -l");
       
       if($result == 1) {
           print "Only one snapshot left!\n";
@@ -113,8 +113,8 @@ makeTest {
       # Finally, check whether the imported snapshot is the right one.
       $machine->mustSucceed("mkdir -p /tmp/snapshots");
       $machine->mustSucceed("cp -av ".(substr $lastResolvedSnapshot, 0, -1)." /tmp/snapshots");
-      $machine->mustSucceed("dysnomia-store --gc --keep 0");
-      $result = $machine->mustSucceed("dysnomia-store --query-all --container mysql-database --component ${mysql_database} | wc -l");
+      $machine->mustSucceed("dysnomia-snapshots --gc --keep 0");
+      $result = $machine->mustSucceed("dysnomia-snapshots --query-all --container mysql-database --component ${mysql_database} | wc -l");
       
       if($result == 0) {
           print "No snapshots left!\n";
@@ -122,7 +122,7 @@ makeTest {
           die "There should be no snapshots left!";
       }
       
-      $machine->mustSucceed("dysnomia-store --import --container mysql-database --component ${mysql_database} /tmp/snapshots/*");
+      $machine->mustSucceed("dysnomia-snapshots --import --container mysql-database --component ${mysql_database} /tmp/snapshots/*");
       $machine->mustSucceed("[ \"\$(xzgrep 'Three' ".(substr $lastResolvedSnapshot, 0, -1)."/dump.sql.xz)\" != \"\" ]");
       
       # Deactivate the MySQL database
