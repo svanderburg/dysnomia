@@ -82,10 +82,6 @@ let
         };
       in
       {
-        frontend = import ./tests/frontend.nix {
-          inherit nixpkgs buildFun;
-        };
-        
         install = import ./tests/install.nix {
           inherit nixpkgs buildFun;
         };
@@ -95,6 +91,10 @@ let
         };
         
         processes_direct = import ./tests/processes-direct.nix {
+          inherit nixpkgs buildFun;
+        };
+        
+        snapshots = import ./tests/snapshots.nix {
           inherit nixpkgs buildFun;
         };
       };
