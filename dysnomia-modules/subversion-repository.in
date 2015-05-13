@@ -42,7 +42,7 @@ case "$1" in
         then
             mkdir -p $snapshotsPath/$rev
             @svnadmin@ dump -r $rev $svnBaseDir/$componentName | xz > $snapshotsPath/$rev/dump.xz
-            createGenerationSymlink $snapshotsPath/$hash
+            createGenerationSymlink $snapshotsPath/$rev
         fi
         ;;
     restore)
@@ -51,6 +51,11 @@ case "$1" in
         
         if [ "$lastSnapshot" != "" ] && [ "$rev" != "$lastSnapshot" ]
         then
+            rm -Rf $svnBaseDir/$componentName
+            @svnadmin@ create $svnBaseDir/$componentName
+            chgrp -R $svnGroup $svnBaseDir/$componentName
+            chmod -R g+w $svnBaseDir/$componentName
+            chmod g+s $svnBaseDir/$componentName/db
             xzcat $snapshotsPath/$lastSnapshot/dump.xz | @svnadmin@ load $svnBaseDir/$componentName
         fi
         ;;
