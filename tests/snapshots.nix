@@ -109,6 +109,22 @@ makeTest {
       
       $machine->mustSucceed("[ -e ".(substr $lastResolvedSnapshot, 0, -1)." ]");
       
+      # Make a copy of the last snapshot, delete all snapshots and import it again
+      # Finally, check whether the imported snapshot is the right one.
+      $machine->mustSucceed("mkdir -p /tmp/snapshots");
+      $machine->mustSucceed("cp -av ".(substr $lastResolvedSnapshot, 0, -1)." /tmp/snapshots");
+      $machine->mustSucceed("dysnomia-store --gc --keep 0");
+      $result = $machine->mustSucceed("dysnomia-store --query-all --container mysql-database --component ${mysql_database} | wc -l");
+      
+      if($result == 0) {
+          print "No snapshots left!\n";
+      } else {
+          die "There should be no snapshots left!";
+      }
+      
+      $machine->mustSucceed("dysnomia-store --import --container mysql-database --component ${mysql_database} /tmp/snapshots/*");
+      $machine->mustSucceed("[ \"\$(xzgrep 'Three' ".(substr $lastResolvedSnapshot, 0, -1)."/dump.sql.xz)\" != \"\" ]");
+      
       # Deactivate the MySQL database
       $machine->mustSucceed("dysnomia --operation deactivate --component ${mysql_database} --container ${mysql_container}");
   '';

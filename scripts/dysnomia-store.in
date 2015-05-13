@@ -36,7 +36,7 @@ checkStateDir
 
 # Parse valid argument options
 
-PARAMS=`@getopt@ -n $0 -o C:c:h -l print-missing,query-latest,query-all,gc,import,resolve,container:,component:,help -- "$@"`
+PARAMS=`@getopt@ -n $0 -o C:c:h -l print-missing,query-latest,query-all,gc,import,resolve,container:,component:,keep:,help -- "$@"`
 
 if [ $? != 0 ]
 then
@@ -75,6 +75,9 @@ do
         -c|--component)
             component=$2
             ;;
+        --keep)
+            keep=$2
+            ;;
         -h|--help)
             showUsage
             exit 0
@@ -92,6 +95,11 @@ if [ -z "$operation" ]
 then
     echo "No operation specified!" >&2
     exit 1
+fi
+
+if [ -z "$keep" ]
+then
+    keep=1
 fi
 
 # Execute operation
@@ -210,10 +218,10 @@ case "$operation" in
                 for component in $(ls $DYSNOMIA_STATEDIR/generations/$container)
                 do
                     count=$(ls $DYSNOMIA_STATEDIR/generations/$container/$component | wc -l)
-                
-                    if [ $count -gt 1 ]
+                    
+                    if [ $count -gt $keep ]
                     then
-                        for i in $(ls $DYSNOMIA_STATEDIR/generations/$container/$component | sort -n | head -n -1)
+                        for i in $(ls $DYSNOMIA_STATEDIR/generations/$container/$component | sort -n | head -n -$keep)
                         do
                             snapshot=$(readlink -f $DYSNOMIA_STATEDIR/generations/$container/$component/$i)
                             echo "Removing old snapshot: $snapshot" >&2
