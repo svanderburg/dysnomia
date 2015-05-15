@@ -106,4 +106,13 @@ case "$1" in
             su $container_username -c "$2/bin/wrapper unlock"
         fi
         ;;
+    snapshot)
+        $2/bin/wrapper snapshot
+        ;;
+    restore)
+        $2/bin/wrapper restore
+        ;;
+    collect-garbage)
+        $2/bin/wrapper collect-garbage
+        ;;
 esac
