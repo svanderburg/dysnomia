@@ -29,7 +29,22 @@ source @datadir@/@PACKAGE@/util
 
 showUsage()
 {
-    echo "$0"
+    echo "Usage: $0 [options] operation"
+    echo "Operations:"
+    echo
+    echo "--query-latest    Queries the relative paths to the latest snapshots of a collection of components"
+    echo "--query-all       Queries the relative paths of all snapshots of a collection of components"
+    echo "--print-missing   Prints all the paths that do not exist in the snapshots folder"
+    echo "--gc              Removes all older snapshots of all components"
+    echo "--import          Moves a snapshot into the snapshots folder"
+    echo "--resolve         Translates the relative snapshot paths into absolute snapshot paths"
+    echo
+    echo "Options:"
+    echo
+    echo "-c,--component    Name of (or path to) a component containing the logical state of a mutable component"
+    echo "-C,--container    Name of (or path to) a configuration describing the container in which the mutable component should be hosted"
+    echo "--keep            Number of snapshot generations to keep while running the garbage collector"
+    echo "-h,--help         Shows the usage of this command"
 }
 
 checkStateDir
