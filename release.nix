@@ -57,7 +57,7 @@ let
       src = dysnomia;
       inherit officialRelease;
 
-      buildInputs = [ pkgs.getopt ];
+      buildInputs = [ pkgs.getopt pkgs.help2man ];
     };
 
     build = pkgs.lib.genAttrs systems (system: 

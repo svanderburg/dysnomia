@@ -29,29 +29,58 @@ source @datadir@/@PACKAGE@/util
 
 showUsage()
 {
-    echo "Usage: $0 [options] operation"
-    echo "Operations:"
-    echo
-    echo "--query-latest    Queries the relative paths to the latest snapshots of a collection of components"
-    echo "--query-all       Queries the relative paths of all snapshots of a collection of components"
-    echo "--print-missing   Prints all the paths that do not exist in the snapshots folder"
-    echo "--gc              Removes all older snapshots of all components"
-    echo "--import          Moves a snapshot into the snapshots folder"
-    echo "--resolve         Translates the relative snapshot paths into absolute snapshot paths"
-    echo
-    echo "Options:"
-    echo
-    echo "-c,--component    Name of (or path to) a component containing the logical state of a mutable component"
-    echo "-C,--container    Name of (or path to) a configuration describing the container in which the mutable component should be hosted"
-    echo "--keep            Number of snapshot generations to keep while running the garbage collector"
-    echo "-h,--help         Shows the usage of this command"
+    cat <<EOF
+Usage: $0 [OPTION] OPERATION
+
+The command \`dysnomia-snapshots' can be used to manage the contents of a store
+of snapshots capturing multiple generations of logical state of a mutable
+components hosted inside a container.
+
+Options:
+
+Operations:
+      --query-latest   Queries the relative paths to the latest snapshots of a
+                       collection of components
+      --query-all      Queries the relative paths of all snapshots of a
+                       collection of components
+      --print-missing  Prints all the paths that do not exist in the snapshots
+                       folder
+      --gc             Removes older generations of snapshots of components
+      --import         Moves a snapshot into the snapshots folder
+      --resolve        Translates the relative snapshot paths into absolute
+                       snapshot paths
+
+General parameters:
+  -c, --component=COMPONENT  Name of (or path to) a component containing the
+                             logical state of a mutable component
+  -C, --container=CONTAINER  Name of (or path to) a configuration describing the
+                             container in which the mutable component should be
+                             hosted
+      --keep=NUM             Number of snapshot generations to keep while
+                             running the garbage collector. Defaults to: 1
+  -h, --help                 Shows the usage of this command
+  -v, --version              Shows the version of this command
+
+Environment:
+  DYSNOMIA_STATEDIR    Specifies where the snapshots must be stored on the
+                       coordinator machine (defaults to: /var/dysnomia)
+EOF
 }
 
-checkStateDir
+# Shows the version of this command to the user
+
+showVersion()
+{
+    cat <<EOF
+$0 (@PACKAGE_NAME@ @PACKAGE_VERSION@)
+
+Copyright (C) 2009-2015 Sander van der Burg
+EOF
+}
 
 # Parse valid argument options
 
-PARAMS=`@getopt@ -n $0 -o C:c:h -l print-missing,query-latest,query-all,gc,import,resolve,container:,component:,keep:,help -- "$@"`
+PARAMS=`@getopt@ -n $0 -o C:c:hv -l print-missing,query-latest,query-all,gc,import,resolve,container:,component:,keep:,help,version -- "$@"`
 
 if [ $? != 0 ]
 then
@@ -97,6 +126,10 @@ do
             showUsage
             exit 0
             ;;
+        -v|--version)
+            showVersion
+            exit 0
+            ;;
     esac
     
     shift
@@ -105,6 +138,8 @@ done
 shift
 
 # Validate options
+
+checkStateDir
 
 if [ -z "$operation" ]
 then
@@ -151,7 +186,7 @@ case "$operation" in
                     if [ -d $DYSNOMIA_STATEDIR/generations/$container/$component ]
                     then
                         lastGeneration=$(ls $DYSNOMIA_STATEDIR/generations/$container/$component | sort -n | tail -1)
-                    
+                        
                         if [ "$lastGeneration" != "" ]
                         then
                             lastSnapshot=$(readlink -f $DYSNOMIA_STATEDIR/generations/$container/$component/$lastGeneration)

@@ -38,6 +38,7 @@ fi
 # Checks for programs
 AC_PROG_INSTALL
 NEED_PROG(getopt, getopt)
+AC_PATH_PROG(HELP2MAN, help2man, false)
 
 AS_IF([test "x$with_apache" != "x" && test "x$with_apache" != "xno"],
       [have_apache=yes],
@@ -161,8 +162,6 @@ scripts/Makefile
 dysnomia-modules/process
 dysnomia-modules/wrapper
 dysnomia-modules/Makefile
-doc/Makefile
-doc/man/Makefile
 data/Makefile
 $axis2_webservice
 $ejabberd_dump

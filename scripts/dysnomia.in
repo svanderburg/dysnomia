@@ -23,15 +23,54 @@
 
 showUsage()
 {
-    echo "Usage: $0 --operation operation --component component {--container container | --environment}"
-    echo "Options:"
-    echo
-    echo "-o,--operation    Specifies the operation to execute on the mutable component, such as activate or deactivate"
-    echo "-c,--component    Name of (or path to) a component containing the logical state of a mutable component"
-    echo "-C,--container    Name of (or path to) a configuration describing the container in which the mutable component should be hosted"
-    echo "-E,--environment  Takes the container settings from the current environment. Be careful with this!"
-    echo "-t,--type         Specifies Dysnomia to use the specified Dysnomia module type if none is given. Required to be used in combination with --environment"
-    echo "-h,--help         Shows the usage of this command"
+    cat <<EOF
+Usage: $0 --operation OPERATION --component COMPONENT --container CONTAINER
+  or: $0 --operation OPERATION --component COMPONENT --type TYPE --environment
+
+The command \`dysnomia' modifies the state of a container in which a mutable
+component is hosted. This tool can be used to execute various deployment
+operations, such as activating and deactivating mutable components.
+
+Options:
+  -o, --operation=OPERATION  Specifies the operation to execute on the mutable
+                             component, such as activate or deactivate
+  -c, --component=COMPONENT  Name of (or path to) a component containing the
+                             logical state of a mutable component
+  -C, --container=CONTAINER  Name of (or path to) a configuration describing the
+                             container in which the mutable component should be
+                             hosted
+  -E, --environment          Takes the container settings from the current
+                             environment. Be careful with this!
+  -t, --type=TYPE            Specifies Dysnomia to use the specified Dysnomia
+                             module type if none is given. Required to be used
+                             in combination with --environment
+  -h, --help                 Shows the usage of this command
+  -v, --version              Shows the version of this command
+
+Environment:
+  DYSNOMIA_CONTAINERS_PATH  Specifies the search directories of the containers.
+                            If the container is an ordinary string (not starting
+                            with / or ./), Dysnomia searches in the folders
+                            provided in this colon-separated string.
+  DYSNOMIA_MODULES_PATH     Specifies the search directories of the modules. If
+                            the module is an ordinary string (not starting with
+                            / or ./), Dysnomia searches in the folders provided
+                            in this colon-separated string in addition to its
+                            libexec/ directory.
+  DYSNOMIA_STATEDIR         Specifies where the snapshots must be stored on the
+                            coordinator machine (defaults to: /var/dysnomia)
+EOF
+}
+
+# Shows the version of this command to the user
+
+showVersion()
+{
+    cat <<EOF
+$0 (@PACKAGE_NAME@ @PACKAGE_VERSION@)
+
+Copyright (C) 2009-2015 Sander van der Burg
+EOF
 }
 
 # Autoconf settings
@@ -41,7 +80,7 @@ export exec_prefix=@exec_prefix@
 
 # Parse valid argument options
 
-PARAMS=`@getopt@ -n $0 -o o:c:C:Et:h -l operation:,component:,container:,environment,type:,help -- "$@"`
+PARAMS=`@getopt@ -n $0 -o o:c:C:Et:hv -l operation:,component:,container:,environment,type:,help,version -- "$@"`
 
 if [ $? != 0 ]
 then
@@ -59,25 +98,24 @@ do
         -o|--operation)
             operation="$2"
             ;;
-        
         -c|--component)
             component="$(readlink -f "$2")"
             ;;
-        
         -C|--container)
             container="$2"
             ;;
-        
         -E|--environment)
             useEnvironment=1
             ;;
-        
         -t|--type)
             type="$2"
             ;;
-        
         -h|--help)
             showUsage
+            exit 0
+            ;;
+        -v|--version)
+            showVersion
             exit 0
             ;;
     esac
