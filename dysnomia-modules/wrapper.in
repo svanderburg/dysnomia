@@ -66,15 +66,21 @@ case "$1" in
     deactivate)
         if [ "@job_template@" = "systemd" ]
         then
-            # Systemd deactivation
-            systemctl stop disnix-$serviceName.service
-            rm @systemd_rundir@/system/disnix-$serviceName.service
-            systemctl --system daemon-reload
+            if [ -e @systemd_rundir@/system/disnix-$serviceName.service ]
+            then
+                # Systemd deactivation
+                systemctl stop disnix-$serviceName.service
+                rm @systemd_rundir@/system/disnix-$serviceName.service
+                systemctl --system daemon-reload
+            fi
         elif [ "@job_template@" = "init.d" ]
         then
-            # init.d deactivation
-            @sysvinit_initd_dir@/$serviceName stop
-            rm -f @sysvinit_initd_dir@/$serviceName
+            if [ -e @sysvinit_initd_dir@/$serviceName ]
+            then
+                # init.d deactivation
+                @sysvinit_initd_dir@/$serviceName stop
+                rm @sysvinit_initd_dir@/$serviceName
+            fi
         else
             # Direct deactivation
             

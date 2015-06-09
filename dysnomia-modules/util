@@ -80,14 +80,20 @@ removeUnprivilegedUserAndGroup()
     
     if [ "$container_username" != "" ]
     then
-        userdel $container_username
+        if id -u $container_username
+        then
+            userdel $container_username
+        fi
     fi
     
     # Remove unprivileged group, if requested
     
     if [ "$container_group" != "" ]
     then
-        groupdel $container_group
+        if getent group $container_group
+        then
+            groupdel $container_group
+        fi
     fi
 }
 
