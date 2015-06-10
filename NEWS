@@ -1,5 +1,7 @@
 Version 0.4
 ===========
+- Make process and wrapper deactivation more robust in case a previous deactivation has failed
+
 - Added dysnomia-snapshots utility and snapshotting facilities
 
 Version 0.3

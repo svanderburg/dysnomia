@@ -1,4 +1,6 @@
-#!/bin/bash -e
+#!/bin/bash
+set -e
+set -o pipefail
 
 if [ "$documentRoot" = "" ]
 then
@@ -8,16 +10,16 @@ fi
 case "$1" in
     activate)
         mkdir -p $documentRoot
-	
+        
         ls $(readlink -f $2/webapps) | while read i
-	do
-	    ln -sfn $2/webapps/$i $documentRoot
-	done
+        do
+            ln -sfn $2/webapps/$i $documentRoot
+        done
         ;;
     deactivate)
         ls $(readlink -f $2/webapps) | while read i
-	do
-	    rm -f $documentRoot/$(basename $i)
-	done
+        do
+            rm -f $documentRoot/$(basename $i)
+        done
         ;;
 esac

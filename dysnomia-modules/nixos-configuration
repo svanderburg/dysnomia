@@ -1,4 +1,6 @@
-#!/bin/bash -e
+#!/bin/bash
+set -e
+set -o pipefail
 
 # Activation script that activates the given system derivation,
 # which makes it possible to remotely upgrade NixOS

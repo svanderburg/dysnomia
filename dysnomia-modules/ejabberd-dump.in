@@ -1,4 +1,6 @@
-#!/bin/bash -e
+#!/bin/bash
+set -e
+set -o pipefail
 
 ejabberdctl='@ejabberdctl@ --config-dir /var/ejabberd --logs /var/log/ejabberd --spool /var/lib/ejabberd'
 

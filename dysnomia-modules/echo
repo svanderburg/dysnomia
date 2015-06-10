@@ -1,4 +1,6 @@
-#!/bin/bash -e
+#!/bin/bash
+set -e
+set -o pipefail
 
 # Dysnomia module that simply echos the service thats being activated or
 # deactivated
