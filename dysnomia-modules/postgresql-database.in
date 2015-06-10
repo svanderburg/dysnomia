@@ -37,7 +37,6 @@ case "$1" in
         cd $tmpdir
         
         @pg_dump@ $componentName | xz > dump.pgsql.xz
-        [ "$PIPESTATUS" != "0" ] && exit 1
         
         hash=$(cat dump.pgsql.xz | sha256sum)
         hash=${hash:0:64}
