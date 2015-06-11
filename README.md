@@ -179,7 +179,9 @@ variables.
 The following code fragment shows the source code of the `echo` module, that
 simply echoes what it's doing:
 
-    #!/bin/bash -e
+    #!/bin/bash
+    set -e
+    set -o pipefail
 
     # Activation script that simply echos the service thats being activated or
     # deactivated
@@ -209,6 +211,23 @@ simply echoes what it's doing:
         unlock)
             echo "Echo activation script: Unlock service: $2"
             ;;
+        
+        # Snapshots the corresponding state of the service in a preferably consistent
+        # and portable manner in a special purpose folder with a naming strategy.
+        snapshot)
+            echo "Echo module: Snapshot state of service: $2"
+            ;;
+        
+        # Restores the state of the service from the special purpose folder with a
+        # naming strategy.
+        restore)
+            echo "Echo module: Restore state of service: $2"
+            ;;
+        
+        # Collects the garbage of the service by permanently removing it
+        collect-garbage)
+            echo "Echo module: Collect garbage of service: $2"
+            ;;
     esac
 
     # Print the environment variables
@@ -216,17 +235,120 @@ simply echoes what it's doing:
     echo "Environment variables:"
     set
 
-Currently, Dysnomia supports four types of activities:
+Currently, Dysnomia supports the following types of operations:
 
 * `activate` is used to activate the component in a container.
 * `deactivate` is used to deactivate the component in a container.
-* `lock` is invoked by Disnix before the upgrade transition starts. This operation can be used to consult a deployed component to determine whether it is safe to upgrade and to take precautions before the upgrade starts (such as queing incoming connections).
-* `unlock` is invoked by Disnix after the upgrade transition is over. This can be used to notify the component to resume its normal operations.
+* `lock` is invoked by Disnix before the upgrade transition starts. This
+   operation can be used to consult a deployed component to determine whether it
+   is safe to upgrade and to take precautions before the upgrade starts (such as
+   queing incoming connections).
+* `unlock` is invoked by Disnix after the upgrade transition is over. This can
+   be used to notify the component to resume its normal operations.
+* `snapshot` is used to snapshot the logical state of a component in a
+   container. This operation is optionally executed by Disnix to move data from
+   one machine to another.
+* `restore` is used to restore the logical state of a component in a container.
+   This operation is optionally executed by Disnix to move data from one machine
+   to another.
+* `collect-garbage` is used to remove the state of a component in a container.
 
-The above code example is written in [bash](http://www.gnu.org/software/bash),
+The above code examples are written in [bash](http://www.gnu.org/software/bash),
 but any lanugage can be used as long as the tool provides the same command-line
 interface and properly uses the environment variables from the container
 specification.
+
+Convention for stateful mutable components
+------------------------------------------
+The implementation of each operation is completely the responsible of the
+implementer. However, for mutable components with persistent state, such as
+databases, we typically follow a convention for many of the operations:
+
+    #!/bin/bash
+    set -e
+    set -o pipefail
+    
+    # Autoconf settings
+    export prefix=@prefix@
+    
+    # Import utility functions
+    source @datadir@/@PACKAGE@/util
+    
+    determineComponentName $2
+    checkStateDir
+    determineTypeIdentifier $0
+    composeSnapshotsPath
+    composeGarbagePath
+    composeGenerationsPath
+
+    case "$1" in
+        activate)
+            # Initalize the given schema if the database does not exists
+            if ! exampleStateInitialized
+            then
+                exampleInitializeState
+            fi
+            unmarkStateAsGarbage
+            ;;
+        deactivate)
+            markStateAsGarbage
+            ;;
+        snapshot)
+            tmpdir=$(mktemp -d)
+            cd $tmpdir
+            exampleSnapshotState | xz > dump.xz
+        
+            hash=$(cat dump.xz | sha256sum)
+            hash=${hash:0:64}
+        
+            if [ -d $snapshotsPath/$hash ]
+            then
+                rm -Rf $tmpdir
+            else
+                mkdir -p $snapshotsPath/$hash
+                mv dump.xz $snapshotsPath/$hash
+                rmdir $tmpdir
+            fi
+            createGenerationSymlink $snapshotsPath/$hash
+            ;;
+        restore)
+            determineLastSnapshot
+        
+            if [ "$lastSnapshot" != "" ]
+            then
+                exampleRestoreState $lastSnapshot
+            fi
+            ;;
+        collect-garbage)
+            if [ -f $garbagePath ]
+            then
+                exampleDeleteState
+                unmarkStateAsGarbage
+            fi
+            ;;
+    esac
+
+The above code fragment outlines an example module implementing deployment
+operations of a database:
+
+* `activate`: The activate operation checks whether the database exists in the
+   DBMS. If the database does not exists, it gets created and an initial
+   static dump (typically a schema) is imported. It also marks the database as
+   used so that it will not be removed by the garbage collector.
+* `deactivate`: Marks the mutable component (database) as garbage so that it
+   will be removed by the garbage collector.
+* `snapshot`: Snapshots the database and composes generation symlink determining
+   the order of the snapshots. As an optimisation, the module also tries to
+   store a snapshot only once. If it has been taken once before, the earlier
+   result is reused. To make the optimisation work, a naming convention must be
+   chosen. In the above example, the output hash of the snapshot is used.
+* `restore`: Determines the last generation snapshot and restores it. If no
+   snapshot is in the store, it does nothing.
+* `collect-garbage`: Checks if the component is marked as garbage and deletes it
+   if this the case. Otherwise, it does nothing.
+
+Dynomia includes a set of utility functions to make implementing these
+operations more convenient.
 
 License
 =======
