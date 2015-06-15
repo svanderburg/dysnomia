@@ -85,6 +85,27 @@ makeTest {
       my $lastResolvedSnapshot = $machine->mustSucceed("dysnomia-snapshots --resolve ".$lastSnapshot);
       $machine->mustSucceed("[ \"\$(xzgrep 'Three' ".(substr $lastResolvedSnapshot, 0, -1)."/dump.sql.xz)\" != \"\" ]");
       
+      # We should have 3 generation snapshot links
+      $result = $machine->mustSucceed("ls /var/dysnomia/generations/mysql-database/testdb | wc -l");
+      
+      if($result == 3) {
+          print "We have three generation links!\n";
+      } else {
+          die "We should have three generation links!";
+      }
+      
+      # Create another snapshot. Since nothing has changed we should have an
+      # equal amount of generation symlinks.
+      
+      $machine->mustSucceed("dysnomia --operation snapshot --component ${mysql_database} --container ${mysql_container}");
+      $result = $machine->mustSucceed("ls /var/dysnomia/generations/mysql-database/testdb | wc -l");
+      
+      if($result == 3) {
+          print "We have three generation links!\n";
+      } else {
+          die "We should have three generation links!";
+      }
+      
       # Print missing snapshot paths. The former path should exist, the latter
       # should not.
       

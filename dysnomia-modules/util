@@ -196,5 +196,9 @@ createGenerationSymlink()
     fi
     
     newGeneration=$((lastGeneration+1))
-    ln -s "$1" $generationsPath/$newGeneration
+    
+    if [ "$lastGeneration" = "0" ] || [ "$(readlink -f $generationsPath/$lastGeneration)" != "$1" ] # Only create the generation symlink if the previous symlink refers to a different snapshot
+    then
+        ln -s "$1" $generationsPath/$newGeneration
+    fi
 }

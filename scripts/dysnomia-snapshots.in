@@ -46,6 +46,8 @@ Operations:
       --import         Moves a snapshot into the snapshots folder
       --resolve        Translates the relative snapshot paths into absolute
                        snapshot paths
+  -h, --help           Shows the usage of this command
+  -v, --version        Shows the version of this command
 
 General parameters:
   -c, --component=COMPONENT  Name of (or path to) a component containing the
