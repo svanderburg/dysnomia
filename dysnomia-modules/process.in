@@ -82,6 +82,14 @@ case "$1" in
             if [ -e @systemd_rundir@/system/disnix-$serviceName.service ]
             then
                 systemctl stop disnix-$serviceName.service
+                
+                # Wait until the job has actually stopped
+                while [ "$(systemctl show disnix-$serviceName.service | grep '^ActivateState=active$')" != "" ]
+                do
+                    echo "Waiting for disnix-$serviceName.service to stop being active..."
+                    sleep 1
+                done
+                
                 rm @systemd_rundir@/system/disnix-$serviceName.service
                 systemctl --system daemon-reload
             fi
