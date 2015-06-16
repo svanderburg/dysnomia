@@ -146,6 +146,41 @@ makeTest {
       $machine->mustSucceed("dysnomia-snapshots --import --container mysql-database --component ${mysql_database} /tmp/snapshots/*");
       $machine->mustSucceed("[ \"\$(xzgrep 'Three' ".(substr $lastResolvedSnapshot, 0, -1)."/dump.sql.xz)\" != \"\" ]");
       
+      # Add another record and create another snapshot. We need this for future
+      # tests.
+      $machine->mustSucceed("echo \"insert into test values ('Four');\" | mysql --user=root --password=verysecret -N testdb");
+      $machine->mustSucceed("dysnomia --operation snapshot --component ${mysql_database} --container ${mysql_container}");
+      
+      $result = $machine->mustSucceed("dysnomia-snapshots --query-all --container mysql-database --component ${mysql_database} | wc -l");
+      
+      if($result == 2) {
+          print "We have two snapshots!\n";
+      } else {
+          die "There should be two snapshots!";
+      }
+      
+      # Delete the record we just created. Now we end up in a state that is
+      # identical to the one before it.
+      
+      $machine->mustSucceed("echo \"delete from test where test = 'Four';\" | mysql --user=root --password=verysecret -N testdb");
+      $machine->mustSucceed("dysnomia --operation snapshot --component ${mysql_database} --container ${mysql_container}");
+      
+      if($result == 2) {
+          print "We have two snapshots!\n";
+      } else {
+          die "There should be two snapshots!";
+      }
+      
+      # Do a garbage collect and verify whether the last snapshot is the correct
+      # one. Despite two generation symlinks referring to it, it should not be
+      # accidentally removed.
+      
+      $machine->mustSucceed("dysnomia-snapshots --gc");
+      
+      $lastSnapshot = $machine->mustSucceed("dysnomia-snapshots --query-latest --container mysql-database --component ${mysql_database}");
+      $lastResolvedSnapshot = $machine->mustSucceed("dysnomia-snapshots --resolve ".$lastSnapshot);
+      $machine->mustSucceed("[ \"\$(xzgrep 'Four' ".(substr $lastResolvedSnapshot, 0, -1)."/dump.sql.xz)\" = \"\" ]");
+      
       # Deactivate the MySQL database
       $machine->mustSucceed("dysnomia --operation deactivate --component ${mysql_database} --container ${mysql_container}");
   '';
