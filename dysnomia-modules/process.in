@@ -84,9 +84,9 @@ case "$1" in
                 systemctl stop disnix-$serviceName.service
                 
                 # Wait until the job has actually stopped
-                while [ "$(systemctl show disnix-$serviceName.service | grep '^ActivateState=active$')" != "" ]
+                while [ "$(systemctl show disnix-$serviceName.service | grep '^ActivateState=active$')" != "" ] || [ "$(systemctl show disnix-$serviceName.service | grep '^SubState=dead$')" = "" ]
                 do
-                    echo "Waiting for disnix-$serviceName.service to stop being active..."
+                    echo "Waiting for disnix-$serviceName.service to stop being active..." >&2
                     sleep 1
                 done
                 
