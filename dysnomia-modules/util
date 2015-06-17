@@ -35,7 +35,11 @@ createUnprivilegedUserAndGroup()
         fi
         
         params="$params $container_group"
-        groupadd $params
+        
+        if ! getent group $container_group
+        then
+            groupadd $params
+        fi
     fi
     
     # Create unprivileged user that runs the process, if requested
@@ -73,7 +77,11 @@ createUnprivilegedUserAndGroup()
         fi
         
         params="$params $container_username"
-        useradd $params
+        
+        if ! id -u $container_username
+        then
+            useradd $params
+        fi
     fi
 }
 
