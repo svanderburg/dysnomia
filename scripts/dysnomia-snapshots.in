@@ -233,7 +233,7 @@ case "$operation" in
                         for i in $(ls $DYSNOMIA_STATEDIR/generations/$container/$component)
                         do
                             snapshot=$(readlink -f $DYSNOMIA_STATEDIR/generations/$container/$component/$i)
-                            echo $container/$component/$snapshot
+                            echo $container/$component/$(basename $snapshot)
                         done
                     fi
                 done
