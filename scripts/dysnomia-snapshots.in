@@ -203,11 +203,11 @@ case "$operation" in
         fi
         ;;
     query-all)
-        if [ -d $DYSNOMIA_STATEDIR/snapshots ]
+        if [ -d $DYSNOMIA_STATEDIR/generations ]
         then
             if [ -z "$container" ]
             then
-                containers=$(ls $DYSNOMIA_STATEDIR/snapshots)
+                containers=$(ls $DYSNOMIA_STATEDIR/generations)
             else
                 containers=$container
             fi
@@ -216,9 +216,9 @@ case "$operation" in
             do
                 if [ -z "$componentName" ]
                 then
-                    if [ -d $DYSNOMIA_STATEDIR/snapshots/$container ]
+                    if [ -d $DYSNOMIA_STATEDIR/generations/$container ]
                     then
-                        components=$(ls $DYSNOMIA_STATEDIR/snapshots/$container)
+                        components=$(ls $DYSNOMIA_STATEDIR/generations/$container)
                     else
                         components=""
                     fi
@@ -228,10 +228,11 @@ case "$operation" in
                 
                 for component in $components
                 do
-                    if [ -d $DYSNOMIA_STATEDIR/snapshots/$container/$component ]
+                    if [ -d $DYSNOMIA_STATEDIR/generations/$container/$component ]
                     then
-                        for snapshot in $(ls $DYSNOMIA_STATEDIR/snapshots/$container/$component)
+                        for i in $(ls $DYSNOMIA_STATEDIR/generations/$container/$component)
                         do
+                            snapshot=$(readlink -f $DYSNOMIA_STATEDIR/generations/$container/$component/$i)
                             echo $container/$component/$snapshot
                         done
                     fi
