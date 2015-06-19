@@ -1,6 +1,7 @@
 #!/bin/bash
 set -e
 set -o pipefail
+shopt -s nullglob
 
 UNIXMSDeployPath=$(dirname "@msdeploy@")
 export MSDeployPath=$(cygpath --windows "$UNIXMSDeployPath")
