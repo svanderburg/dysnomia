@@ -181,6 +181,13 @@ makeTest {
       $lastResolvedSnapshot = $machine->mustSucceed("dysnomia-snapshots --resolve ".$lastSnapshot);
       $machine->mustSucceed("[ \"\$(xzgrep 'Four' ".(substr $lastResolvedSnapshot, 0, -1)."/dump.sql.xz)\" = \"\" ]");
       
+      # Import a snapshot store path which should simply create a symlink only
+      # and refer to the contents of the corresponding snapshot taken.
+      
+      $machine->mustSucceed("dysnomia-snapshots --import --container mysql-database --component ${mysql_database} ".(substr $lastResolvedSnapshot, 0, -1));
+      $result = $machine->mustSucceed("dysnomia-snapshots --query-latest --container mysql-database --component ${mysql_database}");
+      $machine->mustSucceed("[ \"\$(xzgrep 'Four' ".(substr $lastResolvedSnapshot, 0, -1)."/dump.sql.xz)\" = \"\" ]");
+      
       # Deactivate the MySQL database
       $machine->mustSucceed("dysnomia --operation deactivate --component ${mysql_database} --container ${mysql_container}");
   '';

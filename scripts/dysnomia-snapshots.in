@@ -327,15 +327,18 @@ case "$operation" in
         
         if [[ ! -z "$@" ]]
         then
-            mkdir -p $DYSNOMIA_STATEDIR/snapshots/$container/$componentName
-            
             for i in $@
             do
-                mv $i $DYSNOMIA_STATEDIR/snapshots/$container/$componentName
+                if [ "${i:0:${#DYSNOMIA_STATEDIR}}" != "$DYSNOMIA_STATEDIR" ] # If a path refers to a directory in the snapshot store, do nothing. Other paths are copied into the snapshot store first
+                then
+                    mkdir -p $DYSNOMIA_STATEDIR/snapshots/$container/$componentName
+                    mv $i $DYSNOMIA_STATEDIR/snapshots/$container/$componentName
+                fi
+                
+                # Update generation symlink
+                generationsPath=$DYSNOMIA_STATEDIR/generations/$container/$componentName
+                createGenerationSymlink $DYSNOMIA_STATEDIR/snapshots/$container/$componentName/$(basename $i)
             done
-            
-            generationsPath=$DYSNOMIA_STATEDIR/generations/$container/$componentName
-            createGenerationSymlink $DYSNOMIA_STATEDIR/snapshots/$container/$componentName/$(basename $i)
         fi
         ;;
     resolve)
