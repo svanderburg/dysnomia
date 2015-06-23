@@ -113,7 +113,7 @@ dependencies:
 
 Providing a logical state snapshot of the component
 ---------------------------------------------------
-The following file could be stored in `~/test-database/mysql-database/createdb.sql`
+The following file could be stored in `~/testdb/mysql-database/createdb.sql`
 representing the logical state of a MySQL database. In this particular case, this
 file is a collection of SQL statements setting up the initial schema of the
 database:
@@ -133,7 +133,7 @@ database:
       FOREIGN KEY(AUTHOR_ID) references author(AUTHOR_ID) on update cascade on delete cascade
     );
 
-The folder `~/test-database` folder represents a logical state dump that we can
+The folder `~/testdb` folder represents a logical state dump that we can
 deploy through a Dysnomia module.
 
 Providing the container configuration
@@ -158,7 +158,7 @@ Executing a deployment activity
 With those two files, we can perform a deployment activity, such as activating a
 MySQL database inside a MySQL DBMS instance:
 
-    $ dysnomia --operation activate --component ~/test-database --container ~/mysql-production
+    $ dysnomia --operation activate --component ~/testdb --container ~/mysql-production
 
 Every component has its own way of representing its logical state and each of
 them require different container settings. For databases, these are typically SQL
@@ -167,6 +167,63 @@ dumps and authentication settings.
 Web applications have archive files (WAR/AAR) or a collection of web related
 files (HTML, CSS etc.) as a representation of their logical state. Consult the
 actual Dysnomia modules for more information.
+
+Managing snapshots
+------------------
+Dysnomia can also be used to manage snapshots of mutable components. Running the
+following operation captures the state of the previously deployed MySQL database:
+
+    $ dysnomia --operation snapshot --component ~/testdb --container ~/mysql-production
+
+Restoring the last taken snapshot can be done by running:
+
+    $ dysnomia --operation restore --component ~/testdb --container ~/mysql-production
+
+Snapshots taken by Dysnomia are stored in a so-called Dysnomia snapshot store
+(stored by default in `/var/dysnomia`, but can be changed by setting the
+`DYSNOMIA_STATEDIR` environment variable), a special purpose directory that
+stores multiple generations of snapshots according to some naming convention
+that uniquely identifies each snapshot.
+
+The following command can be used to query all snapshots taken for the component
+`testdb` deployed to the MySQL container.
+
+    $ dysnomia-snapshots --query-all --container mysql-database --component testdb
+    mysql-database/testdb/9b0c3562b57dafd00e480c6b3a67d29146179775b67dfff5aa7a138b2699b241
+    mysql-database/testdb/1df326254d596dd31d9d9db30ea178d05eb220ae51d093a2cbffeaa13f45b21c
+    mysql-database/testdb/330232eda02b77c3629a4623b498855c168986e0a214ec44f38e7e0447a3f7ef
+
+In most cases, only the latest snapshot is useful. The following query only
+shows the last generation snapshot:
+
+    $ dysnomia-snapshots --query-latest --container mysql-production --component testdb
+    mysql-database/testdb/330232eda02b77c3629a4623b498855c168986e0a214ec44f38e7e0447a3f7ef
+
+The query operations show the relative paths of the snapshot directories so that
+their names are consistent among multiple machines. Their absolute paths can be
+resolved by running:
+
+    $ dysnomia-snapshots --resolve mysql-database/testdb/330232eda02b77c3629a4623b498855c168986e0a214ec44f38e7e0447a3f7ef
+    /var/dysnomia/snapshots/mysql-database/testdb/330232eda02b77c3629a4623b498855c168986e0a214ec44f38e7e0447a3f7ef
+
+Deleting older generations of snapshots
+---------------------------------------
+Dysnomia stores multiple versions of snapshots next to each other and never
+automatically deletes them.
+
+Clearing up older generation of snapshots can be done by invoking the garbage
+collect operation. The following command deletes all but the latest snapshot
+generation from the Dysnomia snapshots store:
+
+    $ dysnomia-snapshots --gc
+
+The amount of snapshots that must be kept can be adjusted by providing the
+`--keep` parameter:
+
+    $ dysnomia-snapshots --gc --keep 3
+
+The above command specifies that the last 3 generations of snapshots should be
+kept.
 
 Implementing custom Dysnomia modules
 ====================================
