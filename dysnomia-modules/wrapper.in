@@ -79,9 +79,6 @@ case "$1" in
                     echo "Waiting for disnix-$serviceName.service to stop being active..." >&2
                     sleep 1
                 done
-                
-                rm @systemd_rundir@/system/disnix-$serviceName.service
-                systemctl --system daemon-reload
             fi
         elif [ "@job_template@" = "init.d" ]
         then
@@ -89,7 +86,6 @@ case "$1" in
             then
                 # init.d deactivation
                 @sysvinit_initd_dir@/$serviceName stop
-                rm @sysvinit_initd_dir@/$serviceName
             fi
         else
             # Direct deactivation
@@ -103,6 +99,17 @@ case "$1" in
         fi
         
         removeUnprivilegedUserAndGroup
+        
+        if [ "@job_template@" = "systemd" ] && [ -e @systemd_rundir@/system/disnix-$serviceName.service ]
+        then
+            # systemd cleanup
+            rm @systemd_rundir@/system/disnix-$serviceName.service
+            systemctl --system daemon-reload
+        elif [ "@job_template@" = "init.d" ]
+        then
+            # init.d cleanup
+            rm @sysvinit_initd_dir@/$serviceName
+        fi
         ;;
     
     lock)
