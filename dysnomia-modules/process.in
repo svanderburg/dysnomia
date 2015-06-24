@@ -83,13 +83,6 @@ case "$1" in
             if [ -e @systemd_rundir@/system/disnix-$serviceName.service ]
             then
                 systemctl stop disnix-$serviceName.service
-                
-                # Wait until the job has actually stopped
-                while [ "$(systemctl show disnix-$serviceName.service | grep '^ActivateState=active$')" != "" ] || [ "$(systemctl show disnix-$serviceName.service | grep '^SubState=dead$')" = "" ]
-                do
-                    echo "Waiting for disnix-$serviceName.service to stop being active..." >&2
-                    sleep 1
-                done
             fi
         elif [ "@job_template@" = "init.d" ]
         then
@@ -104,7 +97,7 @@ case "$1" in
             rm -f /var/run/$serviceName.pid
         fi
         
-        removeUnprivilegedUserAndGroup
+        attemptSeveralTimes removeUnprivilegedUserAndGroup 10
         
         if [ "@job_template@" = "systemd" ] && [ -e @systemd_rundir@/system/disnix-$serviceName.service ]
         then

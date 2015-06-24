@@ -210,3 +210,25 @@ createGenerationSymlink()
         ln -s "$1" $generationsPath/$newGeneration
     fi
 }
+
+attemptSeveralTimes()
+{
+    num=0
+    while [ $num -lt $2 ]
+    do
+        if $1
+        then
+            break
+        fi
+        
+        echo "Commmand failed, trying again in a second..." >&2
+        sleep 1
+        num=$((num + 1))
+    done
+    
+    if [ $num -eq $2 ]
+    then
+        echo "Still does not work after $num attempts!" >&2
+        false
+    fi
+}
