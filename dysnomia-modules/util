@@ -22,6 +22,17 @@ set -o pipefail
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+# Creates an unprivileged group and/or user
+#
+# Environment variables:
+# container_group: Name of the group to create. If empty, no group will be created.
+# container_gid: GID of the group to create. If empty, an aribitrary one will be chosen.
+# container_username: Name of the user to create. If empty, no user will be created.
+# container_uid: UID of the user to create. If empty, an aribitrary one will be chosen.
+# container_homeDir: Path to the home directory of the user
+# container_createHomeDir: When set to 1 the home directory will be created if it does not exists
+# container_shell: Path to the shell of the user
+
 createUnprivilegedUserAndGroup()
 {
     # Create unprivileged group that runs the process, if requested
@@ -85,6 +96,12 @@ createUnprivilegedUserAndGroup()
     fi
 }
 
+# Removes an unpriveleged group or user.
+#
+# Environment variables:
+# container_group: Name of the group to delete. If empty no group will be deleted.
+# container_username: Name of the user to delete. If empty, no user will be deleted.
+
 removeUnprivilegedUserAndGroup()
 {
     # Remove unprivileged user, if requested
@@ -108,6 +125,12 @@ removeUnprivilegedUserAndGroup()
     fi
 }
 
+# Adds user credentials to a systemd job
+#
+# Environment variables:
+# container_group: Name of the group to run under. If empty no group restrictions will be applied.
+# container_username: Name of the user to run under. If empty, no user restrictions will be applied.
+
 addUserSettingsToSystemdConfig()
 {
     if [ "$container_group" != "" ]
@@ -121,6 +144,9 @@ addUserSettingsToSystemdConfig()
     fi
 }
 
+# Checks whether DYSNOMIA_STATEDIR environment variable is set. If not set, it
+# configures a default value
+
 checkStateDir()
 {
     if [ "$DYSNOMIA_STATEDIR" = "" ]
@@ -128,6 +154,15 @@ checkStateDir()
         DYSNOMIA_STATEDIR="/var/dysnomia"
     fi
 }
+
+# Determines the name of the component from a given path. If a Nix store path is
+# given, then the hash prefix is stripped from it.
+#
+# Parameters:
+# $1: Path or name of a component
+# 
+# Environment variables:
+# componentName: will be set to the name of the component
 
 determineComponentName()
 {
@@ -140,10 +175,25 @@ determineComponentName()
     fi
 }
 
+# Determines the type identifier of a given path
+#
+# Parameters:
+# $1: Path to a container
+# 
+# Environment variables:
+# typeIdentifier: Will be set to the name of the type
+
 determineTypeIdentifier()
 {
     typeIdentifier=$(basename "$1")
 }
+
+# Marks the state as garbage so that it will be deleted by the garbage collector
+#
+# Environment variables:
+# DYSNOMIA_STATEDIR: Path where Dysnomia stores state
+# typeIdentifier: Type of the mutable component that determines the plugin that communicates with it
+# garbagePath: Path to the garbage file that indicates a component has become obsolete
 
 markStateAsGarbage()
 {
@@ -151,10 +201,22 @@ markStateAsGarbage()
     touch $garbagePath
 }
 
+# Unmarks the state as garbage so that it will not be deleted by the garbage
+# collector.
+#
+# Environment variables:
+# garbagePath: Path to the garbage file that indicates a component has become obsolete
+
 unmarkStateAsGarbage()
 {
     rm -f $garbagePath
 }
+
+# Determines the name of the last snapshot.
+#
+# Environment variables:
+# generationsPath: Directory in which the generation symlinks are stored
+# lastSnapshot: Will be set to the last snapshot or empty value if no snapshot generations exist
 
 determineLastSnapshot()
 {
@@ -173,20 +235,53 @@ determineLastSnapshot()
     fi
 }
 
+# Compose the path in which snapshots of components are stored
+#
+# Environment variables:
+# DYSNOMIA_STATEDIR: Path where Dysnomia stores state
+# typeIdentifier: Type of the mutable component that determines the plugin that communicates with it
+# componentName: Name of the mutable component
+# snapshotsPath: Will be set to the path in which snapshots are stored
+
 composeSnapshotsPath()
 {
     snapshotsPath=$DYSNOMIA_STATEDIR/snapshots/$typeIdentifier/$componentName
 }
+
+# Compose the path in which the garbage flag of components are stored
+#
+# Environment variables:
+# DYSNOMIA_STATEDIR: Path where Dysnomia stores state
+# typeIdentifier: Type of the mutable component that determines the plugin that communicates with it
+# componentName: Name of the mutable component
+# garbagePath: Will be set to the path in which garbage flags are stored
 
 composeGarbagePath()
 {
     garbagePath=$DYSNOMIA_STATEDIR/garbage/$typeIdentifier/$componentName
 }
 
+# Compose the path in which the generation symlinks of component snapshots are
+# stored
+#
+# Environment variables:
+# DYSNOMIA_STATEDIR: Path where Dysnomia stores state
+# typeIdentifier: Type of the mutable component that determines the plugin that communicates with it
+# componentName: Name of the mutable component
+# generationsPath: Will be set to the path in which generation symlinks are stored
+
 composeGenerationsPath()
 {
     generationsPath=$DYSNOMIA_STATEDIR/generations/$typeIdentifier/$componentName
 }
+
+# Creates a new generation symlink to a given snapshot.
+#
+# Parameters:
+# $1: Path to a snapshot
+#
+# Environment variables:
+# generationsPath: Path in which the generation symlinks are stored
 
 createGenerationSymlink()
 {
@@ -211,9 +306,16 @@ createGenerationSymlink()
     fi
 }
 
+# Attempts to execute a command and retries it a given number of times if it
+# fails.
+#
+# Parameters:
+# $1: Command to execute
+# $2: The amount of times to retry if te command fails
+
 attemptSeveralTimes()
 {
-    num=0
+    local num=0
     while [ $num -lt $2 ]
     do
         if $1
