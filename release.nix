@@ -47,6 +47,7 @@ let
         ++ stdenv.lib.optional enableMySQLDatabase mysql
         ++ stdenv.lib.optional enablePostgreSQLDatabase postgresql
         ++ stdenv.lib.optional enableMongoDatabase mongodb
+        ++ stdenv.lib.optional enableMongoDatabase mongodb-tools
         ++ stdenv.lib.optional enableSubversionRepository subversion;
     };
   
