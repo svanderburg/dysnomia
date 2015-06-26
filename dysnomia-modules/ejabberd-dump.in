@@ -53,9 +53,9 @@ case "$1" in
         tmpdir=$(mktemp -d)
         cd $tmpdir
         
-        $ejabberdctl dump $tmpdir/db.dump
+        $ejabberdctl dump $tmpdir/dump
         
-        hash=$(cat db.dump | sha256sum)
+        hash=$(cat dump | sha256sum)
         hash=${hash:0:64}
         
         if [ -d $snapshotsPath/$hash ]
@@ -63,7 +63,7 @@ case "$1" in
             rm -Rf $tmpdir
         else
             mkdir -p $snapshotsPath/$hash
-            mv db.dump $snapshotsPath/$hash
+            mv dump $snapshotsPath/$hash
             rmdir $tmpdir
         fi
         createGenerationSymlink $snapshotsPath/$hash
@@ -73,7 +73,7 @@ case "$1" in
         
         if [ "$lastSnapshot" != "" ]
         then
-            $ejabberdctl load $snapshotsPath/$lastSnapshot/dump.db
+            $ejabberdctl load $snapshotsPath/$lastSnapshot/dump
         fi
         ;;
     collect-garbage)

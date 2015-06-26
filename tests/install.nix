@@ -338,8 +338,8 @@ makeTest {
       
       # Restore the last snapshot and check whether it contains the recently
       # added user. This test should succeed.
-      #$machine->mustSucceed("sleep 3; dysnomia --type ejabberd-dump --operation restore --component ${ejabberd_dump} --environment");
-      #$machine->mustSucceed("curl --fail --user newuser:newuser http://localhost:5280/admin");
+      $machine->mustSucceed("sleep 3; dysnomia --type ejabberd-dump --operation restore --component ${ejabberd_dump} --environment");
+      $machine->mustSucceed("curl --fail --user newuser:newuser http://localhost:5280/admin");
       
       # Test Subversion activation script. We import a repository
       # then we do a checkout and see whether it succeeds.
