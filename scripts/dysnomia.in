@@ -214,4 +214,4 @@ fi
 
 env $envFlags PATH=$PATH DYSNOMIA_STATEDIR=$DYSNOMIA_STATEDIR \
   $containerEnv \
-  $module $operation $component
+  $module $operation $component $container

@@ -188,16 +188,45 @@ determineTypeIdentifier()
     typeIdentifier=$(basename "$1")
 }
 
+# Determines the name of the container. If a Nix store path is given, then the
+# hash prefix is stripped from it. If no parameter is given then the container
+# name reverts to its type identifier.
+#
+# Parameters:
+# $1: Path or name of a container
+#
+# Environment variables:
+# typeIdentifier: Type of the mutable component that determines the plugin that communicates with it
+# containerName: will be set to the name of the container
+
+determineContainerName()
+{
+    if [ "$1" = "" ]
+    then
+        containerName=$typeIdentifier
+    else
+        containerName=$(basename "$1")
+        
+        storePrefix="/nix/store/"
+
+        if [ "${1:0:${#storePrefix}}" = "$storePrefix" ]
+        then
+            containerName="${containerName:33}"
+        fi
+    fi
+}
+
+
 # Marks the state as garbage so that it will be deleted by the garbage collector
 #
 # Environment variables:
 # DYSNOMIA_STATEDIR: Path where Dysnomia stores state
-# typeIdentifier: Type of the mutable component that determines the plugin that communicates with it
+# containerName: Name of the container in which the mutable component is hosted
 # garbagePath: Path to the garbage file that indicates a component has become obsolete
 
 markStateAsGarbage()
 {
-    mkdir -p $DYSNOMIA_STATEDIR/garbage/$typeIdentifier
+    mkdir -p $DYSNOMIA_STATEDIR/garbage/$containerName
     touch $garbagePath
 }
 
@@ -239,26 +268,26 @@ determineLastSnapshot()
 #
 # Environment variables:
 # DYSNOMIA_STATEDIR: Path where Dysnomia stores state
-# typeIdentifier: Type of the mutable component that determines the plugin that communicates with it
+# containerName: Name of the container in which the mutable component is hosted
 # componentName: Name of the mutable component
 # snapshotsPath: Will be set to the path in which snapshots are stored
 
 composeSnapshotsPath()
 {
-    snapshotsPath=$DYSNOMIA_STATEDIR/snapshots/$typeIdentifier/$componentName
+    snapshotsPath=$DYSNOMIA_STATEDIR/snapshots/$containerName/$componentName
 }
 
 # Compose the path in which the garbage flag of components are stored
 #
 # Environment variables:
 # DYSNOMIA_STATEDIR: Path where Dysnomia stores state
-# typeIdentifier: Type of the mutable component that determines the plugin that communicates with it
+# containerName: Name of the container in which the mutable component is hosted
 # componentName: Name of the mutable component
 # garbagePath: Will be set to the path in which garbage flags are stored
 
 composeGarbagePath()
 {
-    garbagePath=$DYSNOMIA_STATEDIR/garbage/$typeIdentifier/$componentName
+    garbagePath=$DYSNOMIA_STATEDIR/garbage/$containerName/$componentName
 }
 
 # Compose the path in which the generation symlinks of component snapshots are
@@ -266,13 +295,13 @@ composeGarbagePath()
 #
 # Environment variables:
 # DYSNOMIA_STATEDIR: Path where Dysnomia stores state
-# typeIdentifier: Type of the mutable component that determines the plugin that communicates with it
+# containerName: Name of the container in which the mutable component is hosted
 # componentName: Name of the mutable component
 # generationsPath: Will be set to the path in which generation symlinks are stored
 
 composeGenerationsPath()
 {
-    generationsPath=$DYSNOMIA_STATEDIR/generations/$typeIdentifier/$componentName
+    generationsPath=$DYSNOMIA_STATEDIR/generations/$containerName/$componentName
 }
 
 # Creates a new generation symlink to a given snapshot.

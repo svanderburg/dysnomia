@@ -23,7 +23,7 @@ case "$1" in
         do
             dir="$(dirname $file)"
             mkdir -p "$iisWwwRoot/$webappName/$dir"
-            cp "$file" "$iisWwwRoot/$webappName/$dir"       
+            cp "$file" "$iisWwwRoot/$webappName/$dir"
         done
         ;;
     deactivate)

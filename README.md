@@ -189,22 +189,22 @@ The following command can be used to query all snapshots taken for the component
 `testdb` deployed to the MySQL container.
 
     $ dysnomia-snapshots --query-all --container mysql-database --component testdb
-    mysql-database/testdb/9b0c3562b57dafd00e480c6b3a67d29146179775b67dfff5aa7a138b2699b241
-    mysql-database/testdb/1df326254d596dd31d9d9db30ea178d05eb220ae51d093a2cbffeaa13f45b21c
-    mysql-database/testdb/330232eda02b77c3629a4623b498855c168986e0a214ec44f38e7e0447a3f7ef
+    mysql-production/testdb/9b0c3562b57dafd00e480c6b3a67d29146179775b67dfff5aa7a138b2699b241
+    mysql-production/testdb/1df326254d596dd31d9d9db30ea178d05eb220ae51d093a2cbffeaa13f45b21c
+    mysql-production/testdb/330232eda02b77c3629a4623b498855c168986e0a214ec44f38e7e0447a3f7ef
 
 In most cases, only the latest snapshot is useful. The following query only
 shows the last generation snapshot:
 
     $ dysnomia-snapshots --query-latest --container mysql-production --component testdb
-    mysql-database/testdb/330232eda02b77c3629a4623b498855c168986e0a214ec44f38e7e0447a3f7ef
+    mysql-production/testdb/330232eda02b77c3629a4623b498855c168986e0a214ec44f38e7e0447a3f7ef
 
 The query operations show the relative paths of the snapshot directories so that
 their names are consistent among multiple machines. Their absolute paths can be
 resolved by running:
 
     $ dysnomia-snapshots --resolve mysql-database/testdb/330232eda02b77c3629a4623b498855c168986e0a214ec44f38e7e0447a3f7ef
-    /var/dysnomia/snapshots/mysql-database/testdb/330232eda02b77c3629a4623b498855c168986e0a214ec44f38e7e0447a3f7ef
+    /var/dysnomia/snapshots/mysql-production/testdb/330232eda02b77c3629a4623b498855c168986e0a214ec44f38e7e0447a3f7ef
 
 Deleting older generations of snapshots
 ---------------------------------------
@@ -334,6 +334,7 @@ databases, we typically follow a convention for many of the operations:
     determineComponentName $2
     checkStateDir
     determineTypeIdentifier $0
+    determineContainerName $3
     composeSnapshotsPath
     composeGarbagePath
     composeGenerationsPath

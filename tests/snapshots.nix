@@ -70,8 +70,7 @@ makeTest {
       $machine->mustSucceed("dysnomia --operation snapshot --component ${mysql_database} --container ${mysql_container}");
       
       # Query all snapshots and check if there are actually three of them
-      
-      $result = $machine->mustSucceed("dysnomia-snapshots --query-all --container mysql-database --component ${mysql_database} | wc -l");
+      $result = $machine->mustSucceed("dysnomia-snapshots --query-all --container mysql-container --component ${mysql_database} | wc -l");
       
       if($result == 3) {
           print "We have three snapshots!\n";
@@ -81,12 +80,12 @@ makeTest {
       
       # Query latest snapshot and check if the 'Three' record is in it
       
-      my $lastSnapshot = $machine->mustSucceed("dysnomia-snapshots --query-latest --container mysql-database --component ${mysql_database}");
+      my $lastSnapshot = $machine->mustSucceed("dysnomia-snapshots --query-latest --container mysql-container --component ${mysql_database}");
       my $lastResolvedSnapshot = $machine->mustSucceed("dysnomia-snapshots --resolve ".$lastSnapshot);
       $machine->mustSucceed("[ \"\$(xzgrep 'Three' ".(substr $lastResolvedSnapshot, 0, -1)."/dump.sql.xz)\" != \"\" ]");
       
       # We should have 3 generation snapshot links
-      $result = $machine->mustSucceed("ls /var/dysnomia/generations/mysql-database/testdb | wc -l");
+      $result = $machine->mustSucceed("ls /var/dysnomia/generations/mysql-container/testdb | wc -l");
       
       if($result == 3) {
           print "We have three generation links!\n";
@@ -98,7 +97,7 @@ makeTest {
       # equal amount of generation symlinks.
       
       $machine->mustSucceed("dysnomia --operation snapshot --component ${mysql_database} --container ${mysql_container}");
-      $result = $machine->mustSucceed("ls /var/dysnomia/generations/mysql-database/testdb | wc -l");
+      $result = $machine->mustSucceed("ls /var/dysnomia/generations/mysql-container/testdb | wc -l");
       
       if($result == 3) {
           print "We have three generation links!\n";
@@ -109,9 +108,9 @@ makeTest {
       # Print missing snapshot paths. The former path should exist, the latter
       # should not.
       
-      $result = $machine->mustSucceed("dysnomia-snapshots --print-missing ".(substr $lastSnapshot, 0, -1)." mysql-database/testdb/foo");
+      $result = $machine->mustSucceed("dysnomia-snapshots --print-missing ".(substr $lastSnapshot, 0, -1)." mysql-container/testdb/foo");
       
-      if((substr $result, 0, -1) eq "mysql-database/testdb/foo") {
+      if((substr $result, 0, -1) eq "mysql-container/testdb/foo") {
           print "Invalid path contains the foo path!\n";
       } else {
           die "Invalid path should correspond to the foo path only!";
@@ -120,7 +119,7 @@ makeTest {
       # Run the garbage collector and check whether only the last snapshot exists
       
       $machine->mustSucceed("dysnomia-snapshots --gc");
-      $result = $machine->mustSucceed("dysnomia-snapshots --query-all --container mysql-database --component ${mysql_database} | wc -l");
+      $result = $machine->mustSucceed("dysnomia-snapshots --query-all --container mysql-container --component ${mysql_database} | wc -l");
       
       if($result == 1) {
           print "Only one snapshot left!\n";
@@ -135,7 +134,7 @@ makeTest {
       $machine->mustSucceed("mkdir -p /tmp/snapshots");
       $machine->mustSucceed("cp -av ".(substr $lastResolvedSnapshot, 0, -1)." /tmp/snapshots");
       $machine->mustSucceed("dysnomia-snapshots --gc --keep 0");
-      $result = $machine->mustSucceed("dysnomia-snapshots --query-all --container mysql-database --component ${mysql_database} | wc -l");
+      $result = $machine->mustSucceed("dysnomia-snapshots --query-all --container mysql-container --component ${mysql_database} | wc -l");
       
       if($result == 0) {
           print "No snapshots left!\n";
@@ -143,7 +142,7 @@ makeTest {
           die "There should be no snapshots left!";
       }
       
-      $machine->mustSucceed("dysnomia-snapshots --import --container mysql-database --component ${mysql_database} /tmp/snapshots/*");
+      $machine->mustSucceed("dysnomia-snapshots --import --container mysql-container --component ${mysql_database} /tmp/snapshots/*");
       $machine->mustSucceed("[ \"\$(xzgrep 'Three' ".(substr $lastResolvedSnapshot, 0, -1)."/dump.sql.xz)\" != \"\" ]");
       
       # Add another record and create another snapshot. We need this for future
@@ -151,7 +150,7 @@ makeTest {
       $machine->mustSucceed("echo \"insert into test values ('Four');\" | mysql --user=root --password=verysecret -N testdb");
       $machine->mustSucceed("dysnomia --operation snapshot --component ${mysql_database} --container ${mysql_container}");
       
-      $result = $machine->mustSucceed("dysnomia-snapshots --query-all --container mysql-database --component ${mysql_database} | wc -l");
+      $result = $machine->mustSucceed("dysnomia-snapshots --query-all --container mysql-container --component ${mysql_database} | wc -l");
       
       if($result == 2) {
           print "We have two snapshots!\n";
@@ -177,15 +176,15 @@ makeTest {
       
       $machine->mustSucceed("dysnomia-snapshots --gc");
       
-      $lastSnapshot = $machine->mustSucceed("dysnomia-snapshots --query-latest --container mysql-database --component ${mysql_database}");
+      $lastSnapshot = $machine->mustSucceed("dysnomia-snapshots --query-latest --container mysql-container --component ${mysql_database}");
       $lastResolvedSnapshot = $machine->mustSucceed("dysnomia-snapshots --resolve ".$lastSnapshot);
       $machine->mustSucceed("[ \"\$(xzgrep 'Four' ".(substr $lastResolvedSnapshot, 0, -1)."/dump.sql.xz)\" = \"\" ]");
       
       # Import a snapshot store path which should simply create a symlink only
       # and refer to the contents of the corresponding snapshot taken.
       
-      $machine->mustSucceed("dysnomia-snapshots --import --container mysql-database --component ${mysql_database} ".(substr $lastResolvedSnapshot, 0, -1));
-      $result = $machine->mustSucceed("dysnomia-snapshots --query-latest --container mysql-database --component ${mysql_database}");
+      $machine->mustSucceed("dysnomia-snapshots --import --container mysql-container --component ${mysql_database} ".(substr $lastResolvedSnapshot, 0, -1));
+      $result = $machine->mustSucceed("dysnomia-snapshots --query-latest --container mysql-container --component ${mysql_database}");
       $machine->mustSucceed("[ \"\$(xzgrep 'Four' ".(substr $lastResolvedSnapshot, 0, -1)."/dump.sql.xz)\" = \"\" ]");
       
       # Deactivate the MySQL database
