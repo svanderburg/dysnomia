@@ -219,7 +219,7 @@ makeTest {
       # This test should succeed.
         
       $machine->waitForJob("mongodb");
-      $machine->mustSucceed("sleep 100"); # !!! We need some delay to run this smoothly
+      #$machine->mustSucceed("sleep 100"); # !!! We need some delay to run this smoothly
       $machine->mustSucceed("dysnomia --type mongo-database --operation activate --component ${mongo_database} --environment");
       $machine->mustSucceed("[ \"\$((echo 'show dbs;'; echo 'use testdb;'; echo 'db.messages.find();') | mongo | grep 'Hello world')\" != \"\" ]");
       
@@ -281,7 +281,7 @@ makeTest {
       $machine->mustFail("curl --fail http://localhost:8080/tomcat-webapplication");
 
       # Test Axis2 web service script.
-        
+      
       $machine->waitForFile("/var/tomcat/webapps/axis2");
       $machine->mustSucceed("dysnomia --type axis2-webservice --operation activate --component ${axis2_webservice} --environment");
       $machine->mustSucceed("sleep 10; curl --fail http://localhost:8080/axis2/services/Test/test"); # !!! We must wait a while to let it become active
@@ -294,10 +294,52 @@ makeTest {
       # Now we should be able to login. This test should succeed.
         
       $machine->waitForJob("ejabberd");
-      $machine->mustFail("sleep 3; curl --fail --user admin:admin http://localhost:5280/admin"); # !!! We need to wait for a while even though ejabberd is running
+      $machine->mustFail("curl --fail --user admin:admin http://localhost:5280/admin");
       $machine->mustSucceed("dysnomia --type ejabberd-dump --operation activate --component ${ejabberd_dump} --environment");
       $machine->mustSucceed("curl --fail --user admin:admin http://localhost:5280/admin");
+      
+      # Take a snapshot of the ejabberd database.
+      # This test should succeed.
+      $machine->mustSucceed("dysnomia --type ejabberd-dump --operation snapshot --component ${ejabberd_dump} --environment");
+      $machine->mustSucceed("[ \"\$(ls /var/dysnomia/snapshots/ejabberd-dump/* | wc -l)\" = \"1\" ]");
+      
+      # Take another snapshot of the ejabberd database. Because nothing changed, no
+      # new snapshot is supposed to be taken. This test should succeed.
+      $machine->mustSucceed("dysnomia --type ejabberd-dump --operation snapshot --component ${ejabberd_dump} --environment");
+      $machine->mustSucceed("[ \"\$(ls /var/dysnomia/snapshots/ejabberd-dump/* | wc -l)\" = \"1\" ]");
+      
+      # Make a modification (creating a new user) and take another snapshot.
+      # Because something changed, a new snapshot is supposed to be taken. This
+      # test should succeed.
+      $machine->mustSucceed("ejabberdctl --config-dir /var/ejabberd --logs /var/log/ejabberd --spool /var/lib/ejabberd register newuser localhost newuser");
+      $machine->mustSucceed("curl --fail --user newuser:newuser http://localhost:5280/admin");
+      $machine->mustSucceed("dysnomia --type ejabberd-dump --operation snapshot --component ${ejabberd_dump} --environment");
+      $machine->mustSucceed("[ \"\$(ls /var/dysnomia/snapshots/ejabberd-dump/* | wc -l)\" = \"2\" ]");
+      
+      # Run the garbage collect operation. Since the database is not considered
+      # garbage yet, it should not be removed.
+      $machine->mustSucceed("dysnomia --type ejabberd-dump --operation collect-garbage --component ${ejabberd_dump} --environment");
+      $machine->mustSucceed("[ -e /var/ejabberd ]");
+      
+      # Deactivate the ejabberd database. This test should succeed.
       $machine->mustSucceed("dysnomia --type ejabberd-dump --operation deactivate --component ${ejabberd_dump} --environment");
+      
+      # Run the garbage collect operation. Since the database has been
+      # deactivated it is considered garbage, so it should be removed.
+      $machine->mustSucceed("systemctl stop ejabberd");
+      $machine->mustSucceed("dysnomia --type ejabberd-dump --operation collect-garbage --component ${ejabberd_dump} --environment");
+      $machine->mustSucceed("[ ! -e /var/ejabberd ]");
+      
+      # Activate the ejabberd database again. This test should succeed.
+      $machine->mustSucceed("systemctl start ejabberd");
+      $machine->waitForJob("ejabberd");
+      $machine->mustSucceed("dysnomia --type ejabberd-dump --operation activate --component ${ejabberd_dump} --environment");
+      $machine->mustFail("curl --fail --user newuser:newuser http://localhost:5280/admin");
+      
+      # Restore the last snapshot and check whether it contains the recently
+      # added user. This test should succeed.
+      #$machine->mustSucceed("sleep 3; dysnomia --type ejabberd-dump --operation restore --component ${ejabberd_dump} --environment");
+      #$machine->mustSucceed("curl --fail --user newuser:newuser http://localhost:5280/admin");
       
       # Test Subversion activation script. We import a repository
       # then we do a checkout and see whether it succeeds.

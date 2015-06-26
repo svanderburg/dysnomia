@@ -3,6 +3,19 @@ set -e
 set -o pipefail
 shopt -s nullglob
 
+# Autoconf settings
+export prefix=@prefix@
+
+# Import utility functions
+source @datadir@/@PACKAGE@/util
+
+determineComponentName $2
+checkStateDir
+determineTypeIdentifier $0
+composeSnapshotsPath
+composeGarbagePath
+composeGenerationsPath
+
 ejabberdctl='@ejabberdctl@ --config-dir /var/ejabberd --logs /var/log/ejabberd --spool /var/lib/ejabberd'
 
 case "$1" in
@@ -30,10 +43,46 @@ case "$1" in
         then
             $ejabberdctl load $2/ejabberd-dump/*
         fi
+        
+        unmarkStateAsGarbage
         ;;
     deactivate)
-        # An ejabberd dump cannot be deactivated, we do not want to drop user accounts
-        # with all data in it, right?
-        echo
+        markStateAsGarbage
+        ;;
+    snapshot)
+        tmpdir=$(mktemp -d)
+        cd $tmpdir
+        
+        $ejabberdctl dump $tmpdir/db.dump
+        
+        hash=$(cat db.dump | sha256sum)
+        hash=${hash:0:64}
+        
+        if [ -d $snapshotsPath/$hash ]
+        then
+            rm -Rf $tmpdir
+        else
+            mkdir -p $snapshotsPath/$hash
+            mv db.dump $snapshotsPath/$hash
+            rmdir $tmpdir
+        fi
+        createGenerationSymlink $snapshotsPath/$hash
+        ;;
+    restore)
+        determineLastSnapshot
+        
+        if [ "$lastSnapshot" != "" ]
+        then
+            $ejabberdctl load $snapshotsPath/$lastSnapshot/dump.db
+        fi
+        ;;
+    collect-garbage)
+        if [ -f $garbagePath ]
+        then
+            rm -Rf /var/lib/ejabberd
+            rm -Rf /var/ejabberd
+            rm -Rf /var/log/ejabberd
+            unmarkStateAsGarbage
+        fi
         ;;
 esac
