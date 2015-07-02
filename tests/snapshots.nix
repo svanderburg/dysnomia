@@ -85,7 +85,7 @@ makeTest {
       $machine->mustSucceed("[ \"\$(xzgrep 'Three' ".(substr $lastResolvedSnapshot, 0, -1)."/dump.sql.xz)\" != \"\" ]");
       
       # We should have 3 generation snapshot links
-      $result = $machine->mustSucceed("ls /var/dysnomia/generations/mysql-container/testdb | wc -l");
+      $result = $machine->mustSucceed("ls /var/state/dysnomia/generations/mysql-container/testdb | wc -l");
       
       if($result == 3) {
           print "We have three generation links!\n";
@@ -97,7 +97,7 @@ makeTest {
       # equal amount of generation symlinks.
       
       $machine->mustSucceed("dysnomia --operation snapshot --component ${mysql_database} --container ${mysql_container}");
-      $result = $machine->mustSucceed("ls /var/dysnomia/generations/mysql-container/testdb | wc -l");
+      $result = $machine->mustSucceed("ls /var/state/dysnomia/generations/mysql-container/testdb | wc -l");
       
       if($result == 3) {
           print "We have three generation links!\n";

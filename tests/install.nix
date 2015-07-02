@@ -115,19 +115,19 @@ makeTest {
       # Take a snapshot of the MySQL database.
       # This test should succeed.
       $machine->mustSucceed("mysqlUsername=root mysqlPassword=verysecret dysnomia --type mysql-database --operation snapshot --component ${mysql_database} --environment");
-      $machine->mustSucceed("[ \"\$(ls /var/dysnomia/snapshots/mysql-database/* | wc -l)\" = \"1\" ]");
+      $machine->mustSucceed("[ \"\$(ls /var/state/dysnomia/snapshots/mysql-database/* | wc -l)\" = \"1\" ]");
       
       # Take another snapshot of the MySQL database. Because nothing changed, no
       # new snapshot is supposed to be taken. This test should succeed.
       $machine->mustSucceed("mysqlUsername=root mysqlPassword=verysecret dysnomia --type mysql-database --operation snapshot --component ${mysql_database} --environment");
-      $machine->mustSucceed("[ \"\$(ls /var/dysnomia/snapshots/mysql-database/* | wc -l)\" = \"1\" ]");
+      $machine->mustSucceed("[ \"\$(ls /var/state/dysnomia/snapshots/mysql-database/* | wc -l)\" = \"1\" ]");
       
       # Make a modification and take another snapshot. Because something
       # changed, a new snapshot is supposed to be taken. This test should
       # succeed.
       $machine->mustSucceed("echo \"insert into test values ('Bye world');\" | mysql --user=root --password=verysecret -N testdb");
       $machine->mustSucceed("mysqlUsername=root mysqlPassword=verysecret dysnomia --type mysql-database --operation snapshot --component ${mysql_database} --environment");
-      $machine->mustSucceed("[ \"\$(ls /var/dysnomia/snapshots/mysql-database/* | wc -l)\" = \"2\" ]");
+      $machine->mustSucceed("[ \"\$(ls /var/state/dysnomia/snapshots/mysql-database/* | wc -l)\" = \"2\" ]");
       
       # Run the garbage collect operation. Since the database is not considered
       # garbage yet, it should not be removed.
@@ -172,20 +172,20 @@ makeTest {
       # Take a snapshot of the PostgreSQL database.
       # This test should succeed.
       $machine->mustSucceed("postgresqlUsername=root dysnomia --type postgresql-database --operation snapshot --component ${postgresql_database} --environment");
-      $machine->mustSucceed("[ \"\$(ls /var/dysnomia/snapshots/postgresql-database/* | wc -l)\" = \"1\" ]");
+      $machine->mustSucceed("[ \"\$(ls /var/state/dysnomia/snapshots/postgresql-database/* | wc -l)\" = \"1\" ]");
       
       # Take another snapshot of the PostgreSQL database. Because nothing
       # changed, no new snapshot is supposed to be taken. This test should
       # succeed.
       $machine->mustSucceed("postgresqlUsername=root dysnomia --type postgresql-database --operation snapshot --component ${postgresql_database} --environment");
-      $machine->mustSucceed("[ \"\$(ls /var/dysnomia/snapshots/postgresql-database/* | wc -l)\" = \"1\" ]");
+      $machine->mustSucceed("[ \"\$(ls /var/state/dysnomia/snapshots/postgresql-database/* | wc -l)\" = \"1\" ]");
       
       # Make a modification and take another snapshot. Because something
       # changed, a new snapshot is supposed to be taken. This test should
       # succeed.
       $machine->mustSucceed("echo \"insert into test values ('Bye world');\" | psql --file - testdb");
       $machine->mustSucceed("postgresqlUsername=root dysnomia --type postgresql-database --operation snapshot --component ${postgresql_database} --environment");
-      $machine->mustSucceed("[ \"\$(ls /var/dysnomia/snapshots/postgresql-database/* | wc -l)\" = \"2\" ]");
+      $machine->mustSucceed("[ \"\$(ls /var/state/dysnomia/snapshots/postgresql-database/* | wc -l)\" = \"2\" ]");
       
       # Run the garbage collect operation. Since the database is not considered
       # garbage yet, it should not be removed.
@@ -226,19 +226,19 @@ makeTest {
       # Take a snapshot of the Mongo database.
       # This test should succeed.
       $machine->mustSucceed("dysnomia --type mongo-database --operation snapshot --component ${mongo_database} --environment");
-      $machine->mustSucceed("[ \"\$(ls /var/dysnomia/snapshots/mongo-database/* | wc -l)\" = \"1\" ]");
+      $machine->mustSucceed("[ \"\$(ls /var/state/dysnomia/snapshots/mongo-database/* | wc -l)\" = \"1\" ]");
       
       # Take another snapshot of the Mongo database. Because nothing changed, no
       # new snapshot is supposed to be taken. This test should succeed.
       $machine->mustSucceed("dysnomia --type mongo-database --operation snapshot --component ${mongo_database} --environment");
-      $machine->mustSucceed("[ \"\$(ls /var/dysnomia/snapshots/mongo-database/* | wc -l)\" = \"1\" ]");
+      $machine->mustSucceed("[ \"\$(ls /var/state/dysnomia/snapshots/mongo-database/* | wc -l)\" = \"1\" ]");
       
       # Make a modification and take another snapshot. Because something
       # changed, a new snapshot is supposed to be taken. This test should
       # succeed.
       $machine->mustSucceed("(echo 'use testdb;'; echo 'db.messages.save({ \"test\": \"test123\" });') | mongo");
       $machine->mustSucceed("dysnomia --type mongo-database --operation snapshot --component ${mongo_database} --environment");
-      $machine->mustSucceed("[ \"\$(ls /var/dysnomia/snapshots/mongo-database/* | wc -l)\" = \"2\" ]");
+      $machine->mustSucceed("[ \"\$(ls /var/state/dysnomia/snapshots/mongo-database/* | wc -l)\" = \"2\" ]");
       
       # Run the garbage collect operation. Since the database is not considered
       # garbage yet, it should not be removed.
@@ -301,12 +301,12 @@ makeTest {
       # Take a snapshot of the ejabberd database.
       # This test should succeed.
       $machine->mustSucceed("dysnomia --type ejabberd-dump --operation snapshot --component ${ejabberd_dump} --environment");
-      $machine->mustSucceed("[ \"\$(ls /var/dysnomia/snapshots/ejabberd-dump/* | wc -l)\" = \"1\" ]");
+      $machine->mustSucceed("[ \"\$(ls /var/state/dysnomia/snapshots/ejabberd-dump/* | wc -l)\" = \"1\" ]");
       
       # Take another snapshot of the ejabberd database. Because nothing changed, no
       # new snapshot is supposed to be taken. This test should succeed.
       $machine->mustSucceed("dysnomia --type ejabberd-dump --operation snapshot --component ${ejabberd_dump} --environment");
-      $machine->mustSucceed("[ \"\$(ls /var/dysnomia/snapshots/ejabberd-dump/* | wc -l)\" = \"1\" ]");
+      $machine->mustSucceed("[ \"\$(ls /var/state/dysnomia/snapshots/ejabberd-dump/* | wc -l)\" = \"1\" ]");
       
       # Make a modification (creating a new user) and take another snapshot.
       # Because something changed, a new snapshot is supposed to be taken. This
@@ -314,7 +314,7 @@ makeTest {
       $machine->mustSucceed("ejabberdctl --config-dir /var/ejabberd --logs /var/log/ejabberd --spool /var/lib/ejabberd register newuser localhost newuser");
       $machine->mustSucceed("curl --fail --user newuser:newuser http://localhost:5280/admin");
       $machine->mustSucceed("dysnomia --type ejabberd-dump --operation snapshot --component ${ejabberd_dump} --environment");
-      $machine->mustSucceed("[ \"\$(ls /var/dysnomia/snapshots/ejabberd-dump/* | wc -l)\" = \"2\" ]");
+      $machine->mustSucceed("[ \"\$(ls /var/state/dysnomia/snapshots/ejabberd-dump/* | wc -l)\" = \"2\" ]");
       
       # Run the garbage collect operation. Since the database is not considered
       # garbage yet, it should not be removed.
@@ -351,20 +351,20 @@ makeTest {
       # Take a snapshot of the Subversion repository.
       # This test should succeed.
       $machine->mustSucceed("svnBaseDir=/repos svnGroup=users dysnomia --type subversion-repository --operation snapshot --component ${subversion_repository} --environment");
-      $machine->mustSucceed("[ \"\$(ls /var/dysnomia/snapshots/subversion-repository/* | wc -l)\" = \"1\" ]");
+      $machine->mustSucceed("[ \"\$(ls /var/state/dysnomia/snapshots/subversion-repository/* | wc -l)\" = \"1\" ]");
       
       # Take another snapshot of the Subversion repository. Because nothing
       # changed, no new snapshot is supposed to be taken. This test should
       # succeed.
       $machine->mustSucceed("svnBaseDir=/repos svnGroup=users dysnomia --type subversion-repository --operation snapshot --component ${subversion_repository} --environment");
-      $machine->mustSucceed("[ \"\$(ls /var/dysnomia/snapshots/subversion-repository/* | wc -l)\" = \"1\" ]");
+      $machine->mustSucceed("[ \"\$(ls /var/state/dysnomia/snapshots/subversion-repository/* | wc -l)\" = \"1\" ]");
       
       # Make a modification and take another snapshot. Because something
       # changed, a new snapshot is supposed to be taken. This test should
       # succeed.
       $machine->mustSucceed("cd testrepos; echo '<p>hello</p>' > hello.php; ${subversion}/bin/svn add hello.php; ${subversion}/bin/svn commit -m 'test commit'");
       $machine->mustSucceed("svnBaseDir=/repos svnGroup=users dysnomia --type subversion-repository --operation snapshot --component ${subversion_repository} --environment");
-      $machine->mustSucceed("[ \"\$(ls /var/dysnomia/snapshots/subversion-repository/* | wc -l)\" = \"2\" ]");
+      $machine->mustSucceed("[ \"\$(ls /var/state/dysnomia/snapshots/subversion-repository/* | wc -l)\" = \"2\" ]");
       
       # Run the garbage collect operation. Since the database is not considered
       # garbage yet, it should not be removed.

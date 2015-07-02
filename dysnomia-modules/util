@@ -151,7 +151,7 @@ checkStateDir()
 {
     if [ "$DYSNOMIA_STATEDIR" = "" ]
     then
-        DYSNOMIA_STATEDIR="/var/dysnomia"
+        DYSNOMIA_STATEDIR="/var/state/dysnomia"
     fi
 }
 

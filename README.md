@@ -180,7 +180,7 @@ Restoring the last taken snapshot can be done by running:
     $ dysnomia --operation restore --component ~/testdb --container ~/mysql-production
 
 Snapshots taken by Dysnomia are stored in a so-called Dysnomia snapshot store
-(stored by default in `/var/dysnomia`, but can be changed by setting the
+(stored by default in `/var/state/dysnomia`, but can be changed by setting the
 `DYSNOMIA_STATEDIR` environment variable), a special purpose directory that
 stores multiple generations of snapshots according to some naming convention
 that uniquely identifies each snapshot.
@@ -204,7 +204,7 @@ their names are consistent among multiple machines. Their absolute paths can be
 resolved by running:
 
     $ dysnomia-snapshots --resolve mysql-database/testdb/330232eda02b77c3629a4623b498855c168986e0a214ec44f38e7e0447a3f7ef
-    /var/dysnomia/snapshots/mysql-production/testdb/330232eda02b77c3629a4623b498855c168986e0a214ec44f38e7e0447a3f7ef
+    /var/state/dysnomia/snapshots/mysql-production/testdb/330232eda02b77c3629a4623b498855c168986e0a214ec44f38e7e0447a3f7ef
 
 Deleting older generations of snapshots
 ---------------------------------------
