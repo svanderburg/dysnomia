@@ -14,15 +14,16 @@ change after they have been built.
 
 For example, the [Nix package manager](http://nixos.org/nix), which is used as
 a basis for local deployment in Disnix, achieves many of its quality attributes
-from this fact, such as reliable and reproducible deployment. Moreover, each time
-Nix deploys a new version or variant of a component it is stored next to an older
-version or variant. After a component has deployed, it is usually sufficient to
-launch it from the command-line or program launcher menu from the desktop.
+from immutability, such as reliable and reproducible deployment. Moreover, each
+time Nix deploys a new version or variant of a component it is stored next to an
+older version or variant. After a component has deployed, it is usually
+sufficient to launch it from the command-line or program launcher menu from the
+desktop.
 
 However, to fully automate deployment procedures for certain kinds of systems,
 we also need to deploy components that cannot be managed in such a deployment
 model, such as databases and source code repositories, because it is too costly
-to store multiple generations next to each other.
+to store multiple generations of them next to each other.
 
 Moreover, mutable components may also have to be activated (or deactivated) in
 so-called containers, such as application servers, managing the resources of an
@@ -62,19 +63,19 @@ Dysnomia modules
 The Dysnomia package contains the following modules, of which some of them can
 be optionally enabled/disabled:
 
-* `apache-webapplication`. Activates or deactivates a web application in a document root folder of the [Apache HTTP server](http://httpd.apache.org).
-* `axis2-webservice`. Activates or deactivates an Axis2 ARchive (AAR) file inside an [Axis2](http://axis2.apache.org) container.
+* `apache-webapplication`. Deploys a web application in a document root folder of the [Apache HTTP server](http://httpd.apache.org).
+* `axis2-webservice`. Deploys an Axis2 ARchive (AAR) file inside an [Axis2](http://axis2.apache.org) container.
 * `echo`. Mereley echos the parameters and environment variables used during activation or deactivation. Useful for debugging purposes.
-* `ejabberd-dump`. Activates or deactivates an [Ejabberd](http://www.ejabberd.im) configuration database.
-* `iis-webapplication`. Activates or deactivates a web application in a document root folder of the [Internet Information Services](http://www.iis.net) (IIS) server.
-* `mongo-database`. Activates or deactivate a [MongoDB](http://www.mongodb.org) database inside a MongoDB DBMS instance.
-* `mssql-database`. Imports a database dump inside a [SQL Server](http://www.microsoft.com/en-us/sqlserver/default.aspx) DBMS instance.
-* `mysql-database`. Imports a database dump inside a [MySQL](http://www.mysql.com) DBMS instance.
-* `nixos-configuration`. Activates a specific [NixOS](http://nixos.org/nixos) configuration.
-* `postgresql-database`. Imports a database dump inside a [PostgreSQL](http://www.postgresql.com) DBMS instance.
+* `ejabberd-dump`. Deploys an [Ejabberd](http://www.ejabberd.im) configuration database.
+* `iis-webapplication`. Deploys a web application in a document root folder of the [Internet Information Services](http://www.iis.net) (IIS) server.
+* `mongo-database`. Deploys a [MongoDB](http://www.mongodb.org) database inside a MongoDB DBMS instance.
+* `mssql-database`. Deploys a database to a [SQL Server](http://www.microsoft.com/en-us/sqlserver/default.aspx) DBMS instance.
+* `mysql-database`. Deploys a database to a [MySQL](http://www.mysql.com) DBMS instance.
+* `nixos-configuration`. Deploys a specific [NixOS](http://nixos.org/nixos) configuration.
+* `postgresql-database`. Deploys a database to a [PostgreSQL](http://www.postgresql.com) DBMS instance.
 * `process`. Wraps a process inside a [systemd](http://www.freedesktop.org/wiki/Software/systemd) or init.d job and activates or deactivates it.
-* `subversion-repository`. Imports a [Subversion](http://subversion.apache.org) repository dump into a Subversion working directory.
-* `tomcat-webapplication`. Import a Java Web Application ARchive (WAR) file inside an [Apache Tomcat](http://tomcat.apache.org) servlet container.
+* `subversion-repository`. Deploys [Subversion](http://subversion.apache.org) repository dump into a Subversion working directory.
+* `tomcat-webapplication`. Deploys a Java Web Application ARchive (WAR) file inside an [Apache Tomcat](http://tomcat.apache.org) servlet container.
 * `wrapper`. Wraps the `bin/wrapper` activation script inside the component into a [systemd](http://www.freedesktop.org/wiki/Software/systemd) or init.d job and activates or deactivates it.
 
 Configuration of the process and wrapper modules
@@ -97,7 +98,7 @@ scripts instead. The template that is used to generate these scripts reside in
 to generate an `init.d` script for Ubuntu 12.04 LTS.
 
 If none of the operating system's service manager can be used, Dysnomia can also
-activate and deactive service directly. To accomplish this use the `direct`
+activate and deactivate services directly. To accomplish this use the `direct`
 template option.
 
 To support other kinds of Linux distributions, you need to adapt these templates
@@ -133,14 +134,14 @@ database:
       FOREIGN KEY(AUTHOR_ID) references author(AUTHOR_ID) on update cascade on delete cascade
     );
 
-The folder `~/testdb` folder represents a logical state dump that we can
-deploy through a Dysnomia module.
+The folder `~/testdb` represents a logical state dump that we can deploy through
+a Dysnomia module.
 
 Providing the container configuration
 -------------------------------------
 Besides specifying the state of the database, we also need to know to which DBMS
-instance (a.k.a. container) we have to deploy it. The container settings are
-captured in a separate container configuration file, such as
+instance (a.k.a. container) we have to deploy a component. The container
+settings are captured in a separate container configuration file, such as
 `~/mysql-production`:
 
     type=mysql-database
@@ -150,7 +151,7 @@ captured in a separate container configuration file, such as
 The above file is a very simple textual configuration files consisting of
 key=value pairs. The `type` property is the only setting that is mandatory,
 because it is used to invoke the corresponding Dysnomia module that takes care
-of the deployment operation for that container. The remaining properties are
+of the deployment operations for that container. The remaining properties are
 used by the particular Dysnomia module.
 
 Executing a deployment activity
@@ -171,7 +172,7 @@ actual Dysnomia modules for more information.
 Managing snapshots
 ------------------
 Dysnomia can also be used to manage snapshots of mutable components. Running the
-following operation captures the state of the previously deployed MySQL database:
+following operation captures the state of a deployed MySQL database:
 
     $ dysnomia --operation snapshot --component ~/testdb --container ~/mysql-production
 
@@ -206,10 +207,26 @@ resolved by running:
     $ dysnomia-snapshots --resolve mysql-database/testdb/330232eda02b77c3629a4623b498855c168986e0a214ec44f38e7e0447a3f7ef
     /var/state/dysnomia/snapshots/mysql-production/testdb/330232eda02b77c3629a4623b498855c168986e0a214ec44f38e7e0447a3f7ef
 
+Every container type follows its own naming convention that uniquely identifies a
+snapshot. For example, for MySQL databases a snapshot is identified by its
+output hash, such as `9b0c3562b57dafd00e480c6b3a67d29146179775b67dfff5aa7a138b2699b241`.
+
+Using a specific naming convention (e.g. computing an output hash) has all kinds
+of advantanges. For example, if we take a snapshot twice and they happen to be
+the same (which is reflected in the output hash), we only have to store the
+result once.
+
+Not all component types use output hashes as a naming convention. For example,
+for Subversion repositories the revision number is used. Besides reducing storage
+redundancy this convention has another advantage -- when restoring a snapshot,
+we can first check whether the repository is at the right revision. There is no
+need to restore a snapshot if the revision number equals the revision number of
+a snapshot.
+
 Deleting older generations of snapshots
 ---------------------------------------
-Dysnomia stores multiple versions of snapshots next to each other and never
-automatically deletes them.
+Dysnomia stores multiple generations of snapshots next to each other and never
+automatically deletes them. Instead, it must be done explicitly by the user.
 
 Clearing up older generation of snapshots can be done by invoking the garbage
 collect operation. The following command deletes all but the latest snapshot
@@ -222,19 +239,19 @@ The amount of snapshots that must be kept can be adjusted by providing the
 
     $ dysnomia-snapshots --gc --keep 3
 
-The above command specifies that the last 3 generations of snapshots should be
+The above command states that the last 3 generations of snapshots should be
 kept.
 
 Implementing custom Dysnomia modules
 ====================================
 Custom Dysnomia modules are relatively easy to implement. Every Dysnomia module
-is a process in which the first parameter represents the activity to execute and
-the second parameter represents the path to a component containing a logical
-state snapshot. The container properties are made available through environment
-variables.
+is a process in which the first command-line parameter represents the activity
+to execute and the second parameter represents the path to a component
+containing a logical state snapshot. The container properties are made available
+through environment variables.
 
 The following code fragment shows the source code of the `echo` module, that
-simply echoes what it's doing:
+simply echoes what it is doing:
 
     #!/bin/bash
     set -e
