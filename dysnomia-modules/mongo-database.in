@@ -51,7 +51,7 @@ case "$1" in
             mv $componentName $snapshotsPath/$hash
             rmdir $tmpdir
         fi
-        createGenerationSymlink $snapshotsPath/$hash
+        createGenerationSymlink $hash
         ;;
     restore)
         determineLastSnapshot

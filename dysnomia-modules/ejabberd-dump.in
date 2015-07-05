@@ -67,7 +67,7 @@ case "$1" in
             mv dump $snapshotsPath/$hash
             rmdir $tmpdir
         fi
-        createGenerationSymlink $snapshotsPath/$hash
+        createGenerationSymlink $hash
         ;;
     restore)
         determineLastSnapshot

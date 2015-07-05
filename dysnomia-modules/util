@@ -257,7 +257,7 @@ determineLastSnapshot()
         then
             lastSnapshot=""
         else
-            lastSnapshot=$(basename $(readlink -f $generationsPath/$lastGeneration))
+            lastSnapshot=$(basename $(readlink $generationsPath/$lastGeneration))
         fi
     else
         lastSnapshot=""
@@ -307,10 +307,13 @@ composeGenerationsPath()
 # Creates a new generation symlink to a given snapshot.
 #
 # Parameters:
-# $1: Path to a snapshot
+# $1: Name of a snapshot
 #
 # Environment variables:
+# containerName: Name of the container in which the mutable component is hosted
+# componentName: Name of the mutable component
 # generationsPath: Path in which the generation symlinks are stored
+# snapshotsPath: Path in which the snapshots are stored
 
 createGenerationSymlink()
 {
@@ -327,11 +330,10 @@ createGenerationSymlink()
         lastGeneration=0
     fi
     
-    newGeneration=$((lastGeneration+1))
-    
-    if [ "$lastGeneration" = "0" ] || [ "$(readlink -f $generationsPath/$lastGeneration)" != "$1" ] # Only create the generation symlink if the previous symlink refers to a different snapshot
+    if [ "$lastGeneration" = "0" ] || [ "$(basename $(readlink $generationsPath/$lastGeneration))" != "$1" ] # Only create the generation symlink if the previous symlink refers to a different snapshot
     then
-        ln -s "$1" $generationsPath/$newGeneration
+        newGeneration=$((lastGeneration+1))
+        ln -s "../../../snapshots/$containerName/$componentName/$1" $generationsPath/$newGeneration
     fi
 }
 

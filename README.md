@@ -384,7 +384,7 @@ databases, we typically follow a convention for many of the operations:
                 mv dump.xz $snapshotsPath/$hash
                 rmdir $tmpdir
             fi
-            createGenerationSymlink $snapshotsPath/$hash
+            createGenerationSymlink $hash
             ;;
         restore)
             determineLastSnapshot

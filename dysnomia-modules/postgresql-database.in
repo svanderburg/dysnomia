@@ -52,7 +52,7 @@ case "$1" in
             rmdir $tmpdir
             
         fi
-        createGenerationSymlink $snapshotsPath/$hash
+        createGenerationSymlink $hash
         ;;
     restore)
         determineLastSnapshot

@@ -46,7 +46,7 @@ case "$1" in
         then
             mkdir -p $snapshotsPath/$rev
             @svnadmin@ dump -r $rev $svnBaseDir/$componentName | xz > $snapshotsPath/$rev/dump.xz
-            createGenerationSymlink $snapshotsPath/$rev
+            createGenerationSymlink $rev
         fi
         ;;
     restore)

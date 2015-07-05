@@ -194,7 +194,7 @@ case "$operation" in
                         
                         if [ "$lastGeneration" != "" ]
                         then
-                            lastSnapshot=$(readlink -f $DYSNOMIA_STATEDIR/generations/$container/$component/$lastGeneration)
+                            lastSnapshot=$(readlink $DYSNOMIA_STATEDIR/generations/$container/$component/$lastGeneration)
                             echo $container/$component/$(basename $lastSnapshot)
                         fi
                     fi
@@ -232,7 +232,7 @@ case "$operation" in
                     then
                         for i in $(ls $DYSNOMIA_STATEDIR/generations/$container/$component)
                         do
-                            snapshot=$(readlink -f $DYSNOMIA_STATEDIR/generations/$container/$component/$i)
+                            snapshot=$(readlink $DYSNOMIA_STATEDIR/generations/$container/$component/$i)
                             echo $container/$component/$(basename $snapshot)
                         done
                     fi
@@ -271,7 +271,7 @@ case "$operation" in
                         
                         for i in $(ls $DYSNOMIA_STATEDIR/generations/$container/$component | sort -n | tail -$keep)
                         do
-                            snapshot=$(basename $(readlink -f $DYSNOMIA_STATEDIR/generations/$container/$component/$i))
+                            snapshot=$(basename $(readlink $DYSNOMIA_STATEDIR/generations/$container/$component/$i))
                             snapshotsToKeep="$snapshotsToKeep $snapshot"
                         done
                         
@@ -324,7 +324,7 @@ case "$operation" in
             echo "ERROR: No component specified!" >&2
             exit 1
         fi
-        
+
         if [[ ! -z "$@" ]]
         then
             for i in $@
@@ -337,7 +337,9 @@ case "$operation" in
                 
                 # Update generation symlink
                 generationsPath=$DYSNOMIA_STATEDIR/generations/$container/$componentName
-                createGenerationSymlink $DYSNOMIA_STATEDIR/snapshots/$container/$componentName/$(basename $i)
+                determineContainerName $container
+                composeSnapshotsPath
+                createGenerationSymlink $(basename $i)
             done
         fi
         ;;
