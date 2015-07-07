@@ -223,10 +223,31 @@ we can first check whether the repository is at the right revision. There is no
 need to restore a snapshot if the revision number equals the revision number of
 a snapshot.
 
+Deleting the state of components
+--------------------------------
+Apart from snapshotting and restoring the state of mutable components, it may
+also be desirable to delete state, such as removing a database.
+
+To remove state, first a component must be deactivated:
+
+    $ dysnomia --operation deactivate --component ~/testdb --container ~/mysql-production
+
+The above operation does not delete the database. Instead, it simply marks it as
+garbage, but otherwise keeps it. Actually deleting the database can be done by
+invoking the garbage collect operation:
+
+    $ dysnomia --operation collect-garbage --component ~/testdb --container ~/mysql-production
+
+The above command first checks whether the database has been marked as garbage.
+If this is the case (because it has been deactivated) it is dropped. Otherwise,
+this command does nothing (because we do not want to delete stuff that is
+actually in use).
+
 Deleting older generations of snapshots
 ---------------------------------------
-Dysnomia stores multiple generations of snapshots next to each other and never
-automatically deletes them. Instead, it must be done explicitly by the user.
+Dysnomia stores multiple generations of snapshots next to each other and also
+never automatically deletes them. Instead, it must be done explicitly by the
+user.
 
 Clearing up older generation of snapshots can be done by invoking the garbage
 collect operation. The following command deletes all but the latest snapshot
