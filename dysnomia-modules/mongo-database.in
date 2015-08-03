@@ -22,7 +22,7 @@ case "$1" in
         # Nothing needs to be done to create a mongo database. It gets created
         # automatically once an object is saved.
         
-        if [ -d $2/mongo-databases ]
+        if [ -d $2/mongo-databases ] && [ "$((echo "use $componentName;"; echo "show collections;") | @mongo@ | grep -x 'system.indexes')" = "" ]
         then
             ( echo "use $componentName;"
               cat $2/mongo-databases/*
@@ -58,10 +58,7 @@ case "$1" in
         
         if [ "$lastSnapshot" != "" ]
         then
-            ( echo "use $componentName;"
-              echo "db.dropDatabase();"
-            ) | @mongo@
-            @mongorestore@ -d $componentName $snapshotsPath/$lastSnapshot/$componentName
+            @mongorestore@ --drop -d $componentName $snapshotsPath/$lastSnapshot/$componentName
         fi
         ;;
     collect-garbage)
