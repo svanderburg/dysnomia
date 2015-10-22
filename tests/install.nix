@@ -105,12 +105,15 @@ makeTest {
       $machine->waitForJob("mysql");
       $machine->mustSucceed("mysqlUsername=root mysqlPassword=verysecret dysnomia --type mysql-database --operation activate --component ${mysql_database} --environment");
       my $result = $machine->mustSucceed("echo 'select * from test' | mysql --user=root --password=verysecret -N testdb");
-        
+    
       if($result =~ /Hello world/) {
           print "MySQL query returns: Hello world!\n";
       } else {
           die "MySQL table should contain: Hello world!\n";
       }
+      
+      # Activate the database again. It should proceed without doing anything.
+      $machine->mustSucceed("mysqlUsername=root mysqlPassword=verysecret dysnomia --type mysql-database --operation activate --component ${mysql_database} --environment");
       
       # Take a snapshot of the MySQL database.
       # This test should succeed.
@@ -169,6 +172,9 @@ makeTest {
           die "PostgreSQL table should contain: Hello world!\n";
       }
       
+      # Activate the database again. It should proceed without doing anything.
+      $machine->mustSucceed("postgresqlUsername=root dysnomia --type postgresql-database --operation activate --component ${postgresql_database} --environment");
+      
       # Take a snapshot of the PostgreSQL database.
       # This test should succeed.
       $machine->mustSucceed("postgresqlUsername=root dysnomia --type postgresql-database --operation snapshot --component ${postgresql_database} --environment");
@@ -222,6 +228,10 @@ makeTest {
       #$machine->mustSucceed("sleep 100"); # !!! We need some delay to run this smoothly
       $machine->mustSucceed("dysnomia --type mongo-database --operation activate --component ${mongo_database} --environment");
       $machine->mustSucceed("[ \"\$((echo 'show dbs;'; echo 'use testdb;'; echo 'db.messages.find();') | mongo | grep 'Hello world')\" != \"\" ]");
+      
+      # Activate the Mongo database again and should not cause duplicate records. This test should succeed.
+      $machine->mustSucceed("dysnomia --type mongo-database --operation activate --component ${mongo_database} --environment");
+      $machine->mustSucceed("[ \"\$((echo 'show dbs;'; echo 'use testdb;'; echo 'db.messages.find();') | mongo | grep 'Hello world' | wc -l)\" = \"1\" ]");
       
       # Take a snapshot of the Mongo database.
       # This test should succeed.
