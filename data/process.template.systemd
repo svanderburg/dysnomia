@@ -1,5 +1,6 @@
 [Unit]
 Description=@description@
+After=disnix.service
 
 [Service]
 Environment=PATH=@systemd_path@

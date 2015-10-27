@@ -22,6 +22,8 @@ case "$1" in
         
         if [ "@job_template@" = "systemd" ]
         then
+            mkdir -p @systemd_rundir@/system
+            
             # Systemd activation
             sed -e "s|@name@|disnix-$serviceName|" \
                 -e "s|@description@|$serviceName|" \
@@ -32,7 +34,7 @@ case "$1" in
             addUserSettingsToSystemdConfig @systemd_rundir@/system/disnix-$serviceName.service
             if [ -f $2/etc/systemd-config ]
             then
-                cat $2/etc/systemd-config >> /run/systemd/system/disnix-$serviceName.service
+                cat $2/etc/systemd-config >> @systemd_rundir@/system/disnix-$serviceName.service
             fi
         
             systemctl --system daemon-reload

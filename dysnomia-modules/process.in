@@ -32,6 +32,8 @@ case "$1" in
     
         if [ "@job_template@" = "systemd" ]
         then
+            mkdir -p @systemd_rundir@/system
+            
             # Systemd activation
             sed -e "s|@name@|disnix-$serviceName|" \
                 -e "s|@description@|$serviceName|" \

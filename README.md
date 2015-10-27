@@ -85,8 +85,9 @@ The `process` and `wrapper` modules are supposed to use the host system's
 and system distributions.
 
 By default, Dysnomia is preconfigured to use NixOS' service manager, namely
-`systemd`, which expects runtime state files to reside in `/run/systemd` and sets
-`/run/current-system/sw/bin` as the default `PATH` for services.
+`systemd`, which expects runtime state files to reside in
+`/etc/systemd-mutable/system` and sets `/run/current-system/sw/bin` as the
+default `PATH` for services.
 
 If you are planning to use a different Linux distribution, these settings can be
 changed through the `--with-systemd-rundir` and `--with-systemd-path` configure
