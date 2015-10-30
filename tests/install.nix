@@ -358,6 +358,9 @@ makeTest {
       $machine->mustSucceed("${subversion}/bin/svn co file:///repos/testrepos");
       $machine->mustSucceed("[ -e testrepos/index.php ]");
       
+      # Activate the subversion repository again. It should not fail because of a double activation.
+      $machine->mustSucceed("svnBaseDir=/repos svnGroup=users dysnomia --type subversion-repository --operation activate --component ${subversion_repository} --environment");
+      
       # Take a snapshot of the Subversion repository.
       # This test should succeed.
       $machine->mustSucceed("svnBaseDir=/repos svnGroup=users dysnomia --type subversion-repository --operation snapshot --component ${subversion_repository} --environment");
