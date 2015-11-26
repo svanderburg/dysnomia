@@ -365,3 +365,49 @@ attemptSeveralTimes()
         false
     fi
 }
+
+# Removes a systemd job and its wanted dependencies
+#
+# Parameters:
+# $1: Absolute path to the unit to remove
+
+removeSystemdService()
+{
+    local jobsDir=$(dirname "$1")
+    local jobName=$(basename "$1")
+    
+    if [ -f $jobsDir/dysnomia.target ]
+    then
+        rm $jobsDir/dysnomia.target.wants/$jobName
+        rmdir --ignore-fail-on-non-empty $jobsDir/dysnomia.target.wants
+    fi
+    
+    rm "$1"
+}
+
+# Activates a systemd job and configures its wanted dependencies
+#
+# Parameters:
+# $1: Absolute path to the unit to activate
+# $2: Path to the mutable component to activate
+
+activateSystemdService()
+{
+    local jobsDir=$(dirname "$1")
+    local jobName=$(basename "$1")
+    
+    addUserSettingsToSystemdConfig "$1"
+    if [ -f $2/etc/systemd-config ]
+    then
+        cat $2/etc/systemd-config >> "$1"
+    fi
+    
+    if [ -f $jobsDir/dysnomia.target ]
+    then
+        mkdir -p $jobsDir/dysnomia.target.wants
+        ln -s ../$jobName $jobsDir/dysnomia.target.wants/$jobName
+    fi
+    
+    systemctl --system daemon-reload
+    systemctl start $jobName || (removeSystemdService @systemd_rundir@/system/disnix-$serviceName.service; removeUnprivilegedUserAndGroup; false)
+}
