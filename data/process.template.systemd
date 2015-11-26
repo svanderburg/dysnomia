@@ -2,6 +2,9 @@
 Description=@description@
 After=disnix.service
 
+[Install]
+WantedBy=dysnomia.target
+
 [Service]
 Environment=PATH=@systemd_path@
 ExecStart=@process@

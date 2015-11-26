@@ -1,3 +1,7 @@
+Version 0.5
+===========
+- systemd templates are now wanted by dysnomia.target, so that deployed services are activated on each startup
+
 Version 0.4
 ===========
 - Make process and wrapper deactivation more robust in case a previous deactivation has failed

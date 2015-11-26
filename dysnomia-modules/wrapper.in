@@ -36,9 +36,15 @@ case "$1" in
             then
                 cat $2/etc/systemd-config >> @systemd_rundir@/system/disnix-$serviceName.service
             fi
+            
+            if [ -f @systemd_rundir@/system/dysnomia.target ]
+            then
+                mkdir -p @systemd_rundir@/system/dysnomia.target.wants
+                ln -s ../disnix-$serviceName.service @systemd_rundir@/system/dysnomia.target.wants/disnix-$serviceName.service
+            fi
         
             systemctl --system daemon-reload
-            systemctl start disnix-$serviceName.service || (rm -f disnix-$serviceName.service; removeUnprivilegedUserAndGroup; false)
+            systemctl start disnix-$serviceName.service || (rm -f @systemd_rundir@/system/dysnomia.target.wants/disnix-$serviceName.service; rm @systemd_rundir@/system/disnix-$serviceName.service; removeUnprivilegedUserAndGroup; false)
         elif [ "@job_template@" = "init.d" ]
         then
             runProcess="$(echo $2/bin/wrapper)"
@@ -98,6 +104,12 @@ case "$1" in
         if [ "@job_template@" = "systemd" ] && [ -e @systemd_rundir@/system/disnix-$serviceName.service ]
         then
             # systemd cleanup
+            if [ -f @systemd_rundir@/system/dysnomia.target ]
+            then
+                rm @systemd_rundir@/system/dysnomia.target.wants/disnix-$serviceName.service
+                rmdir --ignore-fail-on-non-empty @systemd_rundir@/system/dysnomia.target.wants
+            fi
+            
             rm @systemd_rundir@/system/disnix-$serviceName.service
             systemctl --system daemon-reload
         elif [ "@job_template@" = "init.d" ]
