@@ -93,6 +93,16 @@ If you are planning to use a different Linux distribution, these settings can be
 changed through the `--with-systemd-rundir` and `--with-systemd-path` configure
 parameters.
 
+`systemd` jobs deployed by Dysnomia are wanted by the `dysnomia.target`, if this
+file exists. However, this target file is not created by default. You need to do
+this yourself first. The following command typically suffices:
+
+    $ cat > /etc/systemd-mutable/system/dysnomia.target <<EOF
+    [Unit]
+    Description=Services that are activated and deactivated by Dysnomia
+    After=final.target
+    EOF
+
 Apart from `systemd`, Dysnomia can also be used to generate plain old `init.d`
 scripts instead. The template that is used to generate these scripts reside in
 `data/*.template.initd` of the source distribution. By default, it's configured
