@@ -79,6 +79,11 @@ case "$1" in
             then
                 systemctl stop disnix-$serviceName.service
             fi
+            
+            if [ -e @systemd_rundir@/system/disnix-$serviceName.socket ]
+            then
+                systemctl stop disnix-$serviceName.socket
+            fi
         elif [ "@job_template@" = "init.d" ]
         then
             # init.d deactivation
@@ -94,10 +99,13 @@ case "$1" in
         
         attemptSeveralTimes removeUnprivilegedUserAndGroup 10
         
-        if [ "@job_template@" = "systemd" ] && [ -e @systemd_rundir@/system/disnix-$serviceName.service ]
+        if [ "@job_template@" = "systemd" ]
         then
-            removeSystemdService @systemd_rundir@/system/disnix-$serviceName.service
-            systemctl --system daemon-reload
+            if [ -e @systemd_rundir@/system/disnix-$serviceName.service ]
+            then
+                removeSystemdService @systemd_rundir@/system/disnix-$serviceName.service $2
+                systemctl --system daemon-reload
+            fi
         elif [ "@job_template@" = "init.d" ]
         then
             # init.d cleanup

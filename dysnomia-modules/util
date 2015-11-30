@@ -370,19 +370,25 @@ attemptSeveralTimes()
 #
 # Parameters:
 # $1: Absolute path to the unit to remove
+# $2: Path to the mutable component to activate
 
 removeSystemdService()
 {
     local jobsDir=$(dirname "$1")
-    local jobName=$(basename "$1")
+    local jobName=$(basename "$1" .service)
     
     if [ -f $jobsDir/dysnomia.target ]
     then
-        rm $jobsDir/dysnomia.target.wants/$jobName
+        rm $jobsDir/dysnomia.target.wants/$jobName.service
         rmdir --ignore-fail-on-non-empty $jobsDir/dysnomia.target.wants
     fi
     
     rm "$1"
+    
+    if [ -f $2/etc/socket ]
+    then
+        rm $jobsDir/$jobName.socket
+    fi
 }
 
 # Activates a systemd job and configures its wanted dependencies
@@ -394,7 +400,7 @@ removeSystemdService()
 activateSystemdService()
 {
     local jobsDir=$(dirname "$1")
-    local jobName=$(basename "$1")
+    local jobName=$(basename "$1" .service)
     
     addUserSettingsToSystemdConfig "$1"
     if [ -f $2/etc/systemd-config ]
@@ -405,9 +411,17 @@ activateSystemdService()
     if [ -f $jobsDir/dysnomia.target ]
     then
         mkdir -p $jobsDir/dysnomia.target.wants
-        ln -s ../$jobName $jobsDir/dysnomia.target.wants/$jobName
+        ln -s ../$jobName.service $jobsDir/dysnomia.target.wants/$jobName.service
+    fi
+    
+    if [ -f $2/etc/socket ]
+    then
+        cp $2/etc/socket $jobsDir/$jobName.socket
+        startUnit=$jobName.socket
+    else
+        startUnit=$jobName.service
     fi
     
     systemctl --system daemon-reload
-    systemctl start $jobName || (removeSystemdService @systemd_rundir@/system/disnix-$serviceName.service; removeUnprivilegedUserAndGroup; false)
+    systemctl start $startUnit || (removeSystemdService $jobsDir/$jobName.service $2; removeUnprivilegedUserAndGroup; false)
 }
