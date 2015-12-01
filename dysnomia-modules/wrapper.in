@@ -64,15 +64,14 @@ case "$1" in
         if [ "@job_template@" = "systemd" ]
         then
             # Systemd deactivation
-
-            if [ -e @systemd_rundir@/system/disnix-$serviceName.service ]
-            then
-                systemctl stop disnix-$serviceName.service
-            fi
-            
             if [ -e @systemd_rundir@/system/disnix-$serviceName.socket ]
             then
                 systemctl stop disnix-$serviceName.socket
+            fi
+            
+            if [ -e @systemd_rundir@/system/disnix-$serviceName.service ]
+            then
+                systemctl stop disnix-$serviceName.service
             fi
         elif [ "@job_template@" = "init.d" ]
         then

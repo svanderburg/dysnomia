@@ -27,6 +27,10 @@ let
   process_unprivileged = import ./deployment/process-unprivileged.nix {
     inherit stdenv;
   };
+  
+  process_socketactivation = import ./deployment/process-socketactivation.nix {
+    inherit stdenv;
+  };
 in
 makeTest {
   nodes = {
@@ -36,7 +40,7 @@ makeTest {
       virtualisation.memorySize = 1024;
       virtualisation.diskSize = 4096;
       
-      environment.systemPackages = [ dysnomia ];
+      environment.systemPackages = [ dysnomia pkgs.netcat ];
     };
   };
   
@@ -139,5 +143,20 @@ makeTest {
       $machine->mustSucceed("dysnomia --type process --operation deactivate --component ${process_unprivileged} --environment");
       $machine->mustSucceed("sleep 5");
       $machine->mustSucceed("[ \"\$(systemctl status disnix-\$(basename ${process_unprivileged}) | grep \"Active: inactive\")\" != \"\" ]");
+      
+      # Socket activation test. We activate the process, but it should
+      # only run if we attempt to connect to its corresponding socket. After we
+      # have deactivated the service, it should both be terminated and the
+      # socket should have disappeared.
+      
+      $machine->mustSucceed("dysnomia --type process --operation activate --component ${process_socketactivation} --environment");
+      $machine->mustSucceed("sleep 5");
+      $machine->mustFail("ps aux | grep ${process_socketactivation} | grep -v grep");
+      $machine->mustSucceed("netcat -z -n -v 127.0.0.1 5123");
+      $machine->mustSucceed("ps aux | grep ${process_socketactivation} | grep -v grep");
+      $machine->mustSucceed("dysnomia --type process --operation deactivate --component ${process_socketactivation} --environment");
+      $machine->mustSucceed("sleep 5");
+      $machine->mustFail("ps aux | grep ${process_socketactivation} | grep -v grep");
+      $machine->mustFail("netcat -z -n -v 127.0.0.1 5123");
     '';
 }
