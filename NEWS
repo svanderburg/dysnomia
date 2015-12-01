@@ -2,6 +2,10 @@ Version 0.5
 ===========
 - systemd templates are now wanted by dysnomia.target, so that deployed services are activated on each startup
 
+- Added support for systemd socket activation
+
+- Dysnomia modules have better documentation so that it becomes more obvious what they can do and how they can be used
+
 Version 0.4
 ===========
 - Make process and wrapper deactivation more robust in case a previous deactivation has failed
