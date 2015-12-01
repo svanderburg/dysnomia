@@ -3,6 +3,13 @@ set -e
 set -o pipefail
 shopt -s nullglob
 
+# Activates or deactivates a web application inside the document root folder of
+# an Internet Information Service (IIS) instance by copying the contents of the
+# mutable into the document root folder.
+#
+# Container properties (environment variables):
+# iisWwwRoot: Document root folder of the IIS server
+
 UNIXMSDeployPath=$(dirname "@msdeploy@")
 export MSDeployPath=$(cygpath --windows "$UNIXMSDeployPath")
 componentName=`basename $2`

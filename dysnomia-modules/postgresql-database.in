@@ -3,6 +3,19 @@ set -e
 set -o pipefail
 shopt -s nullglob
 
+# Manages the deployment lifecycle of a PostgreSQL database.
+#
+# On activation, an initial dump can be restored. If the mutable component
+# contains a sub folder named postgresql-databases/, then the dump files stored
+# inside get imported.
+#
+# This module also support snapshotting. It uses the output hash of the dump to
+# uniquely identify each snapshot.
+#
+# Container properties (environment variables):
+# postgresqlUsername: Username of the account that has the privileges to
+#    administer the database
+
 # Autoconf settings
 export prefix=@prefix@
 

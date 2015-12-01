@@ -2,6 +2,12 @@
 set -e
 set -o pipefail
 
+# Activates or deactivates the web applications in the webapps/ subfolder by
+# symlinking them into the document root folder of the Apache HTTP server.
+#
+# Container properties (environment variables):
+# documentRoot: Path to the document root folder (defaults to: /var/www)
+
 if [ "$documentRoot" = "" ]
 then
     documentRoot=/var/www

@@ -3,6 +3,17 @@ set -e
 set -o pipefail
 shopt -s nullglob
 
+# Manages the deployment lifecycle of a MySQL database.
+#
+# On activation, an initial dump can be restored. If the mutable component
+# contains a sub folder named mssql-databases/, then the dump files stored
+# inside get imported.
+#
+# Container properties (environment variables):
+# msSqlUsername: Username of the account that has the privileges to administer
+#    the database
+# msSqlPassword: Password of the above account
+
 case "$1" in
     activate)
         componentName=`basename $2`

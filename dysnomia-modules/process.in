@@ -3,6 +3,28 @@ set -e
 set -o pipefail
 shopt -s nullglob
 
+# Activates or deactivates a generic process by modifying the host system's
+# service manager's configuration (e.g. systemd, sysvinit)
+#
+# Files:
+# etc/process_config: Configuration file bundled with the component that
+#     configures specific container settings
+# etc/systemd-config: Configuration file bundled with the component that
+#     augments the generated systemd configuration with additional settings
+# etc/socket: Configuration file bundled with the component that defines a
+#     socket unit file that can be used to activate the service on-demand
+#
+# Component properties (environment variables):
+# container_process: Path to the executable that must be run when activated. If
+#     empty, it takes the first executable in the bin/ sub folder.
+# container_group: Name of the group to create. If empty, no group will be created.
+# container_gid: GID of the group to create. If empty, an aribitrary one will be chosen.
+# container_username: Name of the user to create. If empty, no user will be created.
+# container_uid: UID of the user to create. If empty, an aribitrary one will be chosen.
+# container_homeDir: Path to the home directory of the user
+# container_createHomeDir: When set to 1 the home directory will be created if it does not exists
+# container_shell: Path to the shell of the user
+
 # Autoconf settings
 export prefix=@prefix@
 

@@ -2,8 +2,7 @@
 set -e
 set -o pipefail
 
-# Dysnomia module that simply echos the service thats being activated or
-# deactivated
+# Dysnomia module that simply echos the activity that is being executed.
 
 case "$1" in
     # Executes all steps necessary to activate a service. It returns a zero

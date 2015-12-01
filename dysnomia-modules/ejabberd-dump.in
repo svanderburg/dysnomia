@@ -3,6 +3,16 @@ set -e
 set -o pipefail
 shopt -s nullglob
 
+# Manages the deployment lifecycle of an ejabberd database.
+#
+# On activation, an initial dump can be restored. If the mutable component is a
+# directory, then the dump file stored inside the ejabberd-dump/ subfolder gets
+# imported. If the mutable component is a file, then it is considered to be the
+# initial dump.
+#
+# This module also support snapshotting. It uses the output hash of the dump to
+# uniquely identify each snapshot.
+
 # Autoconf settings
 export prefix=@prefix@
 

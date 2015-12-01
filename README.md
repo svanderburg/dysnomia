@@ -289,8 +289,7 @@ simply echoes what it is doing:
     set -e
     set -o pipefail
 
-    # Activation script that simply echos the service thats being activated or
-    # deactivated
+    # Dysnomia module that simply echos the activity that is being executed.
 
     case "$1" in
         # Executes all steps necessary to activate a service. It returns a zero
@@ -456,6 +455,13 @@ operations of a database:
 
 Dynomia includes a set of utility functions to make implementing these
 operations more convenient.
+
+Container and component configuration properties
+------------------------------------------------
+Each module takes its own container and component configuration properties. Both
+are exposed as environment variables. Consult the documentation inside the
+modules (stored in the `dysnomia-modules/` sub folder of this package) for more
+information.
 
 License
 =======

@@ -2,8 +2,14 @@
 set -e
 set -o pipefail
 
-# Activation script that activates the given system derivation,
-# which makes it possible to remotely upgrade NixOS
+# Module that activates a NixOS system derivation, which makes it possible to
+# upgrade NixOS.
+#
+# Container properties (environment variables):
+# disableNixOSSystemProfile: Do not switch the system profile, but do activate
+#     the configuration
+# testNixOS: If set to true, it only tests the configuration and does not update
+#     the bootloader
 
 if [ "$testNixOS" = "" ]
 then

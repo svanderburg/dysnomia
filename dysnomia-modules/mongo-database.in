@@ -3,6 +3,15 @@ set -e
 set -o pipefail
 shopt -s nullglob
 
+# Manages the deployment lifecycle of a Mongo database.
+#
+# On activation, an initial dump can be restored. If the mutable component
+# contains a sub folder named mongo-databases/, then the dump files stored
+# inside get imported.
+#
+# This module also support snapshotting. It uses the output hash of the dump to
+# uniquely identify each snapshot.
+
 # Autoconf settings
 export prefix=@prefix@
 

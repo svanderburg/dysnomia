@@ -3,6 +3,10 @@ set -e
 set -o pipefail
 shopt -s nullglob
 
+# Activates or deactivates web service archives (*.aar files) in the
+# axis2/WEB-INF/services subfolder by symlinking them into an Apache Axis2
+# container.
+
 catalinaBaseDir=@CATALINA_BASE@
 
 case "$1" in

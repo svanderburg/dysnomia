@@ -3,6 +3,10 @@ set -e
 set -o pipefail
 shopt -s nullglob
 
+# Activates or deactivate Java web applications (directories and *.war files) in
+# an Apache Tomcat container by symlinking the contents of the webapps/
+# subfolder into the Apache Tomcat webapps/ folder.
+
 catalinaBaseDir=@CATALINA_BASE@
 
 case "$1" in
