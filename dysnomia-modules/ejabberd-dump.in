@@ -12,6 +12,9 @@ shopt -s nullglob
 #
 # This module also support snapshotting. It uses the output hash of the dump to
 # uniquely identify each snapshot.
+#
+# ejabberdUsername: Username of the account that has the privileges to administer
+#    the ejabberd node
 
 # Autoconf settings
 export prefix=@prefix@
@@ -27,13 +30,13 @@ composeSnapshotsPath
 composeGarbagePath
 composeGenerationsPath
 
-ejabberdctl='@ejabberdctl@ --config-dir /var/ejabberd --logs /var/log/ejabberd --spool /var/lib/ejabberd'
+ejabberdctl=@ejabberdctl@
 
 case "$1" in
     activate)
         # Wait until the ejabberd daemon is available
         count=0
-        while ! $ejabberdctl status
+        while ! su $ejabberdUser -s /bin/sh -c "$ejabberdctl status"
         do
             if [ $count -eq 30 ]
             then
@@ -49,10 +52,10 @@ case "$1" in
         # Load the dump
         if [ -f $2 ]
         then
-            $ejabberdctl load $2
+            su $ejabberdUser -s /bin/sh -c "$ejabberdctl load $2"
         elif [ -d $2 ]
         then
-            $ejabberdctl load $2/ejabberd-dump/*
+            su $ejabberdUser -s /bin/sh -c "$ejabberdctl load $2/ejabberd-dump/*"
         fi
         
         unmarkStateAsGarbage
@@ -62,9 +65,10 @@ case "$1" in
         ;;
     snapshot)
         tmpdir=$(mktemp -d)
+        chown $ejabberdUser $tmpdir
         cd $tmpdir
         
-        $ejabberdctl dump $tmpdir/dump
+        su $ejabberdUser -s /bin/sh -c "$ejabberdctl dump $tmpdir/dump"
         
         hash=$(cat dump | sha256sum)
         hash=${hash:0:64}
@@ -74,6 +78,7 @@ case "$1" in
             rm -Rf $tmpdir
         else
             mkdir -p $snapshotsPath/$hash
+            chown $(whoami) dump
             mv dump $snapshotsPath/$hash
             rmdir $tmpdir
         fi
@@ -84,7 +89,7 @@ case "$1" in
         
         if [ "$lastSnapshot" != "" ]
         then
-            $ejabberdctl load $snapshotsPath/$lastSnapshot/dump
+            su $ejabberdUser -s /bin/sh -c "$ejabberdctl load $snapshotsPath/$lastSnapshot/dump"
         fi
         ;;
     collect-garbage)

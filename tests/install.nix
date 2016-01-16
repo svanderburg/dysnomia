@@ -305,50 +305,50 @@ makeTest {
         
       $machine->waitForJob("ejabberd");
       $machine->mustFail("curl --fail --user admin:admin http://localhost:5280/admin");
-      $machine->mustSucceed("dysnomia --type ejabberd-dump --operation activate --component ${ejabberd_dump} --environment");
+      $machine->mustSucceed("ejabberdUser=ejabberd dysnomia --type ejabberd-dump --operation activate --component ${ejabberd_dump} --environment");
       $machine->mustSucceed("curl --fail --user admin:admin http://localhost:5280/admin");
       
       # Take a snapshot of the ejabberd database.
       # This test should succeed.
-      $machine->mustSucceed("dysnomia --type ejabberd-dump --operation snapshot --component ${ejabberd_dump} --environment");
+      $machine->mustSucceed("ejabberdUser=ejabberd dysnomia --type ejabberd-dump --operation snapshot --component ${ejabberd_dump} --environment");
       $machine->mustSucceed("[ \"\$(ls /var/state/dysnomia/snapshots/ejabberd-dump/* | wc -l)\" = \"1\" ]");
       
       # Take another snapshot of the ejabberd database. Because nothing changed, no
       # new snapshot is supposed to be taken. This test should succeed.
-      $machine->mustSucceed("dysnomia --type ejabberd-dump --operation snapshot --component ${ejabberd_dump} --environment");
+      $machine->mustSucceed("ejabberdUser=ejabberd dysnomia --type ejabberd-dump --operation snapshot --component ${ejabberd_dump} --environment");
       $machine->mustSucceed("[ \"\$(ls /var/state/dysnomia/snapshots/ejabberd-dump/* | wc -l)\" = \"1\" ]");
       
       # Make a modification (creating a new user) and take another snapshot.
       # Because something changed, a new snapshot is supposed to be taken. This
       # test should succeed.
-      $machine->mustSucceed("ejabberdctl --config-dir /var/ejabberd --logs /var/log/ejabberd --spool /var/lib/ejabberd register newuser localhost newuser");
+      $machine->mustSucceed("su ejabberd -s /bin/sh -c \"ejabberdctl register newuser localhost newuser\"");
       $machine->mustSucceed("curl --fail --user newuser:newuser http://localhost:5280/admin");
-      $machine->mustSucceed("dysnomia --type ejabberd-dump --operation snapshot --component ${ejabberd_dump} --environment");
+      $machine->mustSucceed("ejabberdUser=ejabberd dysnomia --type ejabberd-dump --operation snapshot --component ${ejabberd_dump} --environment");
       $machine->mustSucceed("[ \"\$(ls /var/state/dysnomia/snapshots/ejabberd-dump/* | wc -l)\" = \"2\" ]");
       
       # Run the garbage collect operation. Since the database is not considered
       # garbage yet, it should not be removed.
-      $machine->mustSucceed("dysnomia --type ejabberd-dump --operation collect-garbage --component ${ejabberd_dump} --environment");
-      $machine->mustSucceed("[ -e /var/ejabberd ]");
+      $machine->mustSucceed("ejabberdUser=ejabberd dysnomia --type ejabberd-dump --operation collect-garbage --component ${ejabberd_dump} --environment");
+      $machine->mustSucceed("[ -e /var/lib/ejabberd ]");
       
       # Deactivate the ejabberd database. This test should succeed.
-      $machine->mustSucceed("dysnomia --type ejabberd-dump --operation deactivate --component ${ejabberd_dump} --environment");
+      $machine->mustSucceed("ejabberdUser=ejabberd dysnomia --type ejabberd-dump --operation deactivate --component ${ejabberd_dump} --environment");
       
       # Run the garbage collect operation. Since the database has been
       # deactivated it is considered garbage, so it should be removed.
       $machine->mustSucceed("systemctl stop ejabberd");
-      $machine->mustSucceed("dysnomia --type ejabberd-dump --operation collect-garbage --component ${ejabberd_dump} --environment");
-      $machine->mustSucceed("[ ! -e /var/ejabberd ]");
+      $machine->mustSucceed("ejabberdUser=ejabberd dysnomia --type ejabberd-dump --operation collect-garbage --component ${ejabberd_dump} --environment");
+      $machine->mustSucceed("[ ! -e /var/lib/ejabberd ]");
       
       # Activate the ejabberd database again. This test should succeed.
       $machine->mustSucceed("systemctl start ejabberd");
       $machine->waitForJob("ejabberd");
-      $machine->mustSucceed("dysnomia --type ejabberd-dump --operation activate --component ${ejabberd_dump} --environment");
+      $machine->mustSucceed("ejabberdUser=ejabberd dysnomia --type ejabberd-dump --operation activate --component ${ejabberd_dump} --environment");
       $machine->mustFail("curl --fail --user newuser:newuser http://localhost:5280/admin");
       
       # Restore the last snapshot and check whether it contains the recently
       # added user. This test should succeed.
-      $machine->mustSucceed("sleep 3; dysnomia --type ejabberd-dump --operation restore --component ${ejabberd_dump} --environment");
+      $machine->mustSucceed("sleep 3; ejabberdUser=ejabberd dysnomia --type ejabberd-dump --operation restore --component ${ejabberd_dump} --environment");
       $machine->mustSucceed("curl --fail --user newuser:newuser http://localhost:5280/admin");
       
       # Test Subversion activation script. We import a repository

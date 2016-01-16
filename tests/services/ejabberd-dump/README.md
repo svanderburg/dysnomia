@@ -12,27 +12,47 @@ services.ejabberd.enable = true;
 $ nixos-rebuild switch
 ```
 
+- Figure out where the config file is by checking the output of the following command:
+
+```
+$ ejabberdctl
+```
+
 - Create an admin account:
 
 ```
-$ ejabberdctl='ejabberctl --spool /var/lib/ejabberd'
-$ $ejabberdctl register admin local admin
+$ su ejabberd -s /bin/sh -c "ejabberdctl register admin localhost admin"
+```
+
+- Make a copy of the config file:
+
+```
+$ cp /nix/store/...-ejabberd-15.11/etc/ejabberd/ejabberd.yml /etc/nixos
 ```
 
 - Grant the admin user, administration privileges:
-  * Open `/var/ejabberd/ejabberd.cfg` in a text editor
-  * Search for the `ACCESS CONTROL_LISTS` section
-  * Add the following line near the `admin` user section:
+  * Open `/etc/nixos/ejabberd.yml` in a text editor
+  * Search for the `acl:` section
+  * Add the following lines:
 
 ```
-{acl, admin, {user, "admin", "localhost"}}.
+  admin:
+    user:
+      - "admin": "localhost"
 ```
 
-- Restart ejabberd:
+- Change the NixOS configuration to use the modified config:
+
+```
+services.ejabberd.configFile = ./ejabberd.yml;
+```
+
+- Deploy the modified ejabberd and remove its old state:
 
 ```
 $ stop ejabberd
-$ start ejabberd
+$ rm -R /var/lib/ejabberd
+$ nixos-rebuild switch
 ```
 
 - Verify whether you can access the admin web GUI:
@@ -44,7 +64,14 @@ $ start ejabberd
 - Dump the ejabberd database:
 
 ```
-$ $ejabberdctl dump $(pwd)/ejabberdcfg.dump
+$ su ejabberd -s /bin/sh -c "ejabberdctl dump /tmp/ejabberdcfg.dump"
+```
+
+- Copy the database and fix permissions:
+
+```
+$ mv /tmp/ejabberdcfg.dump .
+$ chown sander:users ejabberdcfg.dump
 ```
 
 - This is it!
