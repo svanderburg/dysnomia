@@ -31,7 +31,7 @@ case "$1" in
         # Nothing needs to be done to create a mongo database. It gets created
         # automatically once an object is saved.
         
-        if [ -d $2/mongo-databases ] && [ "$((echo "use $componentName;"; echo "show collections;") | @mongo@ | grep -x 'system.indexes')" = "" ]
+        if [ -d $2/mongo-databases ] && [ "$((echo "use $componentName;"; echo "db.getCollectionNames();") | @mongo@ | grep -x '\[ \]')" != "" ]
         then
             ( echo "use $componentName;"
               cat $2/mongo-databases/*
