@@ -83,7 +83,39 @@ let
         };
       in
       {
-        install = import ./tests/install.nix {
+        apache-webapplication = import ./tests/apache-webapplication.nix {
+          inherit nixpkgs buildFun;
+        };
+        
+        mysql-database = import ./tests/mysql-database.nix {
+          inherit nixpkgs buildFun;
+        };
+        
+        postgresql-database = import ./tests/postgresql-database.nix {
+          inherit nixpkgs buildFun;
+        };
+        
+        mongo-database = import ./tests/mongo-database.nix {
+          inherit nixpkgs buildFun;
+        };
+        
+        tomcat-webapplication = import ./tests/tomcat-webapplication.nix {
+          inherit nixpkgs buildFun;
+        };
+        
+        axis2-webservice = import ./tests/axis2-webservice.nix {
+          inherit nixpkgs buildFun;
+        };
+        
+        ejabberd-dump = import ./tests/ejabberd-dump.nix {
+          inherit nixpkgs buildFun;
+        };
+        
+        subversion-repository = import ./tests/subversion-repository.nix {
+          inherit nixpkgs buildFun;
+        };
+        
+        nixos-configuration = import ./tests/nixos-configuration.nix {
           inherit nixpkgs buildFun;
         };
         
