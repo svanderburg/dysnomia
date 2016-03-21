@@ -51,6 +51,10 @@ Options:
   -v, --version              Shows the version of this command
 
 Environment:
+  DYSNOMIA_COMPONENTS_PATH  Specifies the search directories of the components.
+                            If the component is an ordinary string (not starting
+                            with / or ./), Dysnomia searches in the folders
+                            provided in this colon-separated string.
   DYSNOMIA_CONTAINERS_PATH  Specifies the search directories of the containers.
                             If the container is an ordinary string (not starting
                             with / or ./), Dysnomia searches in the folders
@@ -135,13 +139,7 @@ then
     exit 1
 fi
 
-if [ -z "$component" ]
-then
-    echo "ERROR: No component is specified!" >&2
-    exit 1
-fi
-
-if [ -n "$container" ] 
+if [ -n "$container" ]
 then
     # Determine the container configuration
 
@@ -150,15 +148,14 @@ then
         # File references to containers can be used directly
         containerConfig="$(readlink -f $container)"
     else
-
         # For ordinary strings, search for the container configuration in DYSNOMIA_CONTAINERS_PATH
         DYSNOMIA_CONTAINERS_PATHS=$(echo $DYSNOMIA_CONTAINERS_PATH | tr ':' ' ')
 
-        for i in $DYSNOMIA_CONTAINERS_PATHS
+        for i in $DYSNOMIA_CONTAINERS_PATHS/*
         do
             if [ -f "$i" ]
             then
-                containerConfig=$i
+                containerConfig="$i"
                 break
             fi
         done
@@ -187,9 +184,39 @@ elif [ "$useEnvironment" = "1" ]
 then
     containerEnv=""
     envFlags=""
+    container="$type"
 else
     echo "No container file or environment specified!" >&2
     exit 1
+fi
+
+if [ -z "$component" ]
+then
+    echo "ERROR: No component is specified!" >&2
+    exit 1
+else
+    if [ "${component:0:1}" = "/" ] || [ "${component:0:2}" = "./" ]
+    then
+        # File references to components can be used directly
+        componentFile="$(readlink -f $component)"
+    else
+        DYSNOMIA_COMPONENTS_PATHS=$(echo $DYSNOMIA_COMPONENTS_PATH | tr ':' ' ')
+        
+        for i in $DYSNOMIA_COMPONENTS_PATHS/$container/*
+        do
+            if [ -f "$i" ]
+            then
+                componentFile="$i"
+                break
+            fi
+        done
+        
+        if [ ! -f "$componentFile" ]
+        then
+            echo "No component configuration found for: $component" >&2
+            exit 1
+        fi
+    fi
 fi
 
 # Search for Dysnomia modules in the DYSNOMIA_MODULES_PATH and the libexecdir
@@ -200,7 +227,7 @@ for i in $DYSNOMIA_MODULES_PATHS @libexecdir@
 do
     if [ -x "$i/$type" ]
     then
-        module=$i/$type
+        module="$i/$type"
         break
     fi
 done
@@ -215,4 +242,4 @@ fi
 
 env $envFlags PATH=$PATH DYSNOMIA_STATEDIR=$DYSNOMIA_STATEDIR \
   $containerEnv \
-  $module $operation $component $container
+  $module $operation $componentFile $container
