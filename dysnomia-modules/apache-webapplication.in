@@ -8,6 +8,17 @@ set -o pipefail
 # Container properties (environment variables):
 # documentRoot: Path to the document root folder (defaults to: /var/www)
 
+# Autoconf settings
+export prefix=@prefix@
+
+# Import utility functions
+source @datadir@/@PACKAGE@/util
+
+determineComponentName $2
+determineTypeIdentifier $0
+checkStateDir
+determineContainerName $3
+
 if [ "$documentRoot" = "" ]
 then
     documentRoot=/var/www
@@ -21,11 +32,15 @@ case "$1" in
         do
             ln -sfn $2/webapps/$i $documentRoot
         done
+        
+        markComponentAsDeployedInContainer
         ;;
     deactivate)
         ls $(readlink -f $2/webapps) | while read i
         do
             rm -f $documentRoot/$(basename $i)
         done
+        
+        unmarkComponentAsDeployedInContainer
         ;;
 esac

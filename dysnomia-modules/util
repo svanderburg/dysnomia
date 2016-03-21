@@ -216,29 +216,31 @@ determineContainerName()
     fi
 }
 
-
-# Marks the state as garbage so that it will be deleted by the garbage collector
+# Marks a component as activated in a container so that it will not be deleted by
+# the garbage collector
 #
 # Environment variables:
 # DYSNOMIA_STATEDIR: Path where Dysnomia stores state
 # containerName: Name of the container in which the mutable component is hosted
-# garbagePath: Path to the garbage file that indicates a component has become obsolete
+# componentName: Name of the component
+# containersPath: Path to the containers directory that stores which components have been activated in it
 
-markStateAsGarbage()
+markComponentAsDeployedInContainer()
 {
-    mkdir -p $DYSNOMIA_STATEDIR/garbage/$containerName
-    touch $garbagePath
+    mkdir -p $DYSNOMIA_STATEDIR/containers/$containerName
+    touch $DYSNOMIA_STATEDIR/containers/$containerName/$componentName
 }
 
-# Unmarks the state as garbage so that it will not be deleted by the garbage
-# collector.
+# Unmarks a component as activated in a container so that it will be deleted by
+# the garbage collector
 #
 # Environment variables:
-# garbagePath: Path to the garbage file that indicates a component has become obsolete
+# containerName: Name of the container in which the mutable component is hosted
+# containersPath: Path to the containers directory that stores which components have been activated in it
 
-unmarkStateAsGarbage()
+unmarkComponentAsDeployedInContainer()
 {
-    rm -f $garbagePath
+    rm $DYSNOMIA_STATEDIR/containers/$containerName/$componentName
 }
 
 # Determines the name of the last snapshot.
@@ -277,19 +279,6 @@ composeSnapshotsPath()
     snapshotsPath=$DYSNOMIA_STATEDIR/snapshots/$containerName/$componentName
 }
 
-# Compose the path in which the garbage flag of components are stored
-#
-# Environment variables:
-# DYSNOMIA_STATEDIR: Path where Dysnomia stores state
-# containerName: Name of the container in which the mutable component is hosted
-# componentName: Name of the mutable component
-# garbagePath: Will be set to the path in which garbage flags are stored
-
-composeGarbagePath()
-{
-    garbagePath=$DYSNOMIA_STATEDIR/garbage/$containerName/$componentName
-}
-
 # Compose the path in which the generation symlinks of component snapshots are
 # stored
 #
@@ -302,6 +291,19 @@ composeGarbagePath()
 composeGenerationsPath()
 {
     generationsPath=$DYSNOMIA_STATEDIR/generations/$containerName/$componentName
+}
+
+# Compose the path in which the component names per containers are stored
+#
+# Environment variables:
+# DYSNOMIA_STATEDIR: Path where Dysnomia stores state
+# containerName: Name of the container in which the mutable component is hosted
+# componentName: Name of the mutable component
+# containersPath: Will be set to the path in which component flags are stored
+
+composeContainersPath()
+{
+    containersPath=$DYSNOMIA_STATEDIR/containers/$containerName/$componentName
 }
 
 # Creates a new generation symlink to a given snapshot.

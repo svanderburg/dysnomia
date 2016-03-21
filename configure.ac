@@ -159,6 +159,7 @@ Makefile
 scripts/dysnomia
 scripts/dysnomia-snapshots
 scripts/Makefile
+dysnomia-modules/apache-webapplication
 dysnomia-modules/process
 dysnomia-modules/wrapper
 dysnomia-modules/Makefile

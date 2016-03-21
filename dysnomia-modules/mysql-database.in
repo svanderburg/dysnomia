@@ -28,7 +28,7 @@ checkStateDir
 determineTypeIdentifier $0
 determineContainerName $3
 composeSnapshotsPath
-composeGarbagePath
+composeContainersPath
 composeGenerationsPath
 
 case "$1" in
@@ -45,10 +45,10 @@ case "$1" in
               fi
             ) | @mysql@ --user=$mysqlUsername --password=$mysqlPassword -N
         fi
-        unmarkStateAsGarbage
+        markComponentAsDeployedInContainer
         ;;
     deactivate)
-        markStateAsGarbage
+        unmarkComponentAsDeployedInContainer
         ;;
     snapshot)
         tmpdir=$(mktemp -d)
@@ -82,10 +82,9 @@ case "$1" in
         fi
         ;;
     collect-garbage)
-        if [ -f $garbagePath ]
+        if [ ! -f $containersPath ]
         then
             echo "drop database $componentName;" | @mysql@ --user=$mysqlUsername --password=$mysqlPassword -N
-            unmarkStateAsGarbage
         fi
         ;;
 esac

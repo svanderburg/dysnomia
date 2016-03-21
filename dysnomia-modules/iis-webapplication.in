@@ -10,10 +10,20 @@ shopt -s nullglob
 # Container properties (environment variables):
 # iisWwwRoot: Document root folder of the IIS server
 
+# Autoconf settings
+export prefix=@prefix@
+
+# Import utility functions
+source @datadir@/@PACKAGE@/util
+
+determineComponentName $2
+determineTypeIdentifier $0
+checkStateDir
+determineContainerName $3
+
 UNIXMSDeployPath=$(dirname "@msdeploy@")
 export MSDeployPath=$(cygpath --windows "$UNIXMSDeployPath")
-componentName=`basename $2`
-webappName=${componentName:33}
+webappName=$componentName
 
 case "$1" in
     activate)
@@ -32,8 +42,12 @@ case "$1" in
             mkdir -p "$iisWwwRoot/$webappName/$dir"
             cp "$file" "$iisWwwRoot/$webappName/$dir"
         done
+        
+        markComponentAsDeployedInContainer
         ;;
     deactivate)
         echo \"$(cygpath --windows "@msdeploy@")\" -verb:delete -dest:apphostconfig=\"Default Web Site/$webappName\" | cmd
+        
+        unmarkComponentAsDeployedInContainer
         ;;
 esac

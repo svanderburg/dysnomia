@@ -31,6 +31,11 @@ export prefix=@prefix@
 # Import utility functions
 source @datadir@/@PACKAGE@/util
 
+determineComponentName $2
+determineTypeIdentifier $0
+checkStateDir
+determineContainerName $3
+
 serviceName=$(basename $2)
 
 # Open container configuration file if it exists
@@ -91,6 +96,8 @@ case "$1" in
             
             echo $pid > /var/run/$serviceName.pid
         fi
+        
+        markComponentAsDeployedInContainer
         ;;
     
     deactivate)
@@ -133,5 +140,7 @@ case "$1" in
             # init.d cleanup
             rm @sysvinit_initd_dir@/$serviceName
         fi
+        
+        unmarkComponentAsDeployedInContainer
         ;;
 esac

@@ -45,4 +45,4 @@ endif
 libexec_SCRIPTS = echo process nixos-configuration wrapper $(apache_webapplication) $(axis2_webservice) $(ejabberd_dump) $(iis_webapplication) $(mysql_database) $(mssql_database) $(tomcat_webapplication) $(postgresql_database) $(subversion_repository) $(mongo_database)
 pkgdata_SCRIPTS = util
 
-EXTRA_DIST = apache-webapplication axis2-webservice.in echo ejabberd-dump.in iis-webapplication.in mssql-database.in mysql-database.in process.in nixos-configuration tomcat-webapplication.in wrapper.in postgresql-database.in subversion-repository.in mongo-database.in util
+EXTRA_DIST = apache-webapplication.in axis2-webservice.in echo ejabberd-dump.in iis-webapplication.in mssql-database.in mysql-database.in process.in nixos-configuration tomcat-webapplication.in wrapper.in postgresql-database.in subversion-repository.in mongo-database.in util

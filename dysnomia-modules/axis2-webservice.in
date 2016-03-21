@@ -7,6 +7,17 @@ shopt -s nullglob
 # axis2/WEB-INF/services subfolder by symlinking them into an Apache Axis2
 # container.
 
+# Autoconf settings
+export prefix=@prefix@
+
+# Import utility functions
+source @datadir@/@PACKAGE@/util
+
+determineComponentName $2
+determineTypeIdentifier $0
+checkStateDir
+determineContainerName $3
+
 catalinaBaseDir=@CATALINA_BASE@
 
 case "$1" in
@@ -28,6 +39,8 @@ case "$1" in
                 done
             fi
         done
+        
+        markComponentAsDeployedInContainer
         ;;
     deactivate)
         # Remove AAR files from the deployment directory, so that they will be deactivated with hot deployment
@@ -45,5 +58,7 @@ case "$1" in
                 done
             fi
         done
+        
+        unmarkComponentAsDeployedInContainer
         ;;
 esac

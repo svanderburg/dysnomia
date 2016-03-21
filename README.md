@@ -384,7 +384,7 @@ databases, we typically follow a convention for many of the operations:
     determineTypeIdentifier $0
     determineContainerName $3
     composeSnapshotsPath
-    composeGarbagePath
+    composeContainersPath
     composeGenerationsPath
 
     case "$1" in
@@ -394,10 +394,10 @@ databases, we typically follow a convention for many of the operations:
             then
                 exampleInitializeState
             fi
-            unmarkStateAsGarbage
+            markComponentAsDeployedInContainer
             ;;
         deactivate)
-            markStateAsGarbage
+            unmarkComponentAsDeployedInContainer
             ;;
         snapshot)
             tmpdir=$(mktemp -d)
@@ -426,10 +426,9 @@ databases, we typically follow a convention for many of the operations:
             fi
             ;;
         collect-garbage)
-            if [ -f $garbagePath ]
+            if [ ! -f $containersPath ]
             then
                 exampleDeleteState
-                unmarkStateAsGarbage
             fi
             ;;
     esac
@@ -440,8 +439,8 @@ operations of a database:
 * `activate`: The activate operation checks whether the database exists in the
    DBMS. If the database does not exists, it gets created and an initial
    static dump (typically a schema) is imported. It also marks the database as
-   used so that it will not be removed by the garbage collector.
-* `deactivate`: Marks the mutable component (database) as garbage so that it
+   deployed so that it will not be removed by the garbage collector.
+* `deactivate`: Unmarks the mutable component (database) as deployed so that it
    will be removed by the garbage collector.
 * `snapshot`: Snapshots the database and composes generation symlink determining
    the order of the snapshots. As an optimisation, the module also tries to
@@ -450,8 +449,8 @@ operations of a database:
    chosen. In the above example, the output hash of the snapshot is used.
 * `restore`: Determines the last generation snapshot and restores it. If no
    snapshot is in the store, it does nothing.
-* `collect-garbage`: Checks if the component is marked as garbage and deletes it
-   if this the case. Otherwise, it does nothing.
+* `collect-garbage`: Checks if the component is not deployed to a container and
+   deletes it if this the case. Otherwise, it does nothing.
 
 Dynomia includes a set of utility functions to make implementing these
 operations more convenient.
