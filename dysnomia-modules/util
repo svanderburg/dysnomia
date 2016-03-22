@@ -223,24 +223,57 @@ determineContainerName()
 # DYSNOMIA_STATEDIR: Path where Dysnomia stores state
 # containerName: Name of the container in which the mutable component is hosted
 # componentName: Name of the component
-# containersPath: Path to the containers directory that stores which components have been activated in it
+# activatedPath: Path to the directory that stores which components have been activated in it
 
-markComponentAsDeployedInContainer()
+markComponentAsActive()
 {
-    mkdir -p $DYSNOMIA_STATEDIR/containers/$containerName
-    touch $DYSNOMIA_STATEDIR/containers/$containerName/$componentName
+    mkdir -p $DYSNOMIA_STATEDIR/activated/$containerName
+    
+    if [ -f $DYSNOMIA_STATEDIR/garbage/$containerName/$componentName ]
+    then
+        mv $DYSNOMIA_STATEDIR/garbage/$containerName/$componentName $DYSNOMIA_STATEDIR/activated/$containerName/$componentName
+    else
+        touch $DYSNOMIA_STATEDIR/activated/$containerName/$componentName
+    fi
 }
 
-# Unmarks a component as activated in a container so that it will be deleted by
-# the garbage collector
+# Unmarks a component as activated in a container so that it will be reported as
+# such
 #
 # Environment variables:
 # containerName: Name of the container in which the mutable component is hosted
-# containersPath: Path to the containers directory that stores which components have been activated in it
+# activatedPath: Path to the directory that stores which components have been activated in it
 
-unmarkComponentAsDeployedInContainer()
+unmarkComponentAsActive()
 {
-    rm $DYSNOMIA_STATEDIR/containers/$containerName/$componentName
+    rm $DYSNOMIA_STATEDIR/activated/$containerName/$componentName
+}
+
+# Marks a component that has previously been activated as a garbage so that it
+# will be deleted by the garbage collector,
+#
+# Environment variables:
+# containerName: Name of the container in which the mutable component is hosted
+# activatedPath: Path to the directory that stores which components have been activated in it
+# garbagePath: Path to the directory that stores which components have been marked as garbage
+
+markComponentAsGarbage()
+{
+    mkdir -p $DYSNOMIA_STATEDIR/garbage/$containerName
+    mv $DYSNOMIA_STATEDIR/activated/$containerName/$componentName $DYSNOMIA_STATEDIR/garbage/$containerName/$componentName
+}
+
+# Environment variables:
+#
+# Unmarks a component as garbage so that it will be considered as no longer
+# deployed.
+#
+# containerName: Name of the container in which the mutable component is hosted
+# garbagePath: Path to the directory that stores which components have been marked as garbage
+
+unmarkComponentAsGarbage()
+{
+    rm $DYSNOMIA_STATEDIR/garbage/$containerName/$componentName
 }
 
 # Determines the name of the last snapshot.
@@ -293,17 +326,18 @@ composeGenerationsPath()
     generationsPath=$DYSNOMIA_STATEDIR/generations/$containerName/$componentName
 }
 
-# Compose the path in which the component names per containers are stored
+# Compose the path in which the components names are stored that have become
+# garbage
 #
 # Environment variables:
 # DYSNOMIA_STATEDIR: Path where Dysnomia stores state
 # containerName: Name of the container in which the mutable component is hosted
 # componentName: Name of the mutable component
-# containersPath: Will be set to the path in which component flags are stored
+# garbagePath: Will be set to the path in which garbage flags are stored
 
-composeContainersPath()
+composeGarbagePath()
 {
-    containersPath=$DYSNOMIA_STATEDIR/containers/$containerName/$componentName
+    garbagePath=$DYSNOMIA_STATEDIR/garbage/$containerName/$componentName
 }
 
 # Creates a new generation symlink to a given snapshot.

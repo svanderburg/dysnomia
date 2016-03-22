@@ -40,7 +40,7 @@ case "$1" in
             fi
         done
         
-        markComponentAsDeployedInContainer
+        markComponentAsActive
         ;;
     deactivate)
         # Remove AAR files from the deployment directory, so that they will be deactivated with hot deployment
@@ -59,6 +59,6 @@ case "$1" in
             fi
         done
         
-        unmarkComponentAsDeployedInContainer
+        unmarkComponentAsActive
         ;;
 esac

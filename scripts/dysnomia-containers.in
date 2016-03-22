@@ -1,0 +1,322 @@
+#!/bin/bash
+set -e
+set -o pipefail
+
+# Copyright (c) 2009-2016 Sander van der Burg
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+# THE SOFTWARE.
+
+# Shows the usage of this command to the user
+
+showUsage()
+{
+    cat <<EOF
+Usage: $0 [OPTION] OPERATION
+
+The command \`dysnomia-containers' can be used to manage all mutable components
+deployed to a set of containers.
+
+Options:
+
+Operations:
+      --query-containers            Queries the available containers
+      --query-available-components  Queries the available mutable components
+                                    that can be deployed to containers
+      --query-activated-components  Queries the activated mutable components
+                                    deployed to containers
+  -o, --operation=OPERATION         Executes the given operation on all mutable
+                                    components deployed to a container
+      --deploy                      Deploys all unactivated available mutable
+                                    components and undeploys obsolete deployed
+                                    components
+      --snapshot                    Snapshots the state of all mutable
+                                    components
+      --restore                     Restores the state of all mutable
+                                    components
+      --collect-garbage             Removes the state of all mutable components
+                                    that have been marked as garbage
+  -h, --help                        Shows the usage of this command
+  -v, --version                     Shows the version of this command
+
+General parameters:
+  -C, --container=CONTAINER         Restrict the operations to the given
+                                    container
+  -y                                Auto confirm when destructive operations are
+                                    performed
+
+Environment:
+  DYSNOMIA_COMPONENTS_PATH  Specifies the search directories of the components.
+                            If the component is an ordinary string (not starting
+                            with / or ./), Dysnomia searches in the folders
+                            provided in this colon-separated string.
+  DYSNOMIA_CONTAINERS_PATH  Specifies the search directories of the containers.
+                            If the container is an ordinary string (not starting
+                            with / or ./), Dysnomia searches in the folders
+                            provided in this colon-separated string.
+  DYSNOMIA_STATEDIR         Specifies where the snapshots must be stored on the
+                            coordinator machine (defaults to:
+                            /var/state/dysnomia)
+EOF
+}
+
+# Shows the version of this command to the user
+
+showVersion()
+{
+    cat <<EOF
+$0 (@PACKAGE_NAME@ @PACKAGE_VERSION@)
+
+Copyright (C) 2009-2016 Sander van der Burg
+EOF
+}
+
+
+# Parse valid argument options
+
+PARAMS=`@getopt@ -n $0 -o o:C:yhv -l query-containers,query-available-components,query-activated-components,operation:,deploy,snapshot,restore,collect-garbage,container:,help,version -- "$@"`
+
+if [ $? != 0 ]
+then
+    showUsage
+    exit 1
+fi
+
+# Evaluate valid options
+
+eval set -- "$PARAMS"
+
+while [ "$1" != "--" ]
+do
+    case "$1" in
+        --query-containers)
+            action="query-containers"
+            ;;
+        --query-available-components)
+            action="query-available-components"
+            ;;
+        --query-activated-components)
+            action="query-activated-components"
+            ;;
+        -o|--operation)
+            action="execute-operation"
+            operation="$2"
+            ;;
+        --deploy)
+            action="deploy"
+            ;;
+        --snapshot)
+            action="snapshot"
+            ;;
+        --restore)
+            action="restore"
+            ;;
+        --collect-garbage)
+            action="collect-garbage"
+            ;;
+        -C|--container)
+            container="$2"
+            ;;
+        -y)
+            yes=1
+            ;;
+        -h|--help)
+            showUsage
+            exit 0
+            ;;
+        -v|--version)
+            showVersion
+            exit 0
+            ;;
+    esac
+    
+    shift
+done
+
+# Validate options
+
+if [ -z "$action" ]
+then
+    echo "No action specified!" >&2
+    exit 1
+fi
+
+# Execute operation
+
+queryAvailableComponents()
+{
+    for i in $(ls $DYSNOMIA_COMPONENTS_PATH | tr ':' ' ')
+    do
+        if [ "$container" = "" ] || [ "$container" = "$i" ]
+        then
+            for component in $(ls $DYSNOMIA_COMPONENTS_PATH/$i)
+            do
+                echo "$i/$component"
+            done
+        fi
+    done
+}
+
+queryActivatedComponents()
+{
+    if [ -d "$DYSNOMIA_STATEDIR/activated" ]
+    then
+        for i in $(ls $DYSNOMIA_STATEDIR/activated)
+        do
+            if [ "$container" = "" ] || [ "$container" = "$i" ]
+            then
+                for component in $(ls $DYSNOMIA_STATEDIR/activated/$i)
+                do
+                    echo "$i/$component"
+                done
+            fi
+        done
+    fi
+}
+
+executeOperation()
+{
+    if [ -z "$operation" ]
+    then
+        echo "No operation specified!" >&2
+        exit 1
+    fi
+    
+    activatedComponents=$(queryActivatedComponents)
+    
+    for i in $activatedComponents
+    do
+        container=$(dirname $i)
+        component=$(basename $i)
+        
+        dysnomia --operation $operation --container $container --component $DYSNOMIA_STATEDIR/activated/$container/$component
+    done
+}
+
+case "$action" in
+    query-containers)
+        for container in $(ls $DYSNOMIA_CONTAINERS_PATH | tr ':' ' ')
+        do
+            echo "$container"
+        done
+        ;;
+    query-available-components)
+        queryAvailableComponents
+        ;;
+    query-activated-components)
+        queryActivatedComponents
+        ;;
+    execute-operation)
+        executeOperation
+        ;;
+    deploy)
+        availableComponents=$(queryAvailableComponents)
+        activatedComponents=$(queryActivatedComponents)
+        
+        # For each activated component that is not available: deactivate
+        for i in $activatedComponents
+        do
+            container=$(dirname $i)
+            component=$(basename $i)
+            available=0
+
+            for j in $availableComponents
+            do
+                if [ "$i" = "$j" ]
+                then
+                    available=1
+                    break
+                fi
+            done
+            
+            if [ "$available" = "0" ]
+            then
+                echo "Deactivating component: $component in container: $container" >&2
+                dysnomia --operation deactivate --container $container --component $DYSNOMIA_STATEDIR/activated/$container/$component
+            fi
+        done
+        
+        # For each available component that has not been activated: activate
+        for i in $availableComponents
+        do
+            container=$(dirname $i)
+            component=$(basename $i)
+            activated=0
+            
+            for j in $activatedComponents
+            do
+                if [ "$i" = "$j" ]
+                then
+                    activated=1
+                    break
+                fi
+            done
+            
+            if [ "$activated" = "0" ]
+            then
+                echo "Activating component: $component in container: $container" >&2
+                dysnomia --operation activate --container $container --component $component
+            fi
+        done
+        ;;
+    snapshot)
+        operation=snapshot
+        executeOperation
+        ;;
+    restore)
+        if [ "$yes" != "1" ]
+        then
+            cat <<EOF
+This operation will restore the state of all mutable components deployed to the
+specified containers! This is a operation that can only be undone if recent
+snapshots have been taken! Maybe you prefer to restore the state of individual
+components.
+
+EOF
+
+            echo -n "Are you sure you want to proceed? [n] "
+            read answer
+            
+            if [ "answer" = "y" ]
+            then
+                yes=1
+            fi
+        fi
+        
+        if [ "$yes" = "1" ]
+        then
+            operation=restore
+            executeOperation
+        else
+            echo "Not executing the restore operations!"
+        fi
+        ;;
+    collect-garbage)
+        for i in $(ls $DYSNOMIA_STATEDIR/garbage)
+        do
+            if [ "$container" = "" ] || [ "$container" = "$i" ]
+            then
+                for component in $(ls $DYSNOMIA_STATEDIR/garbage/$i)
+                do
+                    echo "Collecting garbage for component: $component in container: $i" >&2
+                    dysnomia --operation collect-garbage --container $i --component $DYSNOMIA_STATEDIR/garbage/$i/$component
+                done
+            fi
+        done
+        ;;
+esac

@@ -23,7 +23,7 @@ checkStateDir
 determineTypeIdentifier $0
 determineContainerName $3
 composeSnapshotsPath
-composeContainersPath
+composeGarbagePath
 composeGenerationsPath
 
 case "$1" in
@@ -38,11 +38,11 @@ case "$1" in
             ) | @mongo@
         fi
         
-        markComponentAsDeployedInContainer
+        markComponentAsActive
         ;;
         
     deactivate)
-        unmarkComponentAsDeployedInContainer
+        markComponentAsGarbage
         ;;
     snapshot)
         tmpdir=$(mktemp -d)
@@ -71,11 +71,13 @@ case "$1" in
         fi
         ;;
     collect-garbage)
-        if [ ! -f $containersPath ]
+        if [ -f $garbagePath ]
         then
             ( echo "use $componentName;"
               echo "db.dropDatabase();"
             ) | @mongo@
+            
+            unmarkComponentAsGarbage
         fi
         ;;
 esac

@@ -27,7 +27,7 @@ checkStateDir
 determineTypeIdentifier $0
 determineContainerName $3
 composeSnapshotsPath
-composeContainersPath
+composeGarbagePath
 composeGenerationsPath
 
 case "$1" in
@@ -47,10 +47,10 @@ case "$1" in
             chmod -R g+w $svnBaseDir/$componentName
             chmod g+s $svnBaseDir/$componentName/db
         fi
-        markComponentAsDeployedInContainer
+        markComponentAsActive
         ;;
     deactivate)
-        unmarkComponentAsDeployedInContainer
+        markComponentAsGarbage
         ;;
     snapshot)
         rev=$(cat $svnBaseDir/$componentName/db/current)
@@ -77,9 +77,10 @@ case "$1" in
         fi
         ;;
     collect-garbage)
-        if [ ! -f $containersPath ]
+        if [ -f $garbagePath ]
         then
             rm -Rf $svnBaseDir/$componentName
+            unmarkComponentAsGarbage
         fi
         ;;
 esac

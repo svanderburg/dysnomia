@@ -25,7 +25,7 @@ checkStateDir
 determineTypeIdentifier $0
 determineContainerName $3
 composeSnapshotsPath
-composeContainersPath
+composeGarbagePath
 composeGenerationsPath
 
 case "$1" in
@@ -44,12 +44,12 @@ case "$1" in
               cat $2/mssql-databases/*.sql
               echo "go" ) | "@osql@" -S ".\\SQLEXPRESS" -U $msSqlUsername -P $msSqlPassword -n -h-1
         fi
-        markComponentAsDeployedInContainer
+        markComponentAsActive
         ;;
         
     deactivate)
         # A MS SQL database cannot be deactivated, we do not want to drop a database
         # with all data in it, right?
-        unmarkComponentAsDeployedInContainer
+        unmarkComponentAsActive
         ;;
 esac

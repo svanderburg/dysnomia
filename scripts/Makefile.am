@@ -4,7 +4,10 @@ dysnomia.1: dysnomia.in
 dysnomia-snapshots.1: dysnomia-snapshots.in
 	$(HELP2MAN) --output=$@ --no-info --name 'Manage the contents of the Dysnomia snapshots store' "$(SHELL) dysnomia-snapshots"
 
-bin_SCRIPTS = dysnomia dysnomia-snapshots
-man1_MANS = dysnomia.1 dysnomia-snapshots.1
+dysnomia-containers.1: dysnomia-containers.in
+	$(HELP2MAN) --output=$@ --no-info --name 'Manage the contents of a set of Dysnomia containers' "$(SHELL) dysnomia-containers"
 
-EXTRA_DIST = dysnomia.in dysnomia-snapshots.in dysnomia.1 dysnomia-snapshots.1
+bin_SCRIPTS = dysnomia dysnomia-snapshots dysnomia-containers
+man1_MANS = dysnomia.1 dysnomia-snapshots.1 dysnomia-containers.1
+
+EXTRA_DIST = dysnomia.in dysnomia-snapshots.in dysnomia-containers.in dysnomia.1 dysnomia-snapshots.1 dysnomia-containers.1

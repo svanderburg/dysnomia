@@ -43,11 +43,11 @@ case "$1" in
             cp "$file" "$iisWwwRoot/$webappName/$dir"
         done
         
-        markComponentAsDeployedInContainer
+        markComponentAsActive
         ;;
     deactivate)
         echo \"$(cygpath --windows "@msdeploy@")\" -verb:delete -dest:apphostconfig=\"Default Web Site/$webappName\" | cmd
         
-        unmarkComponentAsDeployedInContainer
+        unmarkComponentAsActive
         ;;
 esac

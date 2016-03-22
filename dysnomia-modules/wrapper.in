@@ -84,7 +84,7 @@ case "$1" in
             fi
         fi
         
-        markComponentAsDeployedInContainer
+        markComponentAsActive
         ;;
     
     deactivate)
@@ -134,7 +134,7 @@ case "$1" in
             rm @sysvinit_initd_dir@/$serviceName
         fi
         
-        unmarkComponentAsDeployedInContainer
+        unmarkComponentAsActive
         ;;
     
     lock)

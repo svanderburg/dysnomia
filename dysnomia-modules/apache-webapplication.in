@@ -33,7 +33,7 @@ case "$1" in
             ln -sfn $2/webapps/$i $documentRoot
         done
         
-        markComponentAsDeployedInContainer
+        markComponentAsActive
         ;;
     deactivate)
         ls $(readlink -f $2/webapps) | while read i
@@ -41,6 +41,6 @@ case "$1" in
             rm -f $documentRoot/$(basename $i)
         done
         
-        unmarkComponentAsDeployedInContainer
+        unmarkComponentAsActive
         ;;
 esac

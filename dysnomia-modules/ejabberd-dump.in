@@ -27,7 +27,7 @@ checkStateDir
 determineTypeIdentifier $0
 determineContainerName $3
 composeSnapshotsPath
-composeContainersPath
+composeGarbagePath
 composeGenerationsPath
 
 ejabberdctl=@ejabberdctl@
@@ -58,10 +58,10 @@ case "$1" in
             su $ejabberdUser -s /bin/sh -c "$ejabberdctl load $2/ejabberd-dump/*"
         fi
         
-        markComponentAsDeployedInContainer
+        markComponentAsActive
         ;;
     deactivate)
-        unmarkComponentAsDeployedInContainer
+        markComponentAsGarbage
         ;;
     snapshot)
         tmpdir=$(mktemp -d)
@@ -93,11 +93,13 @@ case "$1" in
         fi
         ;;
     collect-garbage)
-        if [ ! -f $containersPath ]
+        if [ -f $garbagePath ]
         then
             rm -Rf /var/lib/ejabberd
             rm -Rf /var/ejabberd
             rm -Rf /var/log/ejabberd
+            
+            unmarkComponentAsGarbage
         fi
         ;;
 esac

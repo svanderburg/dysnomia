@@ -97,7 +97,7 @@ case "$1" in
             echo $pid > /var/run/$serviceName.pid
         fi
         
-        markComponentAsDeployedInContainer
+        markComponentAsActive
         ;;
     
     deactivate)
@@ -141,6 +141,6 @@ case "$1" in
             rm @sysvinit_initd_dir@/$serviceName
         fi
         
-        unmarkComponentAsDeployedInContainer
+        unmarkComponentAsActive
         ;;
 esac

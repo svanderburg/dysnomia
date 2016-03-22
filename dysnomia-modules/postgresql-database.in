@@ -27,7 +27,7 @@ checkStateDir
 determineTypeIdentifier $0
 determineContainerName $3
 composeSnapshotsPath
-composeContainersPath
+composeGarbagePath
 composeGenerationsPath
 
 case "$1" in
@@ -42,10 +42,10 @@ case "$1" in
                 su $postgresqlUsername -c "psql --file $2/postgresql-databases/*.sql $componentName"
             fi
         fi
-        markComponentAsDeployedInContainer
+        markComponentAsActive
         ;;
     deactivate)
-        unmarkComponentAsDeployedInContainer
+        markComponentAsGarbage
         ;;
     snapshot)
         tmpdir=$(mktemp -d)
@@ -78,9 +78,10 @@ case "$1" in
         fi
         ;;
     collect-garbage)
-        if [ ! -f $containersPath ]
+        if [ -f $garbagePath ]
         then
             dropdb $componentName
+            unmarkComponentAsGarbage
         fi
         ;;
 esac

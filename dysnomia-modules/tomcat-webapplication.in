@@ -7,6 +7,17 @@ shopt -s nullglob
 # an Apache Tomcat container by symlinking the contents of the webapps/
 # subfolder into the Apache Tomcat webapps/ folder.
 
+# Autoconf settings
+export prefix=@prefix@
+
+# Import utility functions
+source @datadir@/@PACKAGE@/util
+
+determineComponentName $2
+determineTypeIdentifier $0
+checkStateDir
+determineContainerName $3
+
 catalinaBaseDir=@CATALINA_BASE@
 
 case "$1" in
@@ -28,6 +39,7 @@ case "$1" in
                 done
             fi
         done
+        markComponentAsActive
         ;;
     deactivate)
         # Remove WAR files from the deployment directory, so that they will be deactivated with hot deployment
@@ -45,5 +57,6 @@ case "$1" in
                 done
             fi
         done
+        unmarkComponentAsActive
         ;;
 esac
