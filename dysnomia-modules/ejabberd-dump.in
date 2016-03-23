@@ -13,7 +13,7 @@ shopt -s nullglob
 # This module also support snapshotting. It uses the output hash of the dump to
 # uniquely identify each snapshot.
 #
-# ejabberdUsername: Username of the account that has the privileges to administer
+# ejabberdUser: Username of the account that has the privileges to administer
 #    the ejabberd node
 
 # Autoconf settings

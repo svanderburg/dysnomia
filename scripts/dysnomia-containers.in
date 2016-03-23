@@ -148,7 +148,15 @@ do
     shift
 done
 
+# Autoconf settings
+export prefix=@prefix@
+
+# Import utility functions
+source @datadir@/@PACKAGE@/util
+
 # Validate options
+
+checkStateDir
 
 if [ -z "$action" ]
 then
