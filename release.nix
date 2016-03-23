@@ -43,51 +43,51 @@ let
       in
       {
         apache-webapplication = import ./tests/apache-webapplication.nix {
-          inherit nixpkgs buildFun;
+          inherit nixpkgs tarball buildFun;
         };
         
         mysql-database = import ./tests/mysql-database.nix {
-          inherit nixpkgs buildFun;
+          inherit nixpkgs tarball buildFun;
         };
         
         postgresql-database = import ./tests/postgresql-database.nix {
-          inherit nixpkgs buildFun;
+          inherit nixpkgs tarball buildFun;
         };
         
         mongo-database = import ./tests/mongo-database.nix {
-          inherit nixpkgs buildFun;
+          inherit nixpkgs tarball buildFun;
         };
         
         tomcat-webapplication = import ./tests/tomcat-webapplication.nix {
-          inherit nixpkgs buildFun;
+          inherit nixpkgs tarball buildFun;
         };
         
         axis2-webservice = import ./tests/axis2-webservice.nix {
-          inherit nixpkgs buildFun;
+          inherit nixpkgs tarball buildFun;
         };
         
         ejabberd-dump = import ./tests/ejabberd-dump.nix {
-          inherit nixpkgs buildFun;
+          inherit nixpkgs tarball buildFun;
         };
         
         subversion-repository = import ./tests/subversion-repository.nix {
-          inherit nixpkgs buildFun;
+          inherit nixpkgs tarball buildFun;
         };
         
         nixos-configuration = import ./tests/nixos-configuration.nix {
-          inherit nixpkgs buildFun;
+          inherit nixpkgs tarball buildFun;
         };
         
         processes_systemd = import ./tests/processes-systemd.nix {
-          inherit nixpkgs buildFun;
+          inherit nixpkgs tarball buildFun;
         };
         
         processes_direct = import ./tests/processes-direct.nix {
-          inherit nixpkgs buildFun;
+          inherit nixpkgs tarball buildFun;
         };
         
         snapshots = import ./tests/snapshots.nix {
-          inherit nixpkgs buildFun;
+          inherit nixpkgs tarball buildFun;
         };
       };
   };
