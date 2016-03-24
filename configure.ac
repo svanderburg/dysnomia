@@ -161,6 +161,7 @@ scripts/dysnomia-containers
 scripts/dysnomia-snapshots
 scripts/Makefile
 dysnomia-modules/apache-webapplication
+dysnomia-modules/nixos-configuration
 dysnomia-modules/process
 dysnomia-modules/wrapper
 dysnomia-modules/Makefile

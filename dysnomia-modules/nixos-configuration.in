@@ -1,0 +1,118 @@
+#!/bin/bash
+set -e
+set -o pipefail
+
+# Module that activates a NixOS system derivation, which makes it possible to
+# upgrade NixOS.
+#
+# Container properties (environment variables):
+# disableNixOSSystemProfile: Do not switch the system profile, but do activate
+#     the configuration
+# testNixOS: If set to true, it only tests the configuration and does not update
+#     the bootloader
+# noHardlink: If set to true, it does not create hardlinks when transferring
+#     snapshots from and to NixOS' dysnomia state directory
+
+# Autoconf settings
+export prefix=@prefix@
+
+# Import utility functions
+source @datadir@/@PACKAGE@/util
+
+determineComponentName $2
+checkStateDir
+determineTypeIdentifier $0
+determineContainerName $3
+composeSnapshotsPath
+composeGarbagePath
+composeGenerationsPath
+
+if [ "$testNixOS" = "" ]
+then
+    action="switch"
+else
+    action="test"
+fi
+
+if [ "$DYSNOMIA_NIXOS_STATEDIR" = "" ]
+then
+    DYSNOMIA_NIXOS_STATEDIR=/var/state/dysnomia-nixos
+fi
+
+if [ "$noHardlink" = "" ]
+then
+    cp_r="cp -lrv"
+else
+    cp_r="cp -rv"
+fi
+
+case "$1" in
+    activate)
+        if [ "$disableNixOSSystemProfile" = "" ]
+        then
+            nix-env -p /nix/var/nix/profiles/system --set $2
+            /nix/var/nix/profiles/system/bin/switch-to-configuration $action
+        else
+            $2/bin/switch-to-configuration $action
+        fi
+        ;;
+    deactivate)
+        if [ "$disableNixOSSystemProfile" = "" ]
+        then
+            nix-env -p /nix/var/nix/profiles/system --rollback
+            /nix/var/nix/profiles/system/bin/switch-to-configuration $action
+        fi
+        ;;
+    snapshot)
+        # Take snapshots of all mutable components deployed as part of the NixOS configuration
+        (DYSNOMIA_STATEDIR=$DYSNOMIA_NIXOS_STATEDIR dysnomia-containers --snapshot)
+        
+        snapshots=$(DYSNOMIA_STATEDIR=$DYSNOMIA_NIXOS_STATEDIR dysnomia-snapshots --query-latest)
+        
+        hash=$(echo $snapshots | sha256sum)
+        hash=${hash:0:64}
+        
+        if [ ! -d $snapshotsPath/$hash ]
+        then
+            mkdir -p $snapshotsPath/$hash
+            cd $snapshotsPath/$hash
+            
+            for i in $snapshots
+            do
+                mkdir -p $(dirname $i)
+                $cp_r $DYSNOMIA_NIXOS_STATEDIR/snapshots/$i $(dirname $i)
+            done
+        fi
+        createGenerationSymlink $hash
+        ;;
+    restore)
+        determineLastSnapshot
+        
+        if [ "$lastSnapshot" != "" ]
+        then
+            for container in $(ls $snapshotsPath/$lastSnapshot)
+            do
+                for component in $(ls $snapshotsPath/$lastSnapshot/$container)
+                do
+                    for snapshot in $(ls $snapshotsPath/$lastSnapshot/$container/$component)
+                    do
+                        if [ ! -e "$DYSNOMIA_NIXOS_STATEDIR/snapshots/$container/$component/$snapshot" ]
+                        then
+                            mkdir -p $DYSNOMIA_NIXOS_STATEDIR/snapshots/$container/$component
+                            $cp_r $snapshotsPath/$lastSnapshot/$container/$component $DYSNOMIA_NIXOS_STATEDIR/snapshots/$container
+                        fi
+                        
+                        # Register generation symlink
+                        (DYSNOMIA_STATEDIR=$DYSNOMIA_NIXOS_STATEDIR dysnomia-snapshots --container $container --component $component --import $DYSNOMIA_NIXOS_STATEDIR/snapshots/$container/$component/$snapshot)
+                    done
+                done
+            done
+            
+            # Restore snapshots of all mutable components deployed as part of the NixOS configuration
+            (DYSNOMIA_STATEDIR=$DYSNOMIA_NIXOS_STATEDIR dysnomia-containers --restore -y)
+        fi
+        ;;
+    collect-garbage)
+        (DYSNOMIA_STATEDIR=$DYSNOMIA_NIXOS_STATEDIR dysnomia-containers --collect-garbage)
+        ;;
+esac

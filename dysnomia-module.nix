@@ -83,6 +83,7 @@ in
     programs.bash.loginShellInit = ''
       export DYSNOMIA_CONTAINERS_PATH=${containersDir}
       export DYSNOMIA_COMPONENTS_PATH=${componentsDir}
+      export DYSNOMIA_STATEDIR=/var/state/dysnomia-nixos
     '';
     
     services.dysnomia.package = mkDefault (import ./build.nix {
