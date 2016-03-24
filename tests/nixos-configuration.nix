@@ -1,8 +1,9 @@
-{ nixpkgs, buildFun }:
+{ nixpkgs, tarball, buildFun }:
 
 let
   dysnomia = buildFun {
-    system = builtins.currentSystem;
+    pkgs = import nixpkgs {};
+    inherit tarball;
   };
 in
 with import nixpkgs {};
