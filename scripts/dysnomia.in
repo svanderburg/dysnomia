@@ -107,7 +107,7 @@ do
             operation="$2"
             ;;
         -c|--component)
-            component="$(readlink -f "$2")"
+            component="$2"
             ;;
         -C|--container)
             container="$2"
@@ -151,11 +151,11 @@ then
         # For ordinary strings, search for the container configuration in DYSNOMIA_CONTAINERS_PATH
         DYSNOMIA_CONTAINERS_PATHS=$(echo $DYSNOMIA_CONTAINERS_PATH | tr ':' ' ')
 
-        for i in $DYSNOMIA_CONTAINERS_PATHS/*
+        for i in $DYSNOMIA_CONTAINERS_PATHS
         do
-            if [ -f "$i" ]
+            if [ -f "$i/$container" ]
             then
-                containerConfig="$i"
+                containerConfig="$i/$container"
                 break
             fi
         done
@@ -202,16 +202,16 @@ else
     else
         DYSNOMIA_COMPONENTS_PATHS=$(echo $DYSNOMIA_COMPONENTS_PATH | tr ':' ' ')
         
-        for i in $DYSNOMIA_COMPONENTS_PATHS/$container/*
+        for i in $DYSNOMIA_COMPONENTS_PATHS
         do
-            if [ -f "$i" ]
+            if [ -e $i/$container/$component ]
             then
-                componentFile="$i"
+                componentFile="$(readlink -f $i/$container/$component)"
                 break
             fi
         done
         
-        if [ ! -f "$componentFile" ]
+        if [ "$componentFile" = "" ]
         then
             echo "No component configuration found for: $component" >&2
             exit 1

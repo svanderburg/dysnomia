@@ -17,7 +17,7 @@ let
         in
         ''
           cat > ${containerName} <<EOF
-          ${concatMapStrings (propertyName: "${propertyName}=${containerProperties."${propertyName}"}") (builtins.attrNames containerProperties)}
+          ${concatMapStrings (propertyName: "${propertyName}=${containerProperties."${propertyName}"}\n") (builtins.attrNames containerProperties)}
           type=${containerName}
           EOF
         ''
@@ -70,10 +70,12 @@ in
       
       containers = mkOption {
         description = "An attribute set in which each key represents a container and each value an attribute set providing its configuration properties";
+        default = {};
       };
       
       components = mkOption {
         description = "An atttribute set in which each key represents a container and each value an attribute set in which each key represents a component and each value a derivation constructing its initial state";
+        default = {};
       };
     };
   };
@@ -106,8 +108,13 @@ in
     // lib.optionalAttrs (config.services.ejabberd.enable) { ejabberd-dump = {
       ejabberdUser = config.services.ejabberd.user;
     }; }
-    // lib.optionalAttrs (config.services.mysql.enable) { mysql-database = {}; }
-    // lib.optionalAttrs (config.services.postgresql.enable) { postgresql-database = {}; }
+    // lib.optionalAttrs (config.services.mysql.enable) { mysql-database = {
+      mysqlUsername = "root";
+      mysqlPassword = builtins.readFile (config.services.mysql.rootPassword);
+    }; }
+    // lib.optionalAttrs (config.services.postgresql.enable) { postgresql-database = {
+      postgresqlUsername = "root";
+    }; }
     // lib.optionalAttrs (config.services.tomcat.enable) { tomcat-webapplication = {}; }
     // lib.optionalAttrs (config.services.mongodb.enable) { mongo-database = {}; };
     
