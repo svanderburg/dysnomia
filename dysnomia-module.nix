@@ -102,7 +102,10 @@ in
       tarball = (import ./release.nix {}).tarball;
     });
     
-    services.dysnomia.containers = {}
+    services.dysnomia.containers = {
+      process = {};
+      wrapper = {};
+    }
     // lib.optionalAttrs (config.services.httpd.enable) { apache-webapplication = {}; }
     // lib.optionalAttrs (config.services.tomcat.axis2.enable) { axis2-webservice = {}; }
     // lib.optionalAttrs (config.services.ejabberd.enable) { ejabberd-dump = {
