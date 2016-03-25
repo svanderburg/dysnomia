@@ -144,6 +144,28 @@ addUserSettingsToSystemdConfig()
     fi
 }
 
+# Checks whether DYSNOMIA_CONTAINERS_PATH variables is set. If not set, it
+# configures a default value
+
+checkContainersPath()
+{
+    if [ "$DYSNOMIA_CONTAINERS_PATH" = "" ]
+    then
+        DYSNOMIA_CONTAINERS_PATH=/etc/dysnomia/containers
+    fi
+}
+
+# Checks whether DYSNOMIA_COMPONENTS_PATH variables is set. If not set, it
+# configures a default value
+
+checkComponentsPath()
+{
+    if [ "$DYSNOMIA_COMPONENTS_PATH" = "" ]
+    then
+        DYSNOMIA_COMPONENTS_PATH=/etc/dysnomia/components
+    fi
+}
+
 # Checks whether DYSNOMIA_STATEDIR environment variable is set. If not set, it
 # configures a default value
 

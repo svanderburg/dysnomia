@@ -82,11 +82,18 @@ in
   
   config = mkIf cfg.enable {
   
-    programs.bash.loginShellInit = ''
-      export DYSNOMIA_CONTAINERS_PATH=${containersDir}
-      export DYSNOMIA_COMPONENTS_PATH=${componentsDir}
-      export DYSNOMIA_STATEDIR=/var/state/dysnomia-nixos
-    '';
+    environment.etc = {
+      "dysnomia/containers" = {
+        source = containersDir;
+      };
+      "dysnomia/components" = {
+        source = componentsDir;
+      };
+    };
+    
+    environment.variables = {
+      DYSNOMIA_STATEDIR = "/var/state/dysnomia-nixos";
+    };
     
     services.dysnomia.package = mkDefault (import ./build.nix {
       enableApacheWebApplication = config.services.httpd.enable;

@@ -64,11 +64,13 @@ Environment:
   DYSNOMIA_COMPONENTS_PATH  Specifies the search directories of the components.
                             If the component is an ordinary string (not starting
                             with / or ./), Dysnomia searches in the folders
-                            provided in this colon-separated string.
+                            provided in this colon-separated string (defaults
+                            to: /etc/dysnomia/components).
   DYSNOMIA_CONTAINERS_PATH  Specifies the search directories of the containers.
                             If the container is an ordinary string (not starting
                             with / or ./), Dysnomia searches in the folders
-                            provided in this colon-separated string.
+                            provided in this colon-separated string (defaults
+                            to: /etc/dysnomia/containers).
   DYSNOMIA_STATEDIR         Specifies where the snapshots must be stored on the
                             coordinator machine (defaults to:
                             /var/state/dysnomia)
@@ -156,6 +158,8 @@ source @datadir@/@PACKAGE@/util
 
 # Validate options
 
+checkContainersPath
+checkComponentsPath
 checkStateDir
 
 if [ -z "$action" ]
