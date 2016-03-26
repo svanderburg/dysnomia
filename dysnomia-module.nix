@@ -64,7 +64,6 @@ in
       
       package = mkOption {
         type = types.path;
-        #default = pkgs.dysnomia; # TODO: refer to package with required plugins enabled
         description = "The Dysnomia package";
       };
       
@@ -95,6 +94,8 @@ in
       DYSNOMIA_STATEDIR = "/var/state/dysnomia-nixos";
     };
     
+    environment.systemPackages = [ cfg.package ];
+    
     services.dysnomia.package = mkDefault (import ./build.nix {
       enableApacheWebApplication = config.services.httpd.enable;
       enableAxis2WebService = config.services.tomcat.axis2.enable;
@@ -103,7 +104,7 @@ in
       enablePostgreSQLDatabase = config.services.postgresql.enable;
       enableTomcatWebApplication = config.services.tomcat.enable;
       enableMongoDatabase = config.services.mongodb.enable;
-      enableSubversionRepository = true; # TODO: how to reliably detect this?
+      enableSubversionRepository = config.services.svnserve.enable;
       jobTemplate = "systemd";
       inherit pkgs;
       tarball = (import ./release.nix {}).tarball;
@@ -113,7 +114,9 @@ in
       process = {};
       wrapper = {};
     }
-    // lib.optionalAttrs (config.services.httpd.enable) { apache-webapplication = {}; }
+    // lib.optionalAttrs (config.services.httpd.enable) { apache-webapplication = {
+      documentRoot = config.services.httpd.documentRoot;
+    }; }
     // lib.optionalAttrs (config.services.tomcat.axis2.enable) { axis2-webservice = {}; }
     // lib.optionalAttrs (config.services.ejabberd.enable) { ejabberd-dump = {
       ejabberdUser = config.services.ejabberd.user;
@@ -121,13 +124,28 @@ in
     // lib.optionalAttrs (config.services.mysql.enable) { mysql-database = {
       mysqlUsername = "root";
       mysqlPassword = builtins.readFile (config.services.mysql.rootPassword);
+      mysqlPort = config.services.mysql.port;
     }; }
     // lib.optionalAttrs (config.services.postgresql.enable) { postgresql-database = {
       postgresqlUsername = "root";
     }; }
-    // lib.optionalAttrs (config.services.tomcat.enable) { tomcat-webapplication = {}; }
-    // lib.optionalAttrs (config.services.mongodb.enable) { mongo-database = {}; };
+    // lib.optionalAttrs (config.services.tomcat.enable) { tomcat-webapplication = {
+      tomcatPort = 8080;
+    }; }
+    // lib.optionalAttrs (config.services.mongodb.enable) { mongo-database = {}; }
+    // lib.optionalAttrs (config.services.svnserve.enable) { subversion-repository = {
+      svnBaseDir = config.services.svnserve.svnBaseDir;
+    }; };
     
-    environment.systemPackages = [ cfg.package ];
+    system.activationScripts.dysnomia = ''
+      mkdir -p /etc/systemd-mutable/system
+      if [ ! -f /etc/systemd-mutable/system/dysnomia.target ]
+      then
+          ( echo "[Unit]"
+            echo "Description=Services that are activated and deactivated by Dysnomia"
+            echo "After=final.target"
+          ) > /etc/systemd-mutable/system/dysnomia.target
+      fi
+    '';
   };
 }

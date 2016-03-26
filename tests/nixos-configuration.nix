@@ -63,10 +63,6 @@ makeTest {
       # NixOS configuration
       $machine->mustSucceed("disableNixOSSystemProfile=1 testNixOS=1 DYSNOMIA_STATEDIR=/var/state/dysnomia dysnomia --type nixos-configuration --operation activate --component /var/run/current-system --environment");
       
-      # Deploy the mutable components
-      # TODO: maybe integrate this as part of the activation script
-      $machine->mustSucceed("DYSNOMIA_STATEDIR=/var/state/dysnomia-nixos dysnomia-containers --deploy");
-      
       # Snapshot the NixOS configuration's state
       $machine->mustSucceed("disableNixOSSystemProfile=1 testNixOS=1 DYSNOMIA_STATEDIR=/var/state/dysnomia dysnomia --type nixos-configuration --operation snapshot --component /var/run/current-system --environment");
       
@@ -78,13 +74,13 @@ makeTest {
       if(scalar(grep(/mysql-database\/testdb/, @snapshots)) == 1) {
           print "mysql-database/testdb is in the snapshots query!\n";
       } else {
-          die "mysql-database/testdb is in the snapshots query!";
+          die "mysql-database/testdb is not in the snapshots query!\n";
       }
       
       if(scalar(grep(/postgresql-database\/testdb/, @snapshots)) == 1) {
           print "postgresql-database/testdb is in the snapshots query!\n";
       } else {
-          die "postgresql-database/testdb is in the snapshots query!";
+          die "postgresql-database/testdb is not in the snapshots query!";
       }
       
       # When querying the snapshots of the "regular" statedir, we should get one

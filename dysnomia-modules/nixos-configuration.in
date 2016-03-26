@@ -55,12 +55,16 @@ case "$1" in
         else
             $2/bin/switch-to-configuration $action
         fi
+        
+        (DYSNOMIA_STATEDIR=$DYSNOMIA_NIXOS_STATEDIR dysnomia-containers --deploy)
         ;;
     deactivate)
         if [ "$disableNixOSSystemProfile" = "" ]
         then
             nix-env -p /nix/var/nix/profiles/system --rollback
             /nix/var/nix/profiles/system/bin/switch-to-configuration $action
+            
+            (DYSNOMIA_STATEDIR=$DYSNOMIA_NIXOS_STATEDIR dysnomia-containers --deploy)
         fi
         ;;
     snapshot)
