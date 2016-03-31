@@ -274,6 +274,166 @@ The amount of snapshots that must be kept can be adjusted by providing the
 The above command states that the last 3 generations of snapshots should be
 kept.
 
+Executing operations on collections of containers
+-------------------------------------------------
+Besides executing operations on individual mutable components, we can also
+manage sets of containers (and their corresponding mutable components) in one go
+through the `dysnomia-containers` utility.
+
+For example, the following command shows all the available containers to deploy
+to:
+
+    $ dysnomia-containers --query-containers
+    mysql-database
+    postgresql-database
+
+The above command searches for container configuration files in the directories
+provided by the `DYSNOMIA_CONTAINERS_PATH` environment variable (which defaults
+to: `/etc/dysnomia/containers`).
+
+We can also display all the available mutable components:
+
+    $ dysnomia-containers --query-available-components
+    mysql-database/testdb
+    postgresql-database/testdb
+
+The above command searches for component configuration files in the directories
+provided by the `DYSNOMIA_COMPONENTS_PATH` environment variable (which defaults
+to: `/etc/dysnomia/components`). Optionally, you can filter the output per
+container by providing the `--container` parameter.
+
+The following command shows all components that have been activated in a
+container:
+
+    $ dysnomia-containers --query-activated-components
+
+The most useful operation is probably the deploy function:
+
+    $ dysnomia-containers --deploy
+
+The above command will automatically deploy all available mutable components
+that have not been activated yet, and will undeploy all activated components
+that are not available anymore. This command automates the deactivation and
+activation steps of collections of components.
+
+We can also snapshot the state of all activated components:
+
+    $ dysnomia-containers --snapshot
+
+and restore the state of them:
+
+    $ dysnomia-containers --restore
+
+The following command removes the state of all components that have been marked
+as garbage:
+
+    $ dysnomia-containers --collect-garbage
+
+We can also directly execute any Dysnomia operation on all activated components:
+
+    $ dysnomia-containers --operation snapshot
+
+NixOS integration
+=================
+In addition to Disnix, it is also possible to use Dysnomia on NixOS-level to
+automatically manage mutable components belonging to a system configuration:
+
+    {pkgs, ...}:
+    
+    {
+      # Import the Dysnomia NixOS module to make its functionality available
+      imports = [ ./dysnomia-module.nix ];
+      
+      services = {
+        # Enabling MySQL in the NixOS configuration implies creating a Dysnomia
+        # container configuration file for it
+        
+        mysql = {
+          enable = true;
+          package = pkgs.mysql;
+          rootPassword = pkgs.writeTextFile {
+            name = "mysqlpw";
+            text = "verysecret";
+          };
+        };
+        
+        # Enabling PostgreSQL in the NixOS configuration implies creating a
+        # Dysnomia container configuration file for it
+        
+        postgresql = {
+          enable = true;
+          package = pkgs.postgresql;
+        };
+        
+        dysnomia = {
+          enable = true;
+          
+          # Here, we deploy databases to the corresponding DBMSes with Dysnomia
+          components = {
+            mysql-database = {
+              testdb = pkgs.writeTextFile {
+                name = "testdb";
+                text = ''
+                  create table author
+                  ( AUTHOR_ID  INTEGER       NOT NULL,
+                    FirstName  VARCHAR(255)  NOT NULL,
+                    LastName   VARCHAR(255)  NOT NULL,
+                    PRIMARY KEY(AUTHOR_ID)
+                  );
+                ''
+              };
+            };
+            
+            postgresql-database = {
+              testdb = pkgs.writeTextFile {
+                name = "testdb";
+                text = ''
+                  create table author
+                  ( AUTHOR_ID  INTEGER       NOT NULL,
+                    FirstName  VARCHAR(255)  NOT NULL,
+                    LastName   VARCHAR(255)  NOT NULL,
+                    PRIMARY KEY(AUTHOR_ID)
+                  );
+                ''
+              };
+            };
+          };
+        };
+        
+        ...
+    }
+
+The above code block shows an example NixOS configuration, in which we do the
+following:
+
+* We import the Dysnomia module from the source package to make its
+  features available.
+* We enable the Dysnomia NixOS service
+* We enable some system services, such as MySQL and PostgreSQL. The Dysnomia
+  NixOS module automatically generates Dysnomia container configuration files
+  for them (and puts them in `/etc/dysnomia/containers` of the corresponding
+  NixOS deployment)
+* We define the available mutable components. In this particular example, a
+  MySQL database named `testdb` and PostgreSQL database named `testdb` which
+  both have one table named: `author` are created.
+
+After deploying the NixOS configuration with the following command-line
+instruction:
+
+    $ nixos-rebuild switch
+
+We can deploy the mutable components as follows:
+
+    $ dysnomia-containers --deploy
+
+And (for example) snapshot the state of the mutable components as follows:
+
+    $ dysnomia-containers --snapshot
+
+To prevent the state of the mutable components to conflict with those deployed
+by Disnix, the Dysnomia module sets `DYSNOMIA_STATEDIR` to
+`/var/state/dysnomia-nixos` so that they are managed separately.
+
 Implementing custom Dysnomia modules
 ====================================
 Custom Dysnomia modules are relatively easy to implement. Every Dysnomia module
