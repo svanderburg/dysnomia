@@ -47,6 +47,10 @@ let
             inherit nixpkgs tarball buildFun;
           };
           
+          echo = import ./tests/echo.nix {
+            inherit nixpkgs tarball buildFun;
+          };
+          
           mysql-database = import ./tests/mysql-database.nix {
             inherit nixpkgs tarball buildFun;
           };
