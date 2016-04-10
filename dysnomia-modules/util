@@ -282,7 +282,10 @@ unmarkComponentAsActive()
 markComponentAsGarbage()
 {
     mkdir -p $DYSNOMIA_STATEDIR/garbage/$containerName
-    mv $DYSNOMIA_STATEDIR/activated/$containerName/$componentName $DYSNOMIA_STATEDIR/garbage/$containerName/$componentName
+    if [ ! -e $DYSNOMIA_STATEDIR/garbage/$containerName/$componentName ]
+    then
+        mv $DYSNOMIA_STATEDIR/activated/$containerName/$componentName $DYSNOMIA_STATEDIR/garbage/$containerName/$componentName
+    fi
 }
 
 # Environment variables:

@@ -71,6 +71,9 @@ makeTest {
       # Deactivate the ejabberd database. This test should succeed.
       $machine->mustSucceed("ejabberdUser=ejabberd dysnomia --type ejabberd-dump --operation deactivate --component ${ejabberd_dump} --environment");
       
+      # Deactivate again. This test should succeed as the operation is idempotent.
+      $machine->mustSucceed("ejabberdUser=ejabberd dysnomia --type ejabberd-dump --operation deactivate --component ${ejabberd_dump} --environment");
+      
       # Run the garbage collect operation. Since the database has been
       # deactivated it is considered garbage, so it should be removed.
       $machine->mustSucceed("systemctl stop ejabberd");

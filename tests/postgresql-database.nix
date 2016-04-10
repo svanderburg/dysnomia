@@ -80,6 +80,9 @@ makeTest {
       # Deactivate the PostgreSQL database again. This test should succeed.
       $machine->mustSucceed("postgresqlUsername=root dysnomia --type postgresql-database --operation deactivate --component ${postgresql_database} --environment");
       
+      # Deactivate again. This test should succeed as the operation is idempotent.
+      $machine->mustSucceed("postgresqlUsername=root dysnomia --type postgresql-database --operation deactivate --component ${postgresql_database} --environment");
+      
       # Run the garbage collect operation. Since the database has been
       # deactivated it is considered garbage, so it should be removed.
       $machine->mustSucceed("postgresqlUsername=root dysnomia --type postgresql-database --operation collect-garbage --component ${postgresql_database} --environment");

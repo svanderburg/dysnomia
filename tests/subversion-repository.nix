@@ -69,7 +69,10 @@ makeTest {
       
       # Deactivate the Subversion repository. This test should succeed.
       $machine->mustSucceed("svnBaseDir=/repos svnGroup=users dysnomia --type subversion-repository --operation deactivate --component ${subversion_repository} --environment");
-    
+      
+      # Deactivate again. This test should succeed as the operation is idempotent.
+      $machine->mustSucceed("svnBaseDir=/repos svnGroup=users dysnomia --type subversion-repository --operation deactivate --component ${subversion_repository} --environment");
+      
       # Run the garbage collect operation. Since the repository has been
       # deactivated it is considered garbage, so it should be removed.
       $machine->mustSucceed("svnBaseDir=/repos svnGroup=users dysnomia --type subversion-repository --operation collect-garbage --component ${subversion_repository} --environment");

@@ -78,6 +78,9 @@ makeTest {
       # Deactivate the MySQL database. This test should succeed.
       $machine->mustSucceed("mysqlUsername=root mysqlPassword=verysecret dysnomia --type mysql-database --operation deactivate --component ${mysql_database} --environment");
       
+      # Deactivate again. This test should succeed as the operation is idempotent.
+      $machine->mustSucceed("mysqlUsername=root mysqlPassword=verysecret dysnomia --type mysql-database --operation deactivate --component ${mysql_database} --environment");
+      
       # Run the garbage collect operation. Since the database has been
       # deactivated it is considered garbage, so it should be removed.
       $machine->mustSucceed("mysqlUsername=root mysqlPassword=verysecret dysnomia --type mysql-database --operation collect-garbage --component ${mysql_database} --environment");

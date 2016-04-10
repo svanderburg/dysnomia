@@ -73,6 +73,9 @@ makeTest {
       # Deactivate the mongo database. This test should succeed.
       $machine->mustSucceed("dysnomia --type mongo-database --operation deactivate --component ${mongo_database} --environment");
       
+      # Deactivate again. This test should succeed as the operation is idempotent.
+      $machine->mustSucceed("dysnomia --type mongo-database --operation deactivate --component ${mongo_database} --environment");
+      
       # Run the garbage collect operation. Since the database has been
       # deactivated it is considered garbage, so it should be removed.
       $machine->mustSucceed("dysnomia --type mongo-database --operation collect-garbage --component ${mongo_database} --environment");
