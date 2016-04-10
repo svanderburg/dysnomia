@@ -48,6 +48,16 @@ makeTest {
       $machine->waitForJob("httpd");
       $machine->mustSucceed("documentRoot=/var/www dysnomia --type apache-webapplication --operation activate --component ${apache_webapplication} --environment");
       $machine->mustSucceed("curl --fail http://localhost/test");
+      
+      # Activate again. This should succeed as the operation is idempotent
+      $machine->mustSucceed("documentRoot=/var/www dysnomia --type apache-webapplication --operation activate --component ${apache_webapplication} --environment");
+      $machine->mustSucceed("curl --fail http://localhost/test");
+      
+      # Deactivate the web application
+      $machine->mustSucceed("documentRoot=/var/www dysnomia --type apache-webapplication --operation deactivate --component ${apache_webapplication} --environment");
+      $machine->mustFail("curl --fail http://localhost/test");
+      
+      # Deactivate again. This should succeed as the operation is idempotent
       $machine->mustSucceed("documentRoot=/var/www dysnomia --type apache-webapplication --operation deactivate --component ${apache_webapplication} --environment");
       $machine->mustFail("curl --fail http://localhost/test");
     '';
