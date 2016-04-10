@@ -268,7 +268,7 @@ markComponentAsActive()
 
 unmarkComponentAsActive()
 {
-    rm $DYSNOMIA_STATEDIR/activated/$containerName/$componentName
+    rm -f $DYSNOMIA_STATEDIR/activated/$containerName/$componentName
 }
 
 # Marks a component that has previously been activated as a garbage so that it
@@ -295,7 +295,7 @@ markComponentAsGarbage()
 
 unmarkComponentAsGarbage()
 {
-    rm $DYSNOMIA_STATEDIR/garbage/$containerName/$componentName
+    rm -f $DYSNOMIA_STATEDIR/garbage/$containerName/$componentName
 }
 
 # Determines the name of the last snapshot.
