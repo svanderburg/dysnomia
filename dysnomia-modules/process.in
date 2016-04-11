@@ -85,16 +85,19 @@ case "$1" in
                 @sysvinit_initd_dir@/$serviceName start || (removeUnprivilegedUserAndGroup; false)
         else
             # Direct activation
-            if [ "$container_username" = "" ]
+            if [ ! -f /var/run/$serviceName.pid ]
             then
-                nohup $runProcess > /var/log/$serviceName.log & pid=$!
-            else
-                touch /var/log/$serviceName.log
-                chown $container_username /var/log/$serviceName.log
-                su $container_username -c "nohup $runProcess > /var/log/$serviceName.log" & pid=$!
+                if [ "$container_username" = "" ]
+                then
+                    nohup $runProcess > /var/log/$serviceName.log & pid=$!
+                else
+                    touch /var/log/$serviceName.log
+                    chown $container_username /var/log/$serviceName.log
+                    su $container_username -c "nohup $runProcess > /var/log/$serviceName.log" & pid=$!
+                fi
+                
+                echo $pid > /var/run/$serviceName.pid
             fi
-            
-            echo $pid > /var/run/$serviceName.pid
         fi
         
         markComponentAsActive
@@ -122,8 +125,11 @@ case "$1" in
             fi
         else
             # Direct deactivation
-            kill $(cat /var/run/$serviceName.pid)
-            rm -f /var/run/$serviceName.pid
+            if [ -f /var/run/$serviceName.pid ]
+            then
+                kill $(cat /var/run/$serviceName.pid)
+                rm -f /var/run/$serviceName.pid
+            fi
         fi
         
         attemptSeveralTimes removeUnprivilegedUserAndGroup 10

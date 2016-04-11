@@ -5,7 +5,7 @@ case "$1" in
         echo "wrapper active" > /tmp/wrapper.state
         ;;
     deactivate)
-        rm /tmp/wrapper.state
+        rm -f /tmp/wrapper.state
         ;;
     lock)
         if [ -f /tmp/wrapper.lock ]

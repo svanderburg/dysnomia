@@ -54,6 +54,11 @@ makeTest {
       $machine->mustSucceed("sleep 5; [ \"\$(cat /tmp/wrapper.state)\" = \"wrapper active\" ]");
       $machine->mustSucceed("[ \"\$(stat -c %U /tmp/wrapper.state)\" = \"root\" ]");
       
+      # Activate again. This operation should succeed as it is idempotent.
+      $machine->mustSucceed("dysnomia --type wrapper --operation activate --component ${wrapper} --environment");
+      $machine->mustSucceed("sleep 5; [ \"\$(cat /tmp/wrapper.state)\" = \"wrapper active\" ]");
+      $machine->mustSucceed("[ \"\$(stat -c %U /tmp/wrapper.state)\" = \"root\" ]");
+      
       # Test wrapper activation script. Here we invoke the lock
       # operation of a certain service. It should write a lock file
       # into the temp dir and it should be owned by root.
@@ -73,6 +78,10 @@ makeTest {
       # on activation is owned by root.
       # This test should succeed.
       
+      $machine->mustSucceed("dysnomia --type wrapper --operation deactivate --component ${wrapper} --environment");
+      $machine->mustSucceed("sleep 5; [ ! -f /tmp/wrapper.state ]");
+      
+      # Deactivate again. This operation should succeed as it is idempotent.
       $machine->mustSucceed("dysnomia --type wrapper --operation deactivate --component ${wrapper} --environment");
       $machine->mustSucceed("sleep 5; [ ! -f /tmp/wrapper.state ]");
       
@@ -119,6 +128,17 @@ makeTest {
       $machine->mustSucceed("sleep 5");
       $machine->mustSucceed("[ \"\$(ps aux | grep ${process}/bin/loop | grep -v grep | grep root)\" != \"\" ]");
       
+      # Activate again. This operation should succeed as it is idempotent.
+      $machine->mustSucceed("dysnomia --type process --operation activate --component ${process} --environment");
+      $machine->mustSucceed("sleep 5");
+      $machine->mustSucceed("[ \"\$(ps aux | grep ${process}/bin/loop | grep -v grep | grep root)\" != \"\" ]");
+      
+      # Deactivate the process.
+      $machine->mustSucceed("dysnomia --type process --operation deactivate --component ${process} --environment");
+      $machine->mustSucceed("sleep 5");
+      $machine->mustSucceed("[ \"\$(ps aux | grep ${process}/bin/loop | grep -v grep | grep root)\" = \"\" ]");
+      
+      # Deactivate again. This operation should succeed as it is idempotent.
       $machine->mustSucceed("dysnomia --type process --operation deactivate --component ${process} --environment");
       $machine->mustSucceed("sleep 5");
       $machine->mustSucceed("[ \"\$(ps aux | grep ${process}/bin/loop | grep -v grep | grep root)\" = \"\" ]");
@@ -128,11 +148,22 @@ makeTest {
       # then we deactivate it again and verify whether it has been
       # stopped. We also check if the process runs as an uprivileged user.
       # This test should succeed.
-        
+      
       $machine->mustSucceed("dysnomia --type process --operation activate --component ${process_unprivileged} --environment");
       $machine->mustSucceed("sleep 5");
       $machine->mustSucceed("[ \"\$(ps aux | grep ${process_unprivileged}/bin/loop | grep -v grep | grep unprivileged)\" != \"\" ]");
       
+      # Activate again. This operation should succeed as it is idempotent.
+      $machine->mustSucceed("dysnomia --type process --operation activate --component ${process_unprivileged} --environment");
+      $machine->mustSucceed("sleep 5");
+      $machine->mustSucceed("[ \"\$(ps aux | grep ${process_unprivileged}/bin/loop | grep -v grep | grep unprivileged)\" != \"\" ]");
+      
+      # Deactivate the process.
+      $machine->mustSucceed("dysnomia --type process --operation deactivate --component ${process_unprivileged} --environment");
+      $machine->mustSucceed("sleep 5");
+      $machine->mustSucceed("[ \"\$(ps aux | grep ${process_unprivileged}/bin/loop | grep -v grep | grep unprivileged)\" = \"\" ]");
+      
+      # Deactivate again. This operation should succeed as it is idempotent.
       $machine->mustSucceed("dysnomia --type process --operation deactivate --component ${process_unprivileged} --environment");
       $machine->mustSucceed("sleep 5");
       $machine->mustSucceed("[ \"\$(ps aux | grep ${process_unprivileged}/bin/loop | grep -v grep | grep unprivileged)\" = \"\" ]");
