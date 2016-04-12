@@ -17,7 +17,7 @@ let
         in
         ''
           cat > ${containerName} <<EOF
-          ${concatMapStrings (propertyName: "${propertyName}=${containerProperties."${propertyName}"}\n") (builtins.attrNames containerProperties)}
+          ${concatMapStrings (propertyName: "${propertyName}=${toString containerProperties."${propertyName}"}\n") (builtins.attrNames containerProperties)}
           type=${containerName}
           EOF
         ''
@@ -33,7 +33,7 @@ let
         let
           component = cfg.components."${containerName}"."${componentName}";
         in
-        "ln -s ${component} ${containerName}/${componentName}"
+        "ln -s ${component} ${containerName}/${componentName}\n"
       ) (builtins.attrNames (cfg.components."${containerName}" or {}))}
     '';
   

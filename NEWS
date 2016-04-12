@@ -1,5 +1,7 @@
 Version 0.6
 ===========
+- Operations are now idempotent by definition
+
 - Added dysnomia-containers utility that executes operations on a container-level
 
 - Added Dysnomia NixOS module that auto-configures Dysnomia to work on containers deployed by NixOS
