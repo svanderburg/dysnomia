@@ -3,7 +3,7 @@
 with lib;
 
 let
-  cfg = config.services.dysnomia;
+  cfg = config.dysnomia;
   
   containersDir = pkgs.stdenv.mkDerivation {
     name = "dysnomia-containers";
@@ -54,7 +54,7 @@ let
 in
 {
   options = {
-    services.dysnomia = {
+    dysnomia = {
       
       enable = mkOption {
         type = types.bool;
@@ -96,7 +96,7 @@ in
     
     environment.systemPackages = [ cfg.package ];
     
-    services.dysnomia.package = mkDefault (import ./build.nix {
+    dysnomia.package = mkDefault (import ./build.nix {
       enableApacheWebApplication = config.services.httpd.enable;
       enableAxis2WebService = config.services.tomcat.axis2.enable;
       enableEjabberdDump = config.services.ejabberd.enable;
@@ -110,7 +110,7 @@ in
       tarball = (import ./release.nix {}).tarball;
     });
     
-    services.dysnomia.containers = {
+    dysnomia.containers = {
       process = {};
       wrapper = {};
     }
