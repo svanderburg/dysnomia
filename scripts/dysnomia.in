@@ -147,7 +147,16 @@ then
     exit 1
 fi
 
-if [ -n "$container" ]
+if [ "$useEnvironment" = "1" ]
+then
+    containerEnv=""
+    envFlags=""
+    
+    if [ "$container" = "" ]
+    then
+        container="$type"
+    fi
+elif [ -n "$container" ]
 then
     # Determine the container configuration
 
@@ -187,12 +196,6 @@ then
     
     containerEnv="$(cat $containerConfig)"
     envFlags="-i"
-    
-elif [ "$useEnvironment" = "1" ]
-then
-    containerEnv=""
-    envFlags=""
-    container="$type"
 else
     echo "No container file or environment specified!" >&2
     exit 1
