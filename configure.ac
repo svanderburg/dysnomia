@@ -166,6 +166,7 @@ dysnomia-modules/process
 dysnomia-modules/wrapper
 dysnomia-modules/Makefile
 data/Makefile
+nix/Makefile
 $axis2_webservice
 $ejabberd_dump
 $iis_webapplication
