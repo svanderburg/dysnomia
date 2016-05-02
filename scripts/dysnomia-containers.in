@@ -40,6 +40,8 @@ Operations:
                                     that can be deployed to containers
       --query-activated-components  Queries the activated mutable components
                                     deployed to containers
+      --generate-expr               Generate a Nix expression from all the
+                                    container configurations and their properties
   -o, --operation=OPERATION         Executes the given operation on all mutable
                                     components deployed to a container
       --deploy                      Deploys all unactivated available mutable
@@ -71,6 +73,8 @@ Environment:
                             with / or ./), Dysnomia searches in the folders
                             provided in this colon-separated string (defaults
                             to: /etc/dysnomia/containers).
+  DYSNOMIA_PROPERTIES       File capturing general machine properties (defaults
+                            to: /etc/dysnomia/properties).
   DYSNOMIA_STATEDIR         Specifies where the snapshots must be stored on the
                             coordinator machine (defaults to:
                             /var/state/dysnomia)
@@ -91,7 +95,7 @@ EOF
 
 # Parse valid argument options
 
-PARAMS=`@getopt@ -n $0 -o o:C:yhv -l query-containers,query-available-components,query-activated-components,operation:,deploy,snapshot,restore,collect-garbage,container:,help,version -- "$@"`
+PARAMS=`@getopt@ -n $0 -o o:C:yhv -l query-containers,query-available-components,query-activated-components,generate-expr,operation:,deploy,snapshot,restore,collect-garbage,container:,help,version -- "$@"`
 
 if [ $? != 0 ]
 then
@@ -114,6 +118,9 @@ do
             ;;
         --query-activated-components)
             action="query-activated-components"
+            ;;
+        --generate-expr)
+            action="generate-expr"
             ;;
         -o|--operation)
             action="execute-operation"
@@ -161,6 +168,11 @@ source @datadir@/@PACKAGE@/util
 checkContainersPath
 checkComponentsPath
 checkStateDir
+
+if [ "$DYSNOMIA_PROPERTIES" = "" ]
+then
+    DYSNOMIA_PROPERTIES=/etc/dysnomia/properties
+fi
 
 if [ -z "$action" ]
 then
@@ -232,6 +244,48 @@ case "$action" in
         ;;
     query-activated-components)
         queryActivatedComponents
+        ;;
+    generate-expr)
+        echo "{"
+        
+        if [ -f "$DYSNOMIA_PROPERTIES" ]
+        then
+            echo "  properties = {"
+            
+            cat "$DYSNOMIA_PROPERTIES" | while read i
+            do
+                varName=$(echo ${i%%=*} | sed 's/"/\\"/g' )
+                value=$(eval "$i"; echo ${!varName})
+                echo "    \"$varName\" = \"$value\";"
+            done
+            
+            echo "  };"
+        fi
+        
+        echo "  containers = {"
+        for path in $(echo $DYSNOMIA_CONTAINERS_PATH | tr ':' ' ')
+        do
+            for container in $(ls $path)
+            do
+                echo "    $container = {"
+                
+                cat $path/$container | while read i
+                do
+                    varName=$(echo ${i%%=*} | sed 's/"/\\"/g' )
+                    value=$(eval "$i"; echo ${!varName})
+                    
+                    if [ "$varName" != "type" ]
+                    then
+                        echo "      \"$varName\" = \"$value\";"
+                    fi
+                done
+                
+                echo "    };"
+            done
+        done
+        
+        echo "  };"
+        echo "}"
         ;;
     execute-operation)
         executeOperation
