@@ -285,7 +285,7 @@ case "$action" in
         done
         
         echo "  };"
-        echo "}"
+        echo -n "}"
         ;;
     execute-operation)
         executeOperation
