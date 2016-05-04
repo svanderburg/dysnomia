@@ -256,7 +256,11 @@ case "$action" in
             do
                 varName=$(echo ${i%%=*} | sed 's/"/\\"/g' )
                 value=$(eval "$i"; echo ${!varName})
-                echo "    \"$varName\" = \"$value\";"
+                
+                if [ "$varName" != "" ]
+                then
+                    echo "    \"$varName\" = \"$value\";"
+                fi
             done
             
             echo "  };"
@@ -274,7 +278,7 @@ case "$action" in
                     varName=$(echo ${i%%=*} | sed 's/"/\\"/g' )
                     value=$(eval "$i"; echo ${!varName})
                     
-                    if [ "$varName" != "type" ]
+                    if [ "$varName" != "" ] && [ "$varName" != "type" ]
                     then
                         echo "      \"$varName\" = \"$value\";"
                     fi
