@@ -269,23 +269,26 @@ case "$action" in
         echo "  containers = {"
         for path in $(echo $DYSNOMIA_CONTAINERS_PATH | tr ':' ' ')
         do
-            for container in $(ls $path)
-            do
-                echo "    $container = {"
-                
-                cat $path/$container | while read i
+            if [ -d "$path" ]
+            then
+                for container in $(ls $path)
                 do
-                    varName=$(echo ${i%%=*} | sed 's/"/\\"/g' )
-                    value=$(eval "$i"; echo ${!varName})
+                    echo "    $container = {"
                     
-                    if [ "$varName" != "" ] && [ "$varName" != "type" ]
-                    then
-                        echo "      \"$varName\" = \"$value\";"
-                    fi
-                done
+                    cat $path/$container | while read i
+                    do
+                        varName=$(echo ${i%%=*} | sed 's/"/\\"/g' )
+                        value=$(eval "$i"; echo ${!varName})
+                        
+                        if [ "$varName" != "" ] && [ "$varName" != "type" ]
+                        then
+                            echo "      \"$varName\" = \"$value\";"
+                        fi
+                    done
                 
-                echo "    };"
-            done
+                    echo "    };"
+                done
+            fi
         done
         
         echo "  };"
