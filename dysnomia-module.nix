@@ -5,6 +5,20 @@ with lib;
 let
   cfg = config.dysnomia;
   
+  printProperties = properties:
+    concatMapStrings (propertyName:
+      "${propertyName}=${toString properties."${propertyName}"}\n"
+    ) (builtins.attrNames properties);
+  
+  properties = pkgs.stdenv.mkDerivation {
+    name = "dysnomia-properties";
+    buildCommand = ''
+      cat > $out << "EOF"
+      ${printProperties cfg.properties}
+      EOF
+    '';
+  };
+  
   containersDir = pkgs.stdenv.mkDerivation {
     name = "dysnomia-containers";
     buildCommand = ''
@@ -17,7 +31,7 @@ let
         in
         ''
           cat > ${containerName} <<EOF
-          ${concatMapStrings (propertyName: "${propertyName}=${toString containerProperties."${propertyName}"}\n") (builtins.attrNames containerProperties)}
+          ${printProperties containerProperties}
           type=${containerName}
           EOF
         ''
@@ -67,6 +81,11 @@ in
         description = "The Dysnomia package";
       };
       
+      properties = mkOption {
+        description = "An attribute set in which each attribute represents a machine property. Optionally, these values can be shell substitutions.";
+        default = {};
+      };
+      
       containers = mkOption {
         description = "An attribute set in which each key represents a container and each value an attribute set providing its configuration properties";
         default = {};
@@ -87,6 +106,9 @@ in
       };
       "dysnomia/components" = {
         source = componentsDir;
+      };
+      "dysnomia/properties" = {
+        source = properties;
       };
     };
     

@@ -13,6 +13,11 @@ makeTest {
       dysnomia = {
         enable = true;
         
+        properties = {
+          hostname = config.networking.hostName;
+          mem = "$(grep 'MemTotal:' /proc/meminfo | sed -e 's/kB//' -e 's/MemTotal://' -e 's/ //g')";
+        };
+        
         components = {
           mysql-database = {
             testdb = import ./deployment/mysql-database.nix {
@@ -185,5 +190,11 @@ makeTest {
       } else {
           print "PostgreSQL does not contain: Bye world!\n";
       }
+      
+      # Properties test. Check if the hostname property is there
+      # and whether the mem property remains a shell substitution.
+      
+      $machine->mustSucceed("grep \"^hostname=machine\$\" /etc/dysnomia/properties");
+      $machine->mustSucceed("grep \"MemTotal\" /etc/dysnomia/properties");
   '';
 }
