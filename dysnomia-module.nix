@@ -76,6 +76,12 @@ in
         description = "Whether to enable Dysnomia";
       };
       
+      enableAuthentication = mkOption {
+        type = types.bool;
+        default = false;
+        description = "Whether to publish privacy-sensitive authentication credentials";
+      };
+      
       package = mkOption {
         type = types.path;
         description = "The Dysnomia package";
@@ -134,7 +140,7 @@ in
     
     dysnomiaTest.containers = import ./nix/generate-containers.nix {
       inherit config lib;
-      enableAuthentication = true;
+      inherit (cfg) enableAuthentication;
     };
     
     system.activationScripts.dysnomia = ''

@@ -12,6 +12,7 @@ makeTest {
       
       dysnomiaTest = {
         enable = true;
+        enableAuthentication = true;
         
         properties = {
           hostname = config.networking.hostName;
