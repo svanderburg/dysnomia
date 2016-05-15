@@ -3,7 +3,7 @@
 with lib;
 
 let
-  cfg = config.dysnomia;
+  cfg = config.dysnomiaTest;
   
   printProperties = properties:
     concatMapStrings (propertyName:
@@ -68,7 +68,7 @@ let
 in
 {
   options = {
-    dysnomia = {
+    dysnomiaTest = {
       
       enable = mkOption {
         type = types.bool;
@@ -118,7 +118,7 @@ in
     
     environment.systemPackages = [ cfg.package ];
     
-    dysnomia.package = mkDefault (import ./build.nix {
+    dysnomiaTest.package = mkDefault (import ./build.nix {
       enableApacheWebApplication = config.services.httpd.enable;
       enableAxis2WebService = config.services.tomcat.axis2.enable;
       enableEjabberdDump = config.services.ejabberd.enable;
@@ -132,7 +132,7 @@ in
       tarball = (import ./release.nix {}).tarball;
     });
     
-    dysnomia.containers = import ./nix/generate-containers.nix {
+    dysnomiaTest.containers = import ./nix/generate-containers.nix {
       inherit config lib;
       enableAuthentication = true;
     };

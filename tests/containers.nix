@@ -10,7 +10,7 @@ makeTest {
     {
       imports = [ ../dysnomia-module.nix ];
       
-      dysnomia = {
+      dysnomiaTest = {
         enable = true;
         
         properties = {
