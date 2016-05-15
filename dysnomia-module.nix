@@ -138,6 +138,24 @@ in
       tarball = (import ./release.nix {}).tarball;
     });
     
+    dysnomiaTest.properties = {
+      hostname = config.networking.hostName;
+      system = if config.nixpkgs.system == "" then builtins.currentSystem else config.nixpkgs.system;
+
+      supportedTypes = (import "${pkgs.stdenv.mkDerivation {
+        name = "supportedtypes";
+        buildCommand = ''
+          ( echo -n "[ "
+            cd ${cfg.package}/libexec/dysnomia
+            for i in *
+            do
+                echo -n "\"$i\" "
+            done
+            echo -n " ]") > $out
+        '';
+      }}");
+    };
+    
     dysnomiaTest.containers = import ./nix/generate-containers.nix {
       inherit config lib;
       inherit (cfg) enableAuthentication;

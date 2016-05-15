@@ -15,7 +15,6 @@ makeTest {
         enableAuthentication = true;
         
         properties = {
-          hostname = config.networking.hostName;
           mem = "$(grep 'MemTotal:' /proc/meminfo | sed -e 's/kB//' -e 's/MemTotal://' -e 's/ //g')";
         };
         
