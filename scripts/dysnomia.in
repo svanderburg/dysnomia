@@ -149,7 +149,6 @@ fi
 
 if [ "$useEnvironment" = "1" ]
 then
-    containerEnv=""
     envFlags=""
     
     if [ "$container" = "" ]
@@ -194,7 +193,6 @@ then
         exit 1
     fi
     
-    containerEnv="$(cat $containerConfig)"
     envFlags="-i"
 else
     echo "No container file or environment specified!" >&2
@@ -251,6 +249,26 @@ fi
 
 # Forward the requested operation to the Dysnomia module
 
-env $envFlags PATH=$PATH DYSNOMIA_STATEDIR=$DYSNOMIA_STATEDIR \
-  $containerEnv \
-  $module $operation $componentFile $container
+( echo $envFlags
+  
+  if [ "$containerConfig" != "" ]
+  then
+      cat $containerConfig | while read i
+      do
+          varName=$(echo ${i%%=*} | sed 's/"/\\"/g' )
+          value=$(eval "$i"; echo ${!varName})
+          
+          if [ "$varName" != "" ] && [ "$varName" != "type" ]
+          then
+              echo "$varName=$value"
+          fi
+      done
+  fi
+  
+  echo "PATH=$PATH"
+  echo "DYSNOMIA_STATEDIR=$DYSNOMIA_STATEDIR"
+  echo "$module"
+  echo "$operation"
+  echo "$componentFile"
+  echo "$container"
+) | xargs env

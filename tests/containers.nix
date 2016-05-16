@@ -194,7 +194,7 @@ makeTest {
       # Properties test. Check if the hostname property is there
       # and whether the mem property remains a shell substitution.
       
-      $machine->mustSucceed("grep \"^hostname=machine\$\" /etc/dysnomia/properties");
+      $machine->mustSucceed("grep \"^hostname=\\\"machine\\\"\$\" /etc/dysnomia/properties");
       $machine->mustSucceed("grep \"MemTotal\" /etc/dysnomia/properties");
   '';
 }

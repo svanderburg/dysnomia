@@ -7,7 +7,7 @@ let
   
   printProperties = properties:
     concatMapStrings (propertyName:
-      "${propertyName}=${toString properties."${propertyName}"}\n"
+      "${propertyName}=\"${toString properties."${propertyName}"}\"\n"
     ) (builtins.attrNames properties);
   
   properties = pkgs.stdenv.mkDerivation {
