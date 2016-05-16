@@ -191,10 +191,12 @@ makeTest {
           print "PostgreSQL does not contain: Bye world!\n";
       }
       
-      # Properties test. Check if the hostname property is there
-      # and whether the mem property remains a shell substitution.
+      # Properties test. Check if the hostname property is there, whether the mem
+      # property remains a shell substitution, and whether the supportedTypes
+      # property is an array.
       
       $machine->mustSucceed("grep \"^hostname=\\\"machine\\\"\$\" /etc/dysnomia/properties");
       $machine->mustSucceed("grep \"MemTotal\" /etc/dysnomia/properties");
+      $machine->mustSucceed("grep \"supportedTypes=(\" /etc/dysnomia/properties");
   '';
 }

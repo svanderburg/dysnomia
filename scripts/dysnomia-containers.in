@@ -232,6 +232,30 @@ executeOperation()
     done
 }
 
+printProperties()
+{
+  local line="$1"
+  local varName="$2"
+  local indent="$3"
+  
+  ( eval $line
+   
+    if declare -p $varName 2> /dev/null | grep -q 'declare \-a'
+    then
+        varRef="$varName[@]"
+        
+        echo -n "$indent\"$varName\" = [ "
+        for i in "${!varRef}"
+        do
+            echo -n "\"$i\" "
+        done
+        echo "];"
+    else
+        echo "$indent\"$varName\" = \"${!varName}\";"
+    fi
+  )
+}
+
 case "$action" in
     query-containers)
         for container in $(ls $DYSNOMIA_CONTAINERS_PATH | tr ':' ' ')
@@ -258,23 +282,7 @@ case "$action" in
                 
                 if [ "$varName" != "" ]
                 then
-                    ( eval $i
-                    
-                      if declare -p $varName 2> /dev/null | grep -q 'declare \-a'
-                      then
-                          varRef="$varName[@]"
-                          
-                          echo -n "    \"$varName\" = [ "
-                          for i in "${!varRef}"
-                          do
-                              echo -n "\"$i\" "
-                          done
-                          echo "];"
-                      else
-                          value=${!varName}
-                          echo "    \"$varName\" = \"$value\";"
-                      fi
-                    )
+                    printProperties "$i" "$varName" "    "
                 fi
             done
             
@@ -296,23 +304,7 @@ case "$action" in
                         
                         if [ "$varName" != "" ] && [ "$varName" != "type" ]
                         then
-                            ( eval $i
-                            
-                              if declare -p $varName 2> /dev/null | grep -q 'declare \-a'
-                              then
-                                  varRef="$varName[@]"
-                                  
-                                  echo -n "    \"$varName\" = [ "
-                                  for i in "${!varRef}"
-                                  do
-                                      echo -n "\"$i\" "
-                                  done
-                                  echo "];"
-                              else
-                                  value=${!varName}
-                                  echo "    \"$varName\" = \"$value\";"
-                              fi
-                            )
+                            printProperties "$i" "$varName" "      "
                         fi
                     done
                 
