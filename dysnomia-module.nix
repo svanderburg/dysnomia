@@ -105,6 +105,11 @@ in
         description = "An atttribute set in which each key represents a container and each value an attribute set in which each key represents a component and each value a derivation constructing its initial state";
         default = {};
       };
+      
+      extraContainerProperties = mkOption {
+        description = "An attribute set providing additional container settings in addition to the default properties";
+        default = {};
+      };
     };
   };
   
@@ -160,10 +165,10 @@ in
       }}");
     };
     
-    dysnomiaTest.containers = import ./nix/generate-containers.nix {
+    dysnomiaTest.containers = lib.recursiveUpdate (import ./nix/generate-containers.nix {
       inherit config lib;
       inherit (cfg) enableAuthentication;
-    };
+    }) cfg.extraContainerProperties;
     
     system.activationScripts.dysnomia = ''
       mkdir -p /etc/systemd-mutable/system
