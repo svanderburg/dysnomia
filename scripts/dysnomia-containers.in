@@ -255,11 +255,26 @@ case "$action" in
             cat "$DYSNOMIA_PROPERTIES" | while read i
             do
                 varName=$(echo ${i%%=*} | sed 's/"/\\"/g' )
-                value=$(eval "$i"; echo ${!varName})
                 
                 if [ "$varName" != "" ]
                 then
-                    echo "    \"$varName\" = \"$value\";"
+                    ( eval $i
+                    
+                      if declare -p $varName 2> /dev/null | grep -q 'declare \-a'
+                      then
+                          varRef="$varName[@]"
+                          
+                          echo -n "    \"$varName\" = [ "
+                          for i in "${!varRef}"
+                          do
+                              echo -n "\"$i\" "
+                          done
+                          echo "];"
+                      else
+                          value=${!varName}
+                          echo "    \"$varName\" = \"$value\";"
+                      fi
+                    )
                 fi
             done
             
@@ -278,11 +293,26 @@ case "$action" in
                     cat $path/$container | while read i
                     do
                         varName=$(echo ${i%%=*} | sed 's/"/\\"/g' )
-                        value=$(eval "$i"; echo ${!varName})
                         
                         if [ "$varName" != "" ] && [ "$varName" != "type" ]
                         then
-                            echo "      \"$varName\" = \"$value\";"
+                            ( eval $i
+                            
+                              if declare -p $varName 2> /dev/null | grep -q 'declare \-a'
+                              then
+                                  varRef="$varName[@]"
+                                  
+                                  echo -n "    \"$varName\" = [ "
+                                  for i in "${!varRef}"
+                                  do
+                                      echo -n "\"$i\" "
+                                  done
+                                  echo "];"
+                              else
+                                  value=${!varName}
+                                  echo "    \"$varName\" = \"$value\";"
+                              fi
+                            )
                         fi
                     done
                 

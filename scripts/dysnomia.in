@@ -256,11 +256,21 @@ fi
       cat $containerConfig | while read i
       do
           varName=$(echo ${i%%=*} | sed 's/"/\\"/g' )
-          value=$(eval "$i"; echo ${!varName})
           
           if [ "$varName" != "" ] && [ "$varName" != "type" ]
           then
-              echo "$varName=$value"
+              ( eval $i
+                
+                if declare -p $varName 2> /dev/null | grep -q 'declare \-a'
+                then
+                    varRef="$varName[@]"
+                    value=${!varRef}
+                else
+                    value=${!varName}
+                fi
+                
+                echo "$varName=$value"
+              )
           fi
       done
   fi

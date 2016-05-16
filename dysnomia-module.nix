@@ -7,7 +7,11 @@ let
   
   printProperties = properties:
     concatMapStrings (propertyName:
-      "${propertyName}=\"${toString properties."${propertyName}"}\"\n"
+      let
+        property = properties."${propertyName}";
+      in
+      if isList property then "${propertyName}=(${lib.concatMapStrings (elem: "\"${toString elem}\" ") (properties."${propertyName}")})\n"
+      else "${propertyName}=\"${toString property}\"\n"
     ) (builtins.attrNames properties);
   
   properties = pkgs.stdenv.mkDerivation {
