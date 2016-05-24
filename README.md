@@ -130,20 +130,22 @@ representing the logical state of a MySQL database. In this particular case, thi
 file is a collection of SQL statements setting up the initial schema of the
 database:
 
-    create table author
-    ( AUTHOR_ID  INTEGER       NOT NULL,
-      FirstName  VARCHAR(255)  NOT NULL,
-      LastName   VARCHAR(255)  NOT NULL,
-      PRIMARY KEY(AUTHOR_ID)
-    );
-    
-    create table books
-    ( ISBN       VARCHAR(255)  NOT NULL,
-      Title      VARCHAR(255)  NOT NULL,
-      AUTHOR_ID  VARCHAR(255)  NOT NULL,
-      PRIMARY KEY(ISBN),
-      FOREIGN KEY(AUTHOR_ID) references author(AUTHOR_ID) on update cascade on delete cascade
-    );
+```sql
+create table author
+( AUTHOR_ID  INTEGER       NOT NULL,
+  FirstName  VARCHAR(255)  NOT NULL,
+  LastName   VARCHAR(255)  NOT NULL,
+  PRIMARY KEY(AUTHOR_ID)
+);
+
+create table books
+( ISBN       VARCHAR(255)  NOT NULL,
+  Title      VARCHAR(255)  NOT NULL,
+  AUTHOR_ID  VARCHAR(255)  NOT NULL,
+  PRIMARY KEY(ISBN),
+  FOREIGN KEY(AUTHOR_ID) references author(AUTHOR_ID) on update cascade on delete cascade
+);
+```
 
 The folder `~/testdb` represents a logical state dump that we can deploy through
 a Dysnomia module.
@@ -338,70 +340,72 @@ NixOS integration
 In addition to Disnix, it is also possible to use Dysnomia on NixOS-level to
 automatically manage mutable components belonging to a system configuration:
 
-    {pkgs, ...}:
+```nix
+{pkgs, ...}:
+
+{
+  # Import the Dysnomia NixOS module to make its functionality available
+  imports = [ ./dysnomia-module.nix ];
+  
+  services = {
+    # Enabling MySQL in the NixOS configuration implies creating a Dysnomia
+    # container configuration file for it
     
-    {
-      # Import the Dysnomia NixOS module to make its functionality available
-      imports = [ ./dysnomia-module.nix ];
+    mysql = {
+      enable = true;
+      package = pkgs.mysql;
+      rootPassword = pkgs.writeTextFile {
+        name = "mysqlpw";
+        text = "verysecret";
+      };
+    };
+    
+    # Enabling PostgreSQL in the NixOS configuration implies creating a
+    # Dysnomia container configuration file for it
+    
+    postgresql = {
+      enable = true;
+      package = pkgs.postgresql;
+    };
+    
+    dysnomia = {
+      enable = true;
       
-      services = {
-        # Enabling MySQL in the NixOS configuration implies creating a Dysnomia
-        # container configuration file for it
-        
-        mysql = {
-          enable = true;
-          package = pkgs.mysql;
-          rootPassword = pkgs.writeTextFile {
-            name = "mysqlpw";
-            text = "verysecret";
+      # Here, we deploy databases to the corresponding DBMSes with Dysnomia
+      components = {
+        mysql-database = {
+          testdb = pkgs.writeTextFile {
+            name = "testdb";
+            text = ''
+              create table author
+              ( AUTHOR_ID  INTEGER       NOT NULL,
+                FirstName  VARCHAR(255)  NOT NULL,
+                LastName   VARCHAR(255)  NOT NULL,
+                PRIMARY KEY(AUTHOR_ID)
+              );
+            ''
           };
         };
         
-        # Enabling PostgreSQL in the NixOS configuration implies creating a
-        # Dysnomia container configuration file for it
-        
-        postgresql = {
-          enable = true;
-          package = pkgs.postgresql;
-        };
-        
-        dysnomia = {
-          enable = true;
-          
-          # Here, we deploy databases to the corresponding DBMSes with Dysnomia
-          components = {
-            mysql-database = {
-              testdb = pkgs.writeTextFile {
-                name = "testdb";
-                text = ''
-                  create table author
-                  ( AUTHOR_ID  INTEGER       NOT NULL,
-                    FirstName  VARCHAR(255)  NOT NULL,
-                    LastName   VARCHAR(255)  NOT NULL,
-                    PRIMARY KEY(AUTHOR_ID)
-                  );
-                ''
-              };
-            };
-            
-            postgresql-database = {
-              testdb = pkgs.writeTextFile {
-                name = "testdb";
-                text = ''
-                  create table author
-                  ( AUTHOR_ID  INTEGER       NOT NULL,
-                    FirstName  VARCHAR(255)  NOT NULL,
-                    LastName   VARCHAR(255)  NOT NULL,
-                    PRIMARY KEY(AUTHOR_ID)
-                  );
-                ''
-              };
-            };
+        postgresql-database = {
+          testdb = pkgs.writeTextFile {
+            name = "testdb";
+            text = ''
+              create table author
+              ( AUTHOR_ID  INTEGER       NOT NULL,
+                FirstName  VARCHAR(255)  NOT NULL,
+                LastName   VARCHAR(255)  NOT NULL,
+                PRIMARY KEY(AUTHOR_ID)
+              );
+            ''
           };
         };
-        
-        ...
-    }
+      };
+    };
+    
+    ...
+}
+```
 
 The above code block shows an example NixOS configuration, in which we do the
 following:
@@ -445,60 +449,62 @@ through environment variables.
 The following code fragment shows the source code of the `echo` module, that
 simply echoes what it is doing:
 
-    #!/bin/bash
-    set -e
-    set -o pipefail
+```bash
+#!/bin/bash
+set -e
+set -o pipefail
 
-    # Dysnomia module that simply echos the activity that is being executed.
+# Dysnomia module that simply echos the activity that is being executed.
 
-    case "$1" in
-        # Executes all steps necessary to activate a service. It returns a zero
-        # exit status in case of success.
-        activate)
-            echo "Echo activation script: Activate service: $2"
-            ;;
-            
-        # Executes all steps necessary to deactivate a service. It returns a zero
-        # exit status in case of success.
-        deactivate)
-            echo "Echo activation script: Deactivate service: $2"
-            ;;
-            
-        # Notifies a service that an upgrade is performed. A service can use this to
-        # take precautions or to reach quiescence. It can also reject the upgrade by
-        # returning a non-zero exit status.
-        lock)
-            echo "Echo activation script: Lock service: $2"
-            ;;
-            
-        # Notifies a service that an upgrade has finished. A service can use this
-        # to resume its normal operations.
-        unlock)
-            echo "Echo activation script: Unlock service: $2"
-            ;;
+case "$1" in
+    # Executes all steps necessary to activate a service. It returns a zero
+    # exit status in case of success.
+    activate)
+        echo "Echo activation script: Activate service: $2"
+        ;;
         
-        # Snapshots the corresponding state of the service in a preferably consistent
-        # and portable manner in a special purpose folder with a naming strategy.
-        snapshot)
-            echo "Echo module: Snapshot state of service: $2"
-            ;;
+    # Executes all steps necessary to deactivate a service. It returns a zero
+    # exit status in case of success.
+    deactivate)
+        echo "Echo activation script: Deactivate service: $2"
+        ;;
         
-        # Restores the state of the service from the special purpose folder with a
-        # naming strategy.
-        restore)
-            echo "Echo module: Restore state of service: $2"
-            ;;
+    # Notifies a service that an upgrade is performed. A service can use this to
+    # take precautions or to reach quiescence. It can also reject the upgrade by
+    # returning a non-zero exit status.
+    lock)
+        echo "Echo activation script: Lock service: $2"
+        ;;
         
-        # Collects the garbage of the service by permanently removing it
-        collect-garbage)
-            echo "Echo module: Collect garbage of service: $2"
-            ;;
-    esac
+    # Notifies a service that an upgrade has finished. A service can use this
+    # to resume its normal operations.
+    unlock)
+        echo "Echo activation script: Unlock service: $2"
+        ;;
+    
+    # Snapshots the corresponding state of the service in a preferably consistent
+    # and portable manner in a special purpose folder with a naming strategy.
+    snapshot)
+        echo "Echo module: Snapshot state of service: $2"
+        ;;
+    
+    # Restores the state of the service from the special purpose folder with a
+    # naming strategy.
+    restore)
+        echo "Echo module: Restore state of service: $2"
+        ;;
+    
+    # Collects the garbage of the service by permanently removing it
+    collect-garbage)
+        echo "Echo module: Collect garbage of service: $2"
+        ;;
+esac
 
-    # Print the environment variables
+# Print the environment variables
 
-    echo "Environment variables:"
-    set
+echo "Environment variables:"
+set
+```
 
 Currently, Dysnomia supports the following types of operations:
 
@@ -529,70 +535,72 @@ The implementation of each operation is completely the responsible of the
 implementer. However, for mutable components with persistent state, such as
 databases, we typically follow a convention for many of the operations:
 
-    #!/bin/bash
-    set -e
-    set -o pipefail
-    
-    # Autoconf settings
-    export prefix=@prefix@
-    
-    # Import utility functions
-    source @datadir@/@PACKAGE@/util
-    
-    determineComponentName $2
-    checkStateDir
-    determineTypeIdentifier $0
-    determineContainerName $3
-    composeSnapshotsPath
-    composeGarbagePath
-    composeGenerationsPath
+```bash
+#!/bin/bash
+set -e
+set -o pipefail
 
-    case "$1" in
-        activate)
-            # Initalize the given schema if the database does not exists
-            if ! exampleStateInitialized
-            then
-                exampleInitializeState
-            fi
-            markComponentAsActive
-            ;;
-        deactivate)
+# Autoconf settings
+export prefix=@prefix@
+
+# Import utility functions
+source @datadir@/@PACKAGE@/util
+
+determineComponentName $2
+checkStateDir
+determineTypeIdentifier $0
+determineContainerName $3
+composeSnapshotsPath
+composeGarbagePath
+composeGenerationsPath
+
+case "$1" in
+    activate)
+        # Initalize the given schema if the database does not exists
+        if ! exampleStateInitialized
+        then
+            exampleInitializeState
+        fi
+        markComponentAsActive
+        ;;
+    deactivate)
+        unmarkComponentAsGarbage
+        ;;
+    snapshot)
+        tmpdir=$(mktemp -d)
+        cd $tmpdir
+        exampleSnapshotState | xz > dump.xz
+    
+        hash=$(cat dump.xz | sha256sum)
+        hash=${hash:0:64}
+    
+        if [ -d $snapshotsPath/$hash ]
+        then
+            rm -Rf $tmpdir
+        else
+            mkdir -p $snapshotsPath/$hash
+            mv dump.xz $snapshotsPath/$hash
+            rmdir $tmpdir
+        fi
+        createGenerationSymlink $hash
+        ;;
+    restore)
+        determineLastSnapshot
+    
+        if [ "$lastSnapshot" != "" ]
+        then
+            exampleRestoreState $lastSnapshot
+        fi
+        ;;
+    collect-garbage)
+        if [ -f $garbagePath ]
+        then
+            exampleDeleteState
             unmarkComponentAsGarbage
-            ;;
-        snapshot)
-            tmpdir=$(mktemp -d)
-            cd $tmpdir
-            exampleSnapshotState | xz > dump.xz
-        
-            hash=$(cat dump.xz | sha256sum)
-            hash=${hash:0:64}
-        
-            if [ -d $snapshotsPath/$hash ]
-            then
-                rm -Rf $tmpdir
-            else
-                mkdir -p $snapshotsPath/$hash
-                mv dump.xz $snapshotsPath/$hash
-                rmdir $tmpdir
-            fi
-            createGenerationSymlink $hash
-            ;;
-        restore)
-            determineLastSnapshot
-        
-            if [ "$lastSnapshot" != "" ]
-            then
-                exampleRestoreState $lastSnapshot
-            fi
-            ;;
-        collect-garbage)
-            if [ -f $garbagePath ]
-            then
-                exampleDeleteState
-                unmarkComponentAsGarbage
-            fi
-            ;;
-    esac
+        fi
+        ;;
+esac
+```
 
 The above code fragment outlines an example module implementing deployment
 operations of a database:
