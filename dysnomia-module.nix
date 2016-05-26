@@ -110,6 +110,16 @@ in
         description = "An attribute set providing additional container settings in addition to the default properties";
         default = {};
       };
+      
+      extraContainerPaths = mkOption {
+        description = "A list of paths containing additional container configurations that are added to the search folders";
+        default = [];
+      };
+      
+      extraModulePaths = mkOption {
+        description = "A list of paths containing additional modules that are added to the search folders";
+        default = [];
+      };
     };
   };
   
@@ -129,6 +139,8 @@ in
     
     environment.variables = {
       DYSNOMIA_STATEDIR = "/var/state/dysnomia-nixos";
+      DYSNOMIA_CONTAINERS_PATH = "${lib.concatMapStrings (containerPath: "${containerPath}:") cfg.extraContainerPaths}/etc/dysnomia/containers";
+      DYSNOMIA_MODULES_PATH = "${lib.concatMapStrings (modulePath: "${modulePath}:") cfg.extraModulePaths}/etc/dysnomia/modules";
     };
     
     environment.systemPackages = [ cfg.package ];
