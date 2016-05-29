@@ -11,6 +11,8 @@ shopt -s nullglob
 #
 # This module also support snapshotting. It uses the output hash of the dump to
 # uniquely identify each snapshot.
+#
+# mongoRestoreArgs: Optional arguments passed to the monogorestore command-line invocation
 
 # Autoconf settings
 export prefix=@prefix@
@@ -67,7 +69,7 @@ case "$1" in
         
         if [ "$lastSnapshot" != "" ]
         then
-            @mongorestore@ --drop -d $componentName $snapshotsPath/$lastSnapshot/$componentName
+            @mongorestore@ $mongoRestoreArgs --drop -d $componentName $snapshotsPath/$lastSnapshot/$componentName
         fi
         ;;
     collect-garbage)

@@ -6,6 +6,9 @@ shopt -s nullglob
 # Activates or deactivate Java web applications (directories and *.war files) in
 # an Apache Tomcat container by symlinking the contents of the webapps/
 # subfolder into the Apache Tomcat webapps/ folder.
+#
+# Container properties (environment variables):
+# catalinaBaseDir: Base directory in which Apache Tomcat is installed (defaults to: @CATALINA_BASE@)
 
 # Autoconf settings
 export prefix=@prefix@
@@ -18,7 +21,10 @@ determineTypeIdentifier $0
 checkStateDir
 determineContainerName $3
 
-catalinaBaseDir=@CATALINA_BASE@
+if [ "$catalinaBaseDir" = "" ]
+then
+    catalinaBaseDir=@CATALINA_BASE@
+fi
 
 case "$1" in
     activate)

@@ -16,6 +16,7 @@ shopt -s nullglob
 # mysqlUsername: Username of the account that has the privileges to administer
 #    the database
 # mysqlPassword: Password of the above account
+# mysqlSocket: Path to the UNIX domain socket that is used to connect to the server (optional)
 
 # Autoconf settings
 export prefix=@prefix@
@@ -31,10 +32,15 @@ composeSnapshotsPath
 composeGarbagePath
 composeGenerationsPath
 
+if [ "$mysqlSocket" != "" ]
+then
+    socketArg="--socket=$mysqlSocket"
+fi
+
 case "$1" in
     activate)
         # Initalize the given schema if the database does not exists
-        if [ "$(echo "show databases" | @mysql@ --user=$mysqlUsername --password=$mysqlPassword -N | grep -x $componentName)" = "" ]
+        if [ "$(echo "show databases" | @mysql@ $socketArg --user=$mysqlUsername --password=$mysqlPassword -N | grep -x $componentName)" = "" ]
         then
             ( echo "create database $componentName;"
               echo "use $componentName;"
@@ -43,7 +49,7 @@ case "$1" in
               then
                   cat $2/mysql-databases/*.sql
               fi
-            ) | @mysql@ --user=$mysqlUsername --password=$mysqlPassword -N
+            ) | @mysql@ $socketArg --user=$mysqlUsername --password=$mysqlPassword -N
         fi
         markComponentAsActive
         ;;
@@ -56,7 +62,7 @@ case "$1" in
         # Dump the MySQL database in a single transaction. Chop off the last
         # line because that contains a comment with a timestamp Without it we
         # can compare output hashes to see whether dumps are identical
-        @mysqldump@ --single-transaction --quick --user=$mysqlUsername --password=$mysqlPassword $componentName | head -n-1 | xz > dump.sql.xz
+        @mysqldump@ $socketArg --single-transaction --quick --user=$mysqlUsername --password=$mysqlPassword $componentName | head -n-1 | xz > dump.sql.xz
         
         hash=$(cat dump.sql.xz | sha256sum)
         hash=${hash:0:64}
@@ -78,13 +84,13 @@ case "$1" in
         then
             ( echo "use $componentName;"
               xzcat $snapshotsPath/$lastSnapshot/dump.sql.xz
-            ) | @mysql@ --user=$mysqlUsername --password=$mysqlPassword -N
+            ) | @mysql@ $socketArg --user=$mysqlUsername --password=$mysqlPassword -N
         fi
         ;;
     collect-garbage)
         if [ -f $garbagePath ]
         then
-            echo "drop database $componentName;" | @mysql@ --user=$mysqlUsername --password=$mysqlPassword -N
+            echo "drop database $componentName;" | @mysql@ $socketArg --user=$mysqlUsername --password=$mysqlPassword -N
             unmarkComponentAsGarbage
         fi
         ;;
