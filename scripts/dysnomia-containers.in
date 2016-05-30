@@ -272,6 +272,7 @@ case "$action" in
     generate-expr)
         echo "{"
         
+        # Display machine level properties, if provided
         if [ -f "$DYSNOMIA_PROPERTIES" ]
         then
             echo "  properties = {"
@@ -289,6 +290,7 @@ case "$action" in
             echo "  };"
         fi
         
+        # Display container properties
         echo "  containers = {"
         for path in $(echo $DYSNOMIA_CONTAINERS_PATH | tr ':' ' ')
         do
@@ -314,6 +316,22 @@ case "$action" in
         done
         
         echo "  };"
+        
+        # Display the system attribute in the properties as a seperately if provided as it has a special status
+        
+        if [ -f "$DYSNOMIA_PROPERTIES" ]
+        then
+            cat "$DYSNOMIA_PROPERTIES" | while read i
+            do
+                varName=$(echo ${i%%=*} | sed 's/"/\\"/g' )
+                
+                if [ "$varName" = "system" ]
+                then
+                    printProperties "$i" "$varName" "  "
+                fi
+            done
+        fi
+        
         echo -n "}"
         ;;
     execute-operation)
