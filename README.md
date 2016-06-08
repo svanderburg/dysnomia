@@ -625,7 +625,7 @@ case "$1" in
         markComponentAsActive
         ;;
     deactivate)
-        unmarkComponentAsGarbage
+        markComponentAsGarbage
         ;;
     snapshot)
         tmpdir=$(mktemp -d)
