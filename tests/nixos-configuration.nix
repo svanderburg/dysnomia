@@ -19,8 +19,9 @@ makeTest {
     
       imports = [ ../dysnomia-module.nix ];
       
-      services.dysnomia = {
+      dysnomiaTest = {
         enable = true;
+        enableAuthentication = true;
         
         components = {
           mysql-database = {

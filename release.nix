@@ -100,6 +100,20 @@ let
           inherit nixpkgs tarball buildFun;
         };
       };
+    
+    release = pkgs.releaseTools.aggregate {
+      name = "disnix-${tarball.version}";
+      constituents = [
+        tarball
+      ]
+      ++ map (system: builtins.getAttr system build) systems
+      ++ map (module: builtins.getAttr module tests.modules) (builtins.attrNames tests.modules)
+      ++ [
+        tests.snapshots
+        tests.containers
+      ];
+      meta.description = "Release-critical builds";
+    };
   };
 in
 jobs
