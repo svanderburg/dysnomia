@@ -102,7 +102,7 @@ let
       };
     
     release = pkgs.releaseTools.aggregate {
-      name = "disnix-${tarball.version}";
+      name = "dysnomia-${tarball.version}";
       constituents = [
         tarball
       ]
