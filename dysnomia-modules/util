@@ -440,15 +440,15 @@ removeSystemdService()
     
     if [ -f $jobsDir/dysnomia.target ]
     then
-        rm $jobsDir/dysnomia.target.wants/$jobName.service
+        rm -f $jobsDir/dysnomia.target.wants/$jobName.service
         rmdir --ignore-fail-on-non-empty $jobsDir/dysnomia.target.wants
     fi
     
-    rm "$1"
+    rm -f "$1"
     
     if [ -f $2/etc/socket ]
     then
-        rm $jobsDir/$jobName.socket
+        rm -f $jobsDir/$jobName.socket
     fi
 }
 
@@ -472,7 +472,7 @@ activateSystemdService()
     if [ -f $jobsDir/dysnomia.target ]
     then
         mkdir -p $jobsDir/dysnomia.target.wants
-        ln -s ../$jobName.service $jobsDir/dysnomia.target.wants/$jobName.service
+        ln -sf ../$jobName.service $jobsDir/dysnomia.target.wants/$jobName.service
     fi
     
     if [ -f $2/etc/socket ]

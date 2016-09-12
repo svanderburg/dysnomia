@@ -42,12 +42,27 @@ makeTest {
       virtualisation.diskSize = 4096;
       
       environment.systemPackages = [ dysnomia pkgs.netcat ];
+      
+      system.activationScripts.dysnomia = ''
+        mkdir -p /etc/systemd-mutable/system
+        if [ ! -f /etc/systemd-mutable/system/dysnomia.target ]
+        then
+            ( echo "[Unit]"
+              echo "Description=Services that are activated and deactivated by Dysnomia"
+              echo "After=final.target"
+            ) > /etc/systemd-mutable/system/dysnomia.target
+        fi
+      '';
     };
   };
   
   testScript =
     ''
       startAll;
+      
+      # Check if Dysnomia systemd target exists. It should exist, or the
+      # remaining tests will not work reliably.
+      $machine->mustSucceed("[ -f /etc/systemd-mutable/system/dysnomia.target ]");
       
       # Test wrapper activation script. Here we invoke the wrapper
       # of a certain service. On activation it writes a state file in
@@ -166,6 +181,17 @@ makeTest {
       $machine->mustSucceed("[ \"\$(ps aux | grep ${process_unprivileged}/bin/loop | grep -v grep | grep unprivileged)\" != \"\" ]");
       
       # Activate again. This test should succeed as the operation is idempotent.
+      $machine->mustSucceed("dysnomia --type process --operation activate --component ${process_unprivileged} --environment");
+      $machine->mustSucceed("sleep 5");
+      $machine->mustSucceed("[ \"\$(systemctl status disnix-\$(basename ${process_unprivileged}) | grep \"Active: active\")\" != \"\" ]");
+      $machine->mustSucceed("[ \"\$(ps aux | grep ${process_unprivileged}/bin/loop | grep -v grep | grep unprivileged)\" != \"\" ]");
+      
+      # Wreck the service and activate again. This test should succeed as the operation is idempotent.
+      my $serviceName = "disnix-\$(basename ${process_unprivileged}).service";
+      
+      $machine->mustSucceed("systemctl stop $serviceName"); # We deliberately stop the service manually
+      $machine->mustSucceed("rm /etc/systemd-mutable/system/dysnomia.target.wants/$serviceName"); # We, by accident, remove the unit from the wants/ directory
+
       $machine->mustSucceed("dysnomia --type process --operation activate --component ${process_unprivileged} --environment");
       $machine->mustSucceed("sleep 5");
       $machine->mustSucceed("[ \"\$(systemctl status disnix-\$(basename ${process_unprivileged}) | grep \"Active: active\")\" != \"\" ]");
