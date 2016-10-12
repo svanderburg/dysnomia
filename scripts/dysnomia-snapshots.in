@@ -74,6 +74,85 @@ Copyright (C) 2009-2016 Sander van der Burg
 EOF
 }
 
+# Enumerates over a provided container or all possible containers.
+#
+# Parameters:
+# $1: If provided it displays the container name if it exists, if not provided
+#  it displays all possible containers
+#
+# Returns:
+# Enumeration of containers
+
+enumerateContainers()
+{
+    if [ -z "$1" ]
+    then
+        ls $DYSNOMIA_STATEDIR/generations
+    else
+        if [ -d $DYSNOMIA_STATEDIR/generations/$1 ]
+        then
+            echo "$1"
+        fi
+    fi
+}
+
+# Enumerates over all existing provided components or all possible components
+# deployed to a container.
+#
+# Parameters:
+# $1: Name of container where to query the components from
+# $2: If provided, it displays the name of the component if it exists, if not
+#   provided it displays all available components
+#
+# Returns:
+# Enumeration of components
+
+enumerateComponents()
+{
+    if [ -z "$2" ]
+    then
+        if [ -d $DYSNOMIA_STATEDIR/generations/$1 ]
+        then
+            ls $DYSNOMIA_STATEDIR/generations/$1
+        fi
+    else
+        if [ -d $DYSNOMIA_STATEDIR/generations/$1/$2 ]
+        then
+            echo "$2"
+        fi
+    fi
+}
+
+# Enumerates over all snapshot generations of a component deployed to a
+# container.
+#
+# Parameters:
+# $1: Name of a container
+# $2: Name of a component deployed to the container
+#
+# Returns:
+# Enumeration of the snapshot generations
+
+enumerateSnapshotGenerations()
+{
+    ls $DYSNOMIA_STATEDIR/generations/$1/$2
+}
+
+# Prints a relative path to a snapshot using the snapshot naming convention
+#
+# $1: Name of a container
+# $2: Name of a component deployed to the container
+# $3: Generation symlink to a snapshot
+#
+# Returns:
+# The relative snapshot path in the format: container/component/identifier
+
+printSnapshotRelativePath()
+{
+    local snapshot=$(readlink $DYSNOMIA_STATEDIR/generations/$1/$2/$3)
+    echo $container/$component/$(basename $snapshot)
+}
+
 # Parse valid argument options
 
 PARAMS=`@getopt@ -n $0 -o C:c:hv -l print-missing,query-latest,query-all,gc,import,resolve,container:,component:,keep:,help,version -- "$@"`
@@ -160,82 +239,30 @@ determineComponentName $component
 
 case "$operation" in
     query-latest)
-        if [ -d $DYSNOMIA_STATEDIR/generations ]
-        then
-            if [ -z "$container" ]
-            then
-                containers=$(ls $DYSNOMIA_STATEDIR/generations)
-            else
-                containers=$container
-            fi
-            
-            for container in $containers
+        for container in $(enumerateContainers $container)
+        do
+            for component in $(enumerateComponents $container $componentName)
             do
-                if [ -z "$componentName" ]
-                then
-                    if [ -d $DYSNOMIA_STATEDIR/generations/$container ]
-                    then
-                        components=$(ls $DYSNOMIA_STATEDIR/generations/$container)
-                    else
-                        components=""
-                    fi
-                else
-                    components=$componentName
-                fi
+                lastGeneration=$(enumerateSnapshotGenerations $container $component | sort -n | tail -1)
                 
-                for component in $components
-                do
-                    if [ -d $DYSNOMIA_STATEDIR/generations/$container/$component ]
-                    then
-                        lastGeneration=$(ls $DYSNOMIA_STATEDIR/generations/$container/$component | sort -n | tail -1)
-                        
-                        if [ "$lastGeneration" != "" ]
-                        then
-                            lastSnapshot=$(readlink $DYSNOMIA_STATEDIR/generations/$container/$component/$lastGeneration)
-                            echo $container/$component/$(basename $lastSnapshot)
-                        fi
-                    fi
-                done
+                if [ "$lastGeneration" != "" ]
+                then
+                    printSnapshotRelativePath $container $component $lastGeneration
+                fi
             done
-        fi
+        done
         ;;
     query-all)
-        if [ -d $DYSNOMIA_STATEDIR/generations ]
-        then
-            if [ -z "$container" ]
-            then
-                containers=$(ls $DYSNOMIA_STATEDIR/generations)
-            else
-                containers=$container
-            fi
-            
-            for container in $containers
+        for container in $(enumerateContainers $container)
+        do
+            for component in $(enumerateComponents $container $componentName)
             do
-                if [ -z "$componentName" ]
-                then
-                    if [ -d $DYSNOMIA_STATEDIR/generations/$container ]
-                    then
-                        components=$(ls $DYSNOMIA_STATEDIR/generations/$container)
-                    else
-                        components=""
-                    fi
-                else
-                    components=$componentName
-                fi
-                
-                for component in $components
+                for generation in $(enumerateSnapshotGenerations $container $component)
                 do
-                    if [ -d $DYSNOMIA_STATEDIR/generations/$container/$component ]
-                    then
-                        for i in $(ls $DYSNOMIA_STATEDIR/generations/$container/$component)
-                        do
-                            snapshot=$(readlink $DYSNOMIA_STATEDIR/generations/$container/$component/$i)
-                            echo $container/$component/$(basename $snapshot)
-                        done
-                    fi
+                    printSnapshotRelativePath $container $component $generation
                 done
             done
-        fi
+        done
         ;;
     print-missing)
         if [[ ! -z "$@" ]]
@@ -250,64 +277,62 @@ case "$operation" in
         fi
         ;;
     gc)
-        if [ -d $DYSNOMIA_STATEDIR/generations ]
-        then
-            # Determine snapshot paths of the last n-generations
+        # Determine snapshot paths of the last n-generations
         
-            for container in $(ls $DYSNOMIA_STATEDIR/generations)
+        for container in $(enumerateContainers $container)
+        do
+            for component in $(enumerateComponents $container $componentName)
             do
-                for component in $(ls $DYSNOMIA_STATEDIR/generations/$container)
-                do
-                    count=$(ls $DYSNOMIA_STATEDIR/generations/$container/$component | wc -l)
+                generations=$(enumerateSnapshotGenerations $container $component)
+                count=$(echo "$generations" | wc -l)
+                
+                if [ $count -gt $keep ]
+                then
+                    # For each generation that should be kept, memorize the snapshot path
                     
-                    if [ $count -gt $keep ]
+                    snapshotsToKeep=""
+                    
+                    for generation in $(echo "$generations" | sort -n | tail -$keep)
+                    do
+                        snapshot=$(basename $(readlink $DYSNOMIA_STATEDIR/generations/$container/$component/$generation))
+                        snapshotsToKeep="$snapshotsToKeep $snapshot"
+                    done
+                    
+                    # Remove older generation symlinks
+                    
+                    for generation in $(echo "$generations" | sort -n | head -n -$keep)
+                    do
+                        echo "Removing old generation symlink: $container/$component/$generation" >&2
+                        rm $DYSNOMIA_STATEDIR/generations/$container/$component/$generation
+                    done
+                    
+                    # Remove all snapshots to which the last n-generations do not refer to
+                    
+                    if [ -d $DYSNOMIA_STATEDIR/snapshots/$container/$component ]
                     then
-                        # For each generation that should be kept, memorize the snapshot path
-                        
-                        snapshotsToKeep=""
-                        
-                        for i in $(ls $DYSNOMIA_STATEDIR/generations/$container/$component | sort -n | tail -$keep)
+                        for snapshot in $(ls $DYSNOMIA_STATEDIR/snapshots/$container/$component)
                         do
-                            snapshot=$(basename $(readlink $DYSNOMIA_STATEDIR/generations/$container/$component/$i))
-                            snapshotsToKeep="$snapshotsToKeep $snapshot"
-                        done
-                        
-                        # Remove older generation symlinks
-                        
-                        for i in $(ls $DYSNOMIA_STATEDIR/generations/$container/$component | sort -n | head -n -$keep)
-                        do
-                            echo "Removing old generation symlink: $container/$component/$i" >&2
-                            rm $DYSNOMIA_STATEDIR/generations/$container/$component/$i
-                        done
-                        
-                        # Remove all snapshots to which the last n-generations do not refer to
-                        
-                        if [ -d $DYSNOMIA_STATEDIR/snapshots/$container/$component ]
-                        then
-                            for snapshot in $(ls $DYSNOMIA_STATEDIR/snapshots/$container/$component)
+                            removeSnapshot=1
+                            
+                            for keepSnapshot in $snapshotsToKeep
                             do
-                                removeSnapshot=1
-                                
-                                for keepSnapshot in $snapshotsToKeep
-                                do
-                                    if [ "$snapshot" = "$keepSnapshot" ]
-                                    then
-                                        removeSnapshot=0
-                                        break
-                                    fi
-                                done
-                                
-                                if [ "$removeSnapshot" = "1" ]
+                                if [ "$snapshot" = "$keepSnapshot" ]
                                 then
-                                    echo "Removing old snapshot: $container/$component/$snapshot" >&2
-                                    rm -Rf $DYSNOMIA_STATEDIR/snapshots/$container/$component/$snapshot
+                                    removeSnapshot=0
+                                    break
                                 fi
                             done
-                        fi
+                            
+                            if [ "$removeSnapshot" = "1" ]
+                            then
+                                echo "Removing old snapshot: $container/$component/$snapshot" >&2
+                                rm -Rf $DYSNOMIA_STATEDIR/snapshots/$container/$component/$snapshot
+                            fi
+                        done
                     fi
-                done
+                fi
             done
-        fi
+        done
         ;;
     import)
         if [ -z "$container" ]
