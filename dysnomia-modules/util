@@ -189,7 +189,7 @@ checkStateDir()
 determineComponentName()
 {
     componentName=$(basename "$1")
-    storePrefix="/nix/store/"
+    storePrefix="${NIX_STORE:-/nix/store}/"
 
     if [ "${1:0:${#storePrefix}}" = "$storePrefix" ]
     then
@@ -229,7 +229,7 @@ determineContainerName()
     else
         containerName=$(basename "$1")
         
-        storePrefix="/nix/store/"
+        storePrefix="${NIX_STORE:-/nix/store}/"
 
         if [ "${1:0:${#storePrefix}}" = "$storePrefix" ]
         then

@@ -1,3 +1,7 @@
+Version 0.7
+===========
+- dysnomia-containers can now also garbage collect snapshots for specific containers and components
+
 Version 0.6
 ===========
 - Operations are now idempotent by definition
