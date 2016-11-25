@@ -162,12 +162,12 @@ makeTest {
       # Deactivate the process
       $machine->mustSucceed("dysnomia --type process --operation deactivate --component ${process} --environment");
       $machine->mustSucceed("sleep 5");
-      $machine->mustSucceed("[ \"\$(systemctl status disnix-\$(basename ${process}) | grep \"Active: inactive\")\" != \"\" ]");
+      $machine->mustFail("systemctl status disnix-\$(basename ${process})");
       
       # Deactivate again. This operation should succeed as it is idempotent.
       $machine->mustSucceed("dysnomia --type process --operation deactivate --component ${process} --environment");
       $machine->mustSucceed("sleep 5");
-      $machine->mustSucceed("[ \"\$(systemctl status disnix-\$(basename ${process}) | grep \"Active: inactive\")\" != \"\" ]");
+      $machine->mustFail("systemctl status disnix-\$(basename ${process})");
       
       # Test process activation script. Here we start a process which
       # loops forever. We check whether it has been started and
@@ -200,12 +200,12 @@ makeTest {
       # Deactivate the process
       $machine->mustSucceed("dysnomia --type process --operation deactivate --component ${process_unprivileged} --environment");
       $machine->mustSucceed("sleep 5");
-      $machine->mustSucceed("[ \"\$(systemctl status disnix-\$(basename ${process_unprivileged}) | grep \"Active: inactive\")\" != \"\" ]");
+      $machine->mustFail("systemctl status disnix-\$(basename ${process_unprivileged})");
       
       # Deactivate again. This test should succeed as the operation is idempotent.
       $machine->mustSucceed("dysnomia --type process --operation deactivate --component ${process_unprivileged} --environment");
       $machine->mustSucceed("sleep 5");
-      $machine->mustSucceed("[ \"\$(systemctl status disnix-\$(basename ${process_unprivileged}) | grep \"Active: inactive\")\" != \"\" ]");
+      $machine->mustFail("systemctl status disnix-\$(basename ${process_unprivileged})");
       
       # Socket activation test. We activate the process, but it should
       # only run if we attempt to connect to its corresponding socket. After we

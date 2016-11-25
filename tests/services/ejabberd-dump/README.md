@@ -50,7 +50,7 @@ services.ejabberd.configFile = ./ejabberd.yml;
 - Deploy the modified ejabberd and remove its old state:
 
 ```
-$ stop ejabberd
+$ systemctl stop ejabberd
 $ rm -R /var/lib/ejabberd
 $ nixos-rebuild switch
 ```
