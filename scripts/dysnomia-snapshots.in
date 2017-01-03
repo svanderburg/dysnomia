@@ -330,8 +330,16 @@ case "$operation" in
                             fi
                         done
                     fi
+                    
+                    # Attempt to remove the component's generation and snapshot folders if they are empty
+                    rmdir --ignore-fail-on-non-empty $DYSNOMIA_STATEDIR/generations/$container/$component
+                    rmdir --ignore-fail-on-non-empty $DYSNOMIA_STATEDIR/snapshots/$container/$component
                 fi
             done
+            
+            # Attempt to remove the container's generation and snapshot folders if they are empty
+            rmdir --ignore-fail-on-non-empty $DYSNOMIA_STATEDIR/generations/$container
+            rmdir --ignore-fail-on-non-empty $DYSNOMIA_STATEDIR/snapshots/$container
         done
         ;;
     import)
