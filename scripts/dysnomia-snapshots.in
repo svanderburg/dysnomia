@@ -366,9 +366,7 @@ case "$operation" in
                 fi
                 
                 # Update generation symlink
-                generationsPath=$DYSNOMIA_STATEDIR/generations/$container/$componentName
                 determineContainerName $container
-                composeSnapshotsPath
                 createGenerationSymlink $(basename $i)
             done
         fi

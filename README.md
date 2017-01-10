@@ -611,9 +611,6 @@ determineComponentName $2
 checkStateDir
 determineTypeIdentifier $0
 determineContainerName $3
-composeSnapshotsPath
-composeGarbagePath
-composeGenerationsPath
 
 case "$1" in
     activate)
@@ -649,6 +646,8 @@ case "$1" in
             mv dump.xz $snapshotsPath/$hash
             rmdir $tmpdir
         fi
+        
+        # Create a generation symlink for the snapshot
         createGenerationSymlink $hash
         ;;
     restore)

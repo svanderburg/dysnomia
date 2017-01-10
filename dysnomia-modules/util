@@ -303,15 +303,13 @@ unmarkComponentAsGarbage()
 
 # Determines the name of the last snapshot.
 #
-# Environment variables:
-# generationsPath: Directory in which the generation symlinks are stored
-#
 # Returns:
 # The path to the latest snapshot or an empty string if no snapshots exist
 
 determineLastSnapshot()
 {
     local snapshotsPath=$(composeSnapshotsPath)
+    local generationsPath=$(composeGenerationsPath)
     
     if [ -d $generationsPath ]
     then
@@ -346,11 +344,13 @@ composeSnapshotsPath()
 # DYSNOMIA_STATEDIR: Path where Dysnomia stores state
 # containerName: Name of the container in which the mutable component is hosted
 # componentName: Name of the mutable component
-# generationsPath: Will be set to the path in which generation symlinks are stored
+#
+# Returns:
+# The path to the directory in which the component's generation symlinks are stored
 
 composeGenerationsPath()
 {
-    generationsPath=$DYSNOMIA_STATEDIR/generations/$containerName/$componentName
+    echo "$DYSNOMIA_STATEDIR/generations/$containerName/$componentName"
 }
 
 # Compose the path in which the components names are stored that have become
@@ -364,7 +364,7 @@ composeGenerationsPath()
 
 composeGarbagePath()
 {
-    garbagePath=$DYSNOMIA_STATEDIR/garbage/$containerName/$componentName
+    echo "$DYSNOMIA_STATEDIR/garbage/$containerName/$componentName"
 }
 
 # Creates a new generation symlink to a given snapshot.
@@ -375,13 +375,14 @@ composeGarbagePath()
 # Environment variables:
 # containerName: Name of the container in which the mutable component is hosted
 # componentName: Name of the mutable component
-# generationsPath: Path in which the generation symlinks are stored
 
 createGenerationSymlink()
 {
+    local generationsPath=$(composeGenerationsPath)
+    
     if [ -d $generationsPath ]
     then
-        lastGeneration=$(ls $generationsPath | sort -n | tail -1)
+        local lastGeneration=$(ls $generationsPath | sort -n | tail -1)
         
         if [ "$lastGeneration" = "" ]
         then
@@ -389,26 +390,24 @@ createGenerationSymlink()
         fi
     else
         mkdir -p $generationsPath
-        lastGeneration=0
+        local lastGeneration=0
     fi
     
     if [ "$lastGeneration" = "0" ] || [ "$(basename $(readlink $generationsPath/$lastGeneration))" != "$1" ] # Only create the generation symlink if the previous symlink refers to a different snapshot
     then
-        newGeneration=$((lastGeneration+1))
+        local newGeneration=$((lastGeneration+1))
         ln -s "../../../snapshots/$containerName/$componentName/$1" $generationsPath/$newGeneration
     fi
 }
 
 # Checks whether a component has been marked as garbage
 #
-# Environment variables:
-# garbagePath: Path to the directory that stores which components have been marked as garbage
-#
 # Exit status:
 # 0 if component is garbage, else 1
 
 componentMarkedAsGarbage()
 {
+    local garbagePath=$(composeGarbagePath)
     [ -f $garbagePath ]
 }
 

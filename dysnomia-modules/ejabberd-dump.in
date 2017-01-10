@@ -26,9 +26,6 @@ determineComponentName $2
 checkStateDir
 determineTypeIdentifier $0
 determineContainerName $3
-composeSnapshotsPath
-composeGarbagePath
-composeGenerationsPath
 
 ejabberdctl=@ejabberdctl@
 
