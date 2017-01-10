@@ -65,11 +65,11 @@ case "$1" in
         createGenerationSymlink $hash
         ;;
     restore)
-        determineLastSnapshot
+        lastSnapshot=$(determineLastSnapshot)
         
         if [ "$lastSnapshot" != "" ]
         then
-            @mongorestore@ $mongoRestoreArgs --drop -d $componentName $snapshotsPath/$lastSnapshot/$componentName
+            @mongorestore@ $mongoRestoreArgs --drop -d $componentName $lastSnapshot/$componentName
         fi
         ;;
     collect-garbage)

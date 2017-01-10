@@ -304,23 +304,22 @@ unmarkComponentAsGarbage()
 # Determines the name of the last snapshot.
 #
 # Environment variables:
+# snapshotsPath: Path in which snapshots are stored
 # generationsPath: Directory in which the generation symlinks are stored
-# lastSnapshot: Will be set to the last snapshot or empty value if no snapshot generations exist
+#
+# Returns:
+# The path to the latest snapshot or an empty string if no snapshots exist
 
 determineLastSnapshot()
 {
     if [ -d $generationsPath ]
     then
-        lastGeneration=$(ls $generationsPath | sort -n | tail -1)
+        local lastGeneration=$(ls $generationsPath | sort -n | tail -1)
         
-        if [ "$lastGeneration" = "" ]
+        if [ "$lastGeneration" != "" ]
         then
-            lastSnapshot=""
-        else
-            lastSnapshot=$(basename $(readlink $generationsPath/$lastGeneration))
+            echo "$snapshotsPath/$(basename $(readlink $generationsPath/$lastGeneration))"
         fi
-    else
-        lastSnapshot=""
     fi
 }
 

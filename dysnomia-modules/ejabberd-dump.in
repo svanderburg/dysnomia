@@ -85,11 +85,11 @@ case "$1" in
         createGenerationSymlink $hash
         ;;
     restore)
-        determineLastSnapshot
+        lastSnapshot=$(determineLastSnapshot)
         
         if [ "$lastSnapshot" != "" ]
         then
-            su $ejabberdUser -s /bin/sh -c "$ejabberdctl load $snapshotsPath/$lastSnapshot/dump"
+            su $ejabberdUser -s /bin/sh -c "$ejabberdctl load $lastSnapshot/dump"
         fi
         ;;
     collect-garbage)

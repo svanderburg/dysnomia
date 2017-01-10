@@ -78,12 +78,12 @@ case "$1" in
         createGenerationSymlink $hash
         ;;
     restore)
-        determineLastSnapshot
+        lastSnapshot=$(determineLastSnapshot)
         
         if [ "$lastSnapshot" != "" ]
         then
             ( echo "use $componentName;"
-              xzcat $snapshotsPath/$lastSnapshot/dump.sql.xz
+              xzcat $lastSnapshot/dump.sql.xz
             ) | @mysql@ $socketArg --user=$mysqlUsername --password=$mysqlPassword -N
         fi
         ;;

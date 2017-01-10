@@ -64,7 +64,7 @@ case "$1" in
         ;;
     restore)
         rev=$(cat $svnBaseDir/$componentName/db/current)
-        determineLastSnapshot
+        lastSnapshot=$(determineLastSnapshot)
         
         if [ "$lastSnapshot" != "" ] && [ "$rev" != "$lastSnapshot" ]
         then
@@ -73,7 +73,7 @@ case "$1" in
             chgrp -R $svnGroup $svnBaseDir/$componentName
             chmod -R g+w $svnBaseDir/$componentName
             chmod g+s $svnBaseDir/$componentName/db
-            xzcat $snapshotsPath/$lastSnapshot/dump.xz | @svnadmin@ load $svnBaseDir/$componentName
+            xzcat $lastSnapshot/dump.xz | @svnadmin@ load $svnBaseDir/$componentName
         fi
         ;;
     collect-garbage)

@@ -90,20 +90,20 @@ case "$1" in
         createGenerationSymlink $hash
         ;;
     restore)
-        determineLastSnapshot
+        lastSnapshot=$(determineLastSnapshot)
         
         if [ "$lastSnapshot" != "" ]
         then
-            for container in $(ls $snapshotsPath/$lastSnapshot)
+            for container in $(ls $lastSnapshot)
             do
-                for component in $(ls $snapshotsPath/$lastSnapshot/$container)
+                for component in $(ls $lastSnapshot/$container)
                 do
-                    for snapshot in $(ls $snapshotsPath/$lastSnapshot/$container/$component)
+                    for snapshot in $(ls $lastSnapshot/$container/$component)
                     do
                         if [ ! -e "$DYSNOMIA_NIXOS_STATEDIR/snapshots/$container/$component/$snapshot" ]
                         then
                             mkdir -p $DYSNOMIA_NIXOS_STATEDIR/snapshots/$container/$component
-                            $cp_r $snapshotsPath/$lastSnapshot/$container/$component $DYSNOMIA_NIXOS_STATEDIR/snapshots/$container
+                            $cp_r $lastSnapshot/$container/$component $DYSNOMIA_NIXOS_STATEDIR/snapshots/$container
                         fi
                         
                         # Register generation symlink

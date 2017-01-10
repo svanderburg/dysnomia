@@ -646,7 +646,7 @@ case "$1" in
         createGenerationSymlink $hash
         ;;
     restore)
-        determineLastSnapshot
+        lastSnapshot=$(determineLastSnapshot)
     
         if [ "$lastSnapshot" != "" ]
         then

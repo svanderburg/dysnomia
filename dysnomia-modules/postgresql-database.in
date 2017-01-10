@@ -68,13 +68,13 @@ case "$1" in
         createGenerationSymlink $hash
         ;;
     restore)
-        determineLastSnapshot
+        lastSnapshot=$(determineLastSnapshot)
         
         if [ "$lastSnapshot" != "" ]
         then
             dropdb $componentName
             @createdb@ -O $postgresqlUsername $componentName
-            su $postgresqlUsername -c "xzcat $snapshotsPath/$lastSnapshot/dump.pgsql.xz | psql --file - $componentName"
+            su $postgresqlUsername -c "xzcat $lastSnapshot/dump.pgsql.xz | psql --file - $componentName"
         fi
         ;;
     collect-garbage)
