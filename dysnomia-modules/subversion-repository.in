@@ -55,6 +55,8 @@ case "$1" in
     snapshot)
         rev=$(cat $svnBaseDir/$componentName/db/current)
         
+        snapshotsPath=$(composeSnapshotsPath)
+        
         if [ ! -d $snapshotsPath/$rev ]
         then
             mkdir -p $snapshotsPath/$rev
@@ -77,7 +79,7 @@ case "$1" in
         fi
         ;;
     collect-garbage)
-        if [ -f $garbagePath ]
+        if componentMarkedAsGarbage
         then
             rm -Rf $svnBaseDir/$componentName
             unmarkComponentAsGarbage

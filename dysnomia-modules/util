@@ -304,7 +304,6 @@ unmarkComponentAsGarbage()
 # Determines the name of the last snapshot.
 #
 # Environment variables:
-# snapshotsPath: Path in which snapshots are stored
 # generationsPath: Directory in which the generation symlinks are stored
 #
 # Returns:
@@ -312,6 +311,8 @@ unmarkComponentAsGarbage()
 
 determineLastSnapshot()
 {
+    local snapshotsPath=$(composeSnapshotsPath)
+    
     if [ -d $generationsPath ]
     then
         local lastGeneration=$(ls $generationsPath | sort -n | tail -1)
@@ -329,11 +330,13 @@ determineLastSnapshot()
 # DYSNOMIA_STATEDIR: Path where Dysnomia stores state
 # containerName: Name of the container in which the mutable component is hosted
 # componentName: Name of the mutable component
-# snapshotsPath: Will be set to the path in which snapshots are stored
+#
+# Returns:
+# The path to the directory in which the component's snapshots are stored
 
 composeSnapshotsPath()
 {
-    snapshotsPath=$DYSNOMIA_STATEDIR/snapshots/$containerName/$componentName
+    echo "$DYSNOMIA_STATEDIR/snapshots/$containerName/$componentName"
 }
 
 # Compose the path in which the generation symlinks of component snapshots are
@@ -373,7 +376,6 @@ composeGarbagePath()
 # containerName: Name of the container in which the mutable component is hosted
 # componentName: Name of the mutable component
 # generationsPath: Path in which the generation symlinks are stored
-# snapshotsPath: Path in which the snapshots are stored
 
 createGenerationSymlink()
 {
@@ -395,6 +397,19 @@ createGenerationSymlink()
         newGeneration=$((lastGeneration+1))
         ln -s "../../../snapshots/$containerName/$componentName/$1" $generationsPath/$newGeneration
     fi
+}
+
+# Checks whether a component has been marked as garbage
+#
+# Environment variables:
+# garbagePath: Path to the directory that stores which components have been marked as garbage
+#
+# Exit status:
+# 0 if component is garbage, else 1
+
+componentMarkedAsGarbage()
+{
+    [ -f $garbagePath ]
 }
 
 # Attempts to execute a command and retries it a given number of times if it

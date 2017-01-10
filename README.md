@@ -628,17 +628,23 @@ case "$1" in
         markComponentAsGarbage
         ;;
     snapshot)
+        # Dump the state of the component in a temp dir
         tmpdir=$(mktemp -d)
         cd $tmpdir
         exampleSnapshotState | xz > dump.xz
-    
+
+        # Compose a unique name for the snapshot
         hash=$(cat dump.xz | sha256sum)
         hash=${hash:0:64}
-    
+
+        snapshotsPath=$(composeSnapshotsPath)
+
         if [ -d $snapshotsPath/$hash ]
         then
+            # If the snapshot exists in the store already, discard it
             rm -Rf $tmpdir
         else
+            # Import the snapshot into the snapshot store
             mkdir -p $snapshotsPath/$hash
             mv dump.xz $snapshotsPath/$hash
             rmdir $tmpdir
@@ -647,14 +653,14 @@ case "$1" in
         ;;
     restore)
         lastSnapshot=$(determineLastSnapshot)
-    
+
         if [ "$lastSnapshot" != "" ]
         then
             exampleRestoreState $lastSnapshot
         fi
         ;;
     collect-garbage)
-        if [ -f $garbagePath ]
+        if componentMarkedAsGarbage
         then
             exampleDeleteState
             unmarkComponentAsGarbage

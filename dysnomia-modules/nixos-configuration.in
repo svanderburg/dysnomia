@@ -76,6 +76,8 @@ case "$1" in
         hash=$(echo $snapshots | sha256sum)
         hash=${hash:0:64}
         
+        snapshotsPath=$(composeSnapshotsPath)
+        
         if [ ! -d $snapshotsPath/$hash ]
         then
             mkdir -p $snapshotsPath/$hash

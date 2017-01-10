@@ -54,6 +54,8 @@ case "$1" in
         hash=$((for i in $componentName/*; do echo $i; cat $i; done) | sha256sum)
         hash=${hash:0:64}
         
+        snapshotsPath=$(composeSnapshotsPath)
+        
         if [ -d $snapshotsPath/$hash ]
         then
             rm -Rf $tmpdir
@@ -73,7 +75,7 @@ case "$1" in
         fi
         ;;
     collect-garbage)
-        if [ -f $garbagePath ]
+        if componentMarkedAsGarbage
         then
             ( echo "use $componentName;"
               echo "db.dropDatabase();"

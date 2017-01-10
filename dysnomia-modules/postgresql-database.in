@@ -56,6 +56,8 @@ case "$1" in
         hash=$(cat dump.pgsql.xz | sha256sum)
         hash=${hash:0:64}
         
+        snapshotsPath=$(composeSnapshotsPath)
+        
         if [ -d $snapshotsPath/$hash ]
         then
             rm -Rf $tmpdir
@@ -78,7 +80,7 @@ case "$1" in
         fi
         ;;
     collect-garbage)
-        if [ -f $garbagePath ]
+        if componentMarkedAsGarbage
         then
             dropdb $componentName
             unmarkComponentAsGarbage

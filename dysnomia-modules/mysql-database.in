@@ -67,6 +67,8 @@ case "$1" in
         hash=$(cat dump.sql.xz | sha256sum)
         hash=${hash:0:64}
         
+        snapshotsPath=$(composeSnapshotsPath)
+        
         if [ -d $snapshotsPath/$hash ]
         then
             rm -Rf $tmpdir
@@ -88,7 +90,7 @@ case "$1" in
         fi
         ;;
     collect-garbage)
-        if [ -f $garbagePath ]
+        if componentMarkedAsGarbage
         then
             echo "drop database $componentName;" | @mysql@ $socketArg --user=$mysqlUsername --password=$mysqlPassword -N
             unmarkComponentAsGarbage

@@ -73,6 +73,8 @@ case "$1" in
         hash=$(cat dump | sha256sum)
         hash=${hash:0:64}
         
+        snapshotsPath=$(composeSnapshotsPath)
+        
         if [ -d $snapshotsPath/$hash ]
         then
             rm -Rf $tmpdir
@@ -93,7 +95,7 @@ case "$1" in
         fi
         ;;
     collect-garbage)
-        if [ -f $garbagePath ]
+        if componentMarkedAsGarbage
         then
             rm -Rf /var/lib/ejabberd
             rm -Rf /var/ejabberd
