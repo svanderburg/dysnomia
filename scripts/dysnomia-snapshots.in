@@ -235,7 +235,7 @@ fi
 
 # Execute operation
 
-determineComponentName $component
+componentName=$(determineComponentName $component)
 
 case "$operation" in
     query-latest)
@@ -366,7 +366,7 @@ case "$operation" in
                 fi
                 
                 # Update generation symlink
-                determineContainerName $container
+                containerName=$(determineContainerName $container)
                 createGenerationSymlink $(basename $i)
             done
         fi

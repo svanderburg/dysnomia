@@ -31,10 +31,8 @@ export prefix=@prefix@
 # Import utility functions
 source @datadir@/@PACKAGE@/util
 
-determineComponentName $2
-determineTypeIdentifier $0
-checkStateDir
-determineContainerName $3
+# Sets a number of common utility environment variables
+composeUtilityVariables $0 $2 $3
 
 serviceName=$(basename $2)
 

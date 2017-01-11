@@ -181,33 +181,22 @@ checkStateDir()
 # given, then the hash prefix is stripped from it.
 #
 # Parameters:
-# $1: Path or name of a component
+# $1: Path to or name of a component
 # 
-# Environment variables:
-# componentName: will be set to the name of the component
+# Returns:
+# The name of the component
 
 determineComponentName()
 {
-    componentName=$(basename "$1")
-    storePrefix="${NIX_STORE_DIR:-/nix/store}/"
+    local storePrefix="${NIX_STORE_DIR:-/nix/store}/"
+    local componentName=$(basename "$1")
 
-    if [ "${1:0:${#storePrefix}}" = "$storePrefix" ]
+    if [ "${1:0:${#storePrefix}}" = "$storePrefix" ] # If the component name is a Nix store path, then strip off the hash component
     then
         componentName="${componentName:33}"
     fi
-}
-
-# Determines the type identifier of a given path
-#
-# Parameters:
-# $1: Path to a container
-# 
-# Environment variables:
-# typeIdentifier: Will be set to the name of the type
-
-determineTypeIdentifier()
-{
-    typeIdentifier=$(basename "$1")
+    
+    echo "$componentName"
 }
 
 # Determines the name of the container. If a Nix store path is given, then the
@@ -215,89 +204,158 @@ determineTypeIdentifier()
 # name reverts to its type identifier.
 #
 # Parameters:
-# $1: Path or name of a container
+# $1: Path to or name of a container
+# $2: Type identifier of the mutable component that determines the plugin that communicates with it
 #
-# Environment variables:
-# typeIdentifier: Type of the mutable component that determines the plugin that communicates with it
-# containerName: will be set to the name of the container
+# Returns:
+# The name of the container
 
 determineContainerName()
 {
+    local storePrefix="${NIX_STORE_DIR:-/nix/store}/"
+    
     if [ "$1" = "" ]
     then
-        containerName=$typeIdentifier
+        local containerName="$2" # If no container name is provided then the type identifier is the container name
     else
-        containerName=$(basename "$1")
+        local containerName=$(basename "$1")
         
-        storePrefix="${NIX_STORE_DIR:-/nix/store}/"
-
         if [ "${1:0:${#storePrefix}}" = "$storePrefix" ]
         then
-            containerName="${containerName:33}"
+            containerName="${containerName:33}" # If container name is a Nix store path, then strip off the hash component
         fi
     fi
+    
+    echo "$containerName"
 }
 
-# Marks a component as activated in a container so that it will not be deleted by
-# the garbage collector
+# Sets a number of common utility environment variables that come in handy for
+# most Dysnomia modules 
+#
+# Environment variables:
+# typeIdentifier: Will be set to the name of the type
+# componentName: will be set to the name of the component
+# containerName: will be set to the name of the container
+
+composeUtilityVariables()
+{
+    checkStateDir
+    typeIdentifier=$(basename "$1")
+    componentName=$(determineComponentName $2)
+    containerName=$(determineContainerName $3 "$typeIdentifier")
+}
+
+# Composes the path in which snapshots of components are stored
 #
 # Environment variables:
 # DYSNOMIA_STATEDIR: Path where Dysnomia stores state
 # containerName: Name of the container in which the mutable component is hosted
-# componentName: Name of the component
-# activatedPath: Path to the directory that stores which components have been activated in it
+# componentName: Name of the mutable component
+#
+# Returns:
+# The path to the directory in which the component's snapshots are stored
+
+composeSnapshotsPath()
+{
+    echo "$DYSNOMIA_STATEDIR/snapshots/$containerName/$componentName"
+}
+
+# Composes the path in which the generation symlinks of component snapshots are
+# stored
+#
+# Environment variables:
+# DYSNOMIA_STATEDIR: Path where Dysnomia stores state
+# containerName: Name of the container in which the mutable component is hosted
+# componentName: Name of the mutable component
+#
+# Returns:
+# The path to the directory in which the component's generation symlinks are stored
+
+composeGenerationsPath()
+{
+    echo "$DYSNOMIA_STATEDIR/generations/$containerName/$componentName"
+}
+
+# Composes the path in which the components names are stored that have become
+# garbage
+#
+# Environment variables:
+# DYSNOMIA_STATEDIR: Path where Dysnomia stores state
+# containerName: Name of the container in which the mutable component is hosted
+# componentName: Name of the mutable component
+#
+# Returns:
+# The path where the component's garbage flag is stored
+
+composeGarbagePath()
+{
+    echo "$DYSNOMIA_STATEDIR/garbage/$containerName/$componentName"
+}
+
+# Composes the path in which the components names are stored that have become
+# activated
+#
+# Environment variables:
+# DYSNOMIA_STATEDIR: Path where Dysnomia stores state
+# containerName: Name of the container in which the mutable component is hosted
+# componentName: Name of the mutable component
+#
+# Returns:
+# The path where the component's activation flag is stored
+
+composeActivatedPath()
+{
+    echo "$DYSNOMIA_STATEDIR/activated/$containerName/$componentName"
+}
+
+# Marks a component as activated in a container so that it will not be deleted by
+# the garbage collector
 
 markComponentAsActive()
 {
-    mkdir -p $DYSNOMIA_STATEDIR/activated/$containerName
+    local garbagePath=$(composeGarbagePath)
+    local activatedPath=$(composeActivatedPath)
     
-    if [ -f $DYSNOMIA_STATEDIR/garbage/$containerName/$componentName ]
+    mkdir -p $(dirname $activatedPath)
+    
+    if [ -f $garbagePath ]
     then
-        mv $DYSNOMIA_STATEDIR/garbage/$containerName/$componentName $DYSNOMIA_STATEDIR/activated/$containerName/$componentName
+        mv $garbagePath $activatedPath
     else
-        touch $DYSNOMIA_STATEDIR/activated/$containerName/$componentName
+        touch $activatedPath
     fi
 }
 
 # Unmarks a component as activated in a container so that it will be reported as
 # such
-#
-# Environment variables:
-# containerName: Name of the container in which the mutable component is hosted
-# activatedPath: Path to the directory that stores which components have been activated in it
 
 unmarkComponentAsActive()
 {
-    rm -f $DYSNOMIA_STATEDIR/activated/$containerName/$componentName
+    local activatedPath=$(composeActivatedPath)
+    rm -f $activatedPath
 }
 
 # Marks a component that has previously been activated as a garbage so that it
 # will be deleted by the garbage collector,
-#
-# Environment variables:
-# containerName: Name of the container in which the mutable component is hosted
-# activatedPath: Path to the directory that stores which components have been activated in it
-# garbagePath: Path to the directory that stores which components have been marked as garbage
 
 markComponentAsGarbage()
 {
-    mkdir -p $DYSNOMIA_STATEDIR/garbage/$containerName
-    if [ ! -e $DYSNOMIA_STATEDIR/garbage/$containerName/$componentName ]
+    local garbagePath=$(composeGarbagePath)
+    local activatedPath=$(composeActivatedPath)
+    
+    if [ ! -e $garbagePath ]
     then
-        mv $DYSNOMIA_STATEDIR/activated/$containerName/$componentName $DYSNOMIA_STATEDIR/garbage/$containerName/$componentName
+        mkdir -p $(dirname $garbagePath)
+        mv $activatedPath $garbagePath
     fi
 }
 
-# Environment variables:
-#
 # Unmarks a component as garbage so that it will be considered as no longer
 # deployed.
-#
-# containerName: Name of the container in which the mutable component is hosted
-# garbagePath: Path to the directory that stores which components have been marked as garbage
 
 unmarkComponentAsGarbage()
 {
+    local garbagePath=$(composeGarbagePath)
     rm -f $DYSNOMIA_STATEDIR/garbage/$containerName/$componentName
 }
 
@@ -320,51 +378,6 @@ determineLastSnapshot()
             echo "$snapshotsPath/$(basename $(readlink $generationsPath/$lastGeneration))"
         fi
     fi
-}
-
-# Compose the path in which snapshots of components are stored
-#
-# Environment variables:
-# DYSNOMIA_STATEDIR: Path where Dysnomia stores state
-# containerName: Name of the container in which the mutable component is hosted
-# componentName: Name of the mutable component
-#
-# Returns:
-# The path to the directory in which the component's snapshots are stored
-
-composeSnapshotsPath()
-{
-    echo "$DYSNOMIA_STATEDIR/snapshots/$containerName/$componentName"
-}
-
-# Compose the path in which the generation symlinks of component snapshots are
-# stored
-#
-# Environment variables:
-# DYSNOMIA_STATEDIR: Path where Dysnomia stores state
-# containerName: Name of the container in which the mutable component is hosted
-# componentName: Name of the mutable component
-#
-# Returns:
-# The path to the directory in which the component's generation symlinks are stored
-
-composeGenerationsPath()
-{
-    echo "$DYSNOMIA_STATEDIR/generations/$containerName/$componentName"
-}
-
-# Compose the path in which the components names are stored that have become
-# garbage
-#
-# Environment variables:
-# DYSNOMIA_STATEDIR: Path where Dysnomia stores state
-# containerName: Name of the container in which the mutable component is hosted
-# componentName: Name of the mutable component
-# garbagePath: Will be set to the path in which garbage flags are stored
-
-composeGarbagePath()
-{
-    echo "$DYSNOMIA_STATEDIR/garbage/$containerName/$componentName"
 }
 
 # Creates a new generation symlink to a given snapshot.

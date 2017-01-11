@@ -63,20 +63,37 @@ Dysnomia modules
 The Dysnomia package contains the following modules, of which some of them can
 be optionally enabled/disabled:
 
-* `apache-webapplication`. Deploys a web application in a document root folder of the [Apache HTTP server](http://httpd.apache.org).
-* `axis2-webservice`. Deploys an Axis2 ARchive (AAR) file inside an [Axis2](http://axis2.apache.org) container.
-* `echo`. Mereley echos the parameters and environment variables used during activation or deactivation. Useful for debugging purposes.
-* `ejabberd-dump`. Deploys an [Ejabberd](http://www.ejabberd.im) configuration database.
-* `iis-webapplication`. Deploys a web application in a document root folder of the [Internet Information Services](http://www.iis.net) (IIS) server.
-* `mongo-database`. Deploys a [MongoDB](http://www.mongodb.org) database inside a MongoDB DBMS instance.
-* `mssql-database`. Deploys a database to a [SQL Server](http://www.microsoft.com/en-us/sqlserver/default.aspx) DBMS instance.
-* `mysql-database`. Deploys a database to a [MySQL](http://www.mysql.com) DBMS instance.
-* `nixos-configuration`. Deploys a specific [NixOS](http://nixos.org/nixos) configuration.
-* `postgresql-database`. Deploys a database to a [PostgreSQL](http://www.postgresql.com) DBMS instance.
-* `process`. Wraps a process inside a [systemd](http://www.freedesktop.org/wiki/Software/systemd) or init.d job and activates or deactivates it.
-* `subversion-repository`. Deploys [Subversion](http://subversion.apache.org) repository dump into a Subversion working directory.
-* `tomcat-webapplication`. Deploys a Java Web Application ARchive (WAR) file inside an [Apache Tomcat](http://tomcat.apache.org) servlet container.
-* `wrapper`. Wraps the `bin/wrapper` activation script inside the component into a [systemd](http://www.freedesktop.org/wiki/Software/systemd) or init.d job and activates or deactivates it.
+* `apache-webapplication`. Deploys a web application in a document root folder
+  of the [Apache HTTP server](http://httpd.apache.org).
+* `axis2-webservice`. Deploys an Axis2 ARchive (AAR) file inside an
+  [Axis2](http://axis2.apache.org) container.
+* `echo`. Mereley echos the parameters and environment variables used during
+  activation or deactivation. Useful for debugging purposes.
+* `ejabberd-dump`. Deploys an [Ejabberd](http://www.ejabberd.im) configuration
+  database.
+* `iis-webapplication`. Deploys a web application in a document root folder of
+  the [Internet Information Services](http://www.iis.net) (IIS) server.
+* `mongo-database`. Deploys a [MongoDB](http://www.mongodb.org) database inside
+  a MongoDB DBMS instance.
+* `mssql-database`. Deploys a database to a
+  [SQL Server](http://www.microsoft.com/en-us/sqlserver/default.aspx) DBMS
+  instance.
+* `mysql-database`. Deploys a database to a [MySQL](http://www.mysql.com) DBMS
+  instance.
+* `nixos-configuration`. Deploys a specific [NixOS](http://nixos.org/nixos)
+  configuration.
+* `postgresql-database`. Deploys a database to a
+  [PostgreSQL](http://www.postgresql.com) DBMS instance.
+* `process`. Wraps a process inside a
+  [systemd](http://www.freedesktop.org/wiki/Software/systemd) or init.d job and
+  activates or deactivates it.
+* `subversion-repository`. Deploys [Subversion](http://subversion.apache.org)
+  repository dump into a Subversion working directory.
+* `tomcat-webapplication`. Deploys a Java Web Application ARchive (WAR) file
+  inside an [Apache Tomcat](http://tomcat.apache.org) servlet container.
+* `wrapper`. Wraps the `bin/wrapper` activation script inside the component into
+  a [systemd](http://www.freedesktop.org/wiki/Software/systemd) or init.d job
+  and activates or deactivates it.
 
 Configuration of the process and wrapper modules
 ------------------------------------------------
@@ -607,10 +624,8 @@ export prefix=@prefix@
 # Import utility functions
 source @datadir@/@PACKAGE@/util
 
-determineComponentName $2
-checkStateDir
-determineTypeIdentifier $0
-determineContainerName $3
+# Sets a number of common utility environment variables
+composeUtilityVariables $0 $2 $3
 
 case "$1" in
     activate)

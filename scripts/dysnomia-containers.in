@@ -234,26 +234,26 @@ executeOperation()
 
 printProperties()
 {
-  local line="$1"
-  local varName="$2"
-  local indent="$3"
+    local line="$1"
+    local varName="$2"
+    local indent="$3"
   
-  ( eval $line
-   
-    if declare -p $varName 2> /dev/null | grep -q 'declare \-a'
-    then
-        varRef="$varName[@]"
-        
-        echo -n "$indent\"$varName\" = [ "
-        for i in "${!varRef}"
-        do
-            echo -n "\"$i\" "
-        done
-        echo "];"
-    else
-        echo "$indent\"$varName\" = \"${!varName}\";"
-    fi
-  )
+    ( eval $line
+     
+      if declare -p $varName 2> /dev/null | grep -q 'declare \-a'
+      then
+          varRef="$varName[@]"
+          
+          echo -n "$indent\"$varName\" = [ "
+          for i in "${!varRef}"
+          do
+              echo -n "\"$i\" "
+          done
+          echo "];"
+      else
+          echo "$indent\"$varName\" = \"${!varName}\";"
+      fi
+    )
 }
 
 case "$action" in
