@@ -503,7 +503,11 @@ activateSystemdService()
     
     if [ -f $2/etc/socket ]
     then
-        cp $2/etc/socket $jobsDir/$jobName.socket
+        if [ ! -f $jobsDir/$jobName.socket ]
+        then
+            cp $2/etc/socket $jobsDir/$jobName.socket
+        fi
+        
         startUnit=$jobName.socket
     else
         startUnit=$jobName.service
