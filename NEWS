@@ -4,6 +4,10 @@ Version 0.7
 
 - The snapshot garbage collector now also removes empty folders
 
+- systemd units with socket activation are now correctly configured to load at startup
+
+- Some minor cleanups to the Dysnomia module interface
+
 Version 0.6
 ===========
 - Operations are now idempotent by definition

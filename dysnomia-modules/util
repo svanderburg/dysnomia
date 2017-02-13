@@ -464,18 +464,15 @@ removeSystemdService()
     local jobsDir=$(dirname "$1")
     local jobName=$(basename "$1" .service)
     
-    if [ -f $jobsDir/dysnomia.target ]
+    if [ -f $2/etc/socket ]
     then
+        rm -f $jobsDir/dysnomia.target.wants/$jobName.socket
+        rm -f $jobsDir/$jobName.socket
+    else
         rm -f $jobsDir/dysnomia.target.wants/$jobName.service
-        rmdir --ignore-fail-on-non-empty $jobsDir/dysnomia.target.wants
     fi
     
     rm -f "$1"
-    
-    if [ -f $2/etc/socket ]
-    then
-        rm -f $jobsDir/$jobName.socket
-    fi
 }
 
 # Activates a systemd job and configures its wanted dependencies
@@ -498,7 +495,6 @@ activateSystemdService()
     if [ -f $jobsDir/dysnomia.target ]
     then
         mkdir -p $jobsDir/dysnomia.target.wants
-        ln -sf ../$jobName.service $jobsDir/dysnomia.target.wants/$jobName.service
     fi
     
     if [ -f $2/etc/socket ]
@@ -506,10 +502,12 @@ activateSystemdService()
         if [ ! -f $jobsDir/$jobName.socket ]
         then
             cp $2/etc/socket $jobsDir/$jobName.socket
+            ln -sf ../$jobName.socket $jobsDir/dysnomia.target.wants/$jobName.socket
         fi
         
         startUnit=$jobName.socket
     else
+        ln -sf ../$jobName.service $jobsDir/dysnomia.target.wants/$jobName.service
         startUnit=$jobName.service
     fi
     
