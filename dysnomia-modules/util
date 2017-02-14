@@ -502,12 +502,20 @@ activateSystemdService()
         if [ ! -f $jobsDir/$jobName.socket ]
         then
             cp $2/etc/socket $jobsDir/$jobName.socket
-            ln -sf ../$jobName.socket $jobsDir/dysnomia.target.wants/$jobName.socket
+            
+            if [ -f $jobsDir/dysnomia.target ]
+            then
+                ln -sf ../$jobName.socket $jobsDir/dysnomia.target.wants/$jobName.socket
+            fi
         fi
         
         startUnit=$jobName.socket
     else
-        ln -sf ../$jobName.service $jobsDir/dysnomia.target.wants/$jobName.service
+        if [ -f $jobsDir/dysnomia.target ]
+        then
+            ln -sf ../$jobName.service $jobsDir/dysnomia.target.wants/$jobName.service
+        fi
+        
         startUnit=$jobName.service
     fi
     
