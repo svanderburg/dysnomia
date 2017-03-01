@@ -26,7 +26,6 @@ makeTest {
       virtualisation.diskSize = 4096;
         
       services.ejabberd.enable = true;
-
       environment.systemPackages = [ dysnomia ];
     };
   };

@@ -31,26 +31,28 @@ case "$1" in
     activate)
         # Wait until the ejabberd daemon is available
         count=0
-        while ! su $ejabberdUser -s /bin/sh -c "$ejabberdctl status"
+        
+        while ! su - $ejabberdUser -s /bin/sh -c "$ejabberdctl status"
         do
             if [ $count -eq 30 ]
             then
-                echo "Tried 30 times, giving up..."
+                echo "Tried 30 times, giving up..." >&2
                 exit 1
             fi
             
-            echo "Ejabberd daemon not yet started. Waiting for 1 second..."
-            count=$((count++))
+            echo "Ejabberd daemon not yet started. Waiting for 1 second..." >&2
+            count2=$((count++))
+            count=$count2
             sleep 1
         done
         
         # Load the dump
         if [ -f $2 ]
         then
-            su $ejabberdUser -s /bin/sh -c "$ejabberdctl load $2"
+            su - $ejabberdUser -s /bin/sh -c "$ejabberdctl load $2"
         elif [ -d $2 ]
         then
-            su $ejabberdUser -s /bin/sh -c "$ejabberdctl load $2/ejabberd-dump/*"
+            su - $ejabberdUser -s /bin/sh -c "$ejabberdctl load $2/ejabberd-dump/*"
         fi
         
         markComponentAsActive
@@ -63,7 +65,7 @@ case "$1" in
         chown $ejabberdUser $tmpdir
         cd $tmpdir
         
-        su $ejabberdUser -s /bin/sh -c "$ejabberdctl dump $tmpdir/dump"
+        su - $ejabberdUser -s /bin/sh -c "$ejabberdctl dump $tmpdir/dump"
         
         hash=$(cat dump | sha256sum)
         hash=${hash:0:64}
@@ -86,7 +88,7 @@ case "$1" in
         
         if [ "$lastSnapshot" != "" ]
         then
-            su $ejabberdUser -s /bin/sh -c "$ejabberdctl load $lastSnapshot/dump"
+            su - $ejabberdUser -s /bin/sh -c "$ejabberdctl load $lastSnapshot/dump"
         fi
         ;;
     collect-garbage)
