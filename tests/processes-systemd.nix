@@ -215,11 +215,11 @@ makeTest {
       $machine->mustSucceed("dysnomia --type process --operation activate --component ${process_socketactivation} --environment");
       $machine->mustSucceed("sleep 5");
       $machine->mustFail("ps aux | grep ${process_socketactivation} | grep -v grep");
-      $machine->mustSucceed("netcat -z -n -v 127.0.0.1 5123");
+      $machine->mustSucceed("nc -z -n -v 127.0.0.1 5123");
       $machine->mustSucceed("ps aux | grep ${process_socketactivation} | grep -v grep");
       $machine->mustSucceed("dysnomia --type process --operation deactivate --component ${process_socketactivation} --environment");
       $machine->mustSucceed("sleep 5");
       $machine->mustFail("ps aux | grep ${process_socketactivation} | grep -v grep");
-      $machine->mustFail("netcat -z -n -v 127.0.0.1 5123");
+      $machine->mustFail("nc -z -n -v 127.0.0.1 5123");
     '';
 }

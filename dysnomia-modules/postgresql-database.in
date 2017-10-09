@@ -14,7 +14,7 @@ shopt -s nullglob
 #
 # Container properties (environment variables):
 # postgresqlUsername: Username of the account that has the privileges to
-#    administer the database
+#    administer the database (defaults to: postgres)
 
 # Autoconf settings
 export prefix=@prefix@
@@ -28,13 +28,13 @@ composeUtilityVariables $0 $2 $3
 case "$1" in
     activate)
         # Initalize the given schema if the database does not exists
-        if [ "$(psql -lqt | cut -d \| -f 1 | grep -w "$componentName" | wc -l)" = "0" ]
+        if [ "$(su $postgresqlUsername -s /bin/sh -c "psql -lqt | cut -d \| -f 1 | grep -w "$componentName" | wc -l")" = "0" ]
         then
-            @createdb@ -O $postgresqlUsername $componentName
-            
+            su $postgresqlUsername -s /bin/sh -c "@createdb@ -O $postgresqlUsername $componentName"
+
             if [ -d $2/postgresql-databases ]
             then
-                su $postgresqlUsername -c "psql --file $2/postgresql-databases/*.sql $componentName"
+                su $postgresqlUsername -s /bin/sh -c "psql --file $2/postgresql-databases/*.sql $componentName"
             fi
         fi
         markComponentAsActive
@@ -44,9 +44,10 @@ case "$1" in
         ;;
     snapshot)
         tmpdir=$(mktemp -d)
+        chown $postgresqlUsername $tmpdir
         cd $tmpdir
         
-        @pg_dump@ $componentName | xz > dump.pgsql.xz
+        su $postgresqlUsername -s /bin/sh -c "@pg_dump@ $componentName | xz > dump.pgsql.xz"
         
         hash=$(cat dump.pgsql.xz | sha256sum)
         hash=${hash:0:64}
@@ -60,24 +61,23 @@ case "$1" in
             mkdir -p $snapshotsPath/$hash
             mv dump.pgsql.xz $snapshotsPath/$hash
             rmdir $tmpdir
-            
         fi
         createGenerationSymlink $hash
         ;;
     restore)
         lastSnapshot=$(determineLastSnapshot)
-        
+
         if [ "$lastSnapshot" != "" ]
         then
-            dropdb $componentName
-            @createdb@ -O $postgresqlUsername $componentName
-            su $postgresqlUsername -c "xzcat $lastSnapshot/dump.pgsql.xz | psql --file - $componentName"
+            su $postgresqlUsername -s /bin/sh -c "dropdb $componentName"
+            su $postgresqlUsername -s /bin/sh -c "@createdb@ -O $postgresqlUsername $componentName"
+            su $postgresqlUsername -s /bin/sh -c "xzcat $lastSnapshot/dump.pgsql.xz | psql --file - $componentName"
         fi
         ;;
     collect-garbage)
         if componentMarkedAsGarbage
         then
-            dropdb $componentName
+            su $postgresqlUsername -s /bin/sh -c "dropdb $componentName"
             unmarkComponentAsGarbage
         fi
         ;;

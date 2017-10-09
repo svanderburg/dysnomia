@@ -138,7 +138,7 @@ makeTest {
       }
       
       # Check whether the PostgreSQL database has been created.
-      $result = $machine->mustSucceed("echo 'select * from test' | psql --file - testdb");
+      $result = $machine->mustSucceed("echo 'select * from test' | su postgres -s /bin/sh -c 'psql --file - testdb'");
       
       if($result =~ /Hello world/) {
           print "PostgreSQL query returns: Hello world!\n";
@@ -168,7 +168,7 @@ makeTest {
       # Modify the state of the databases
       
       $machine->mustSucceed("echo \"insert into test values ('Bye world');\" | mysql --user=root --password=verysecret -N testdb");
-      $machine->mustSucceed("echo \"insert into test values ('Bye world');\" | psql --file - testdb");
+      $machine->mustSucceed("echo \"insert into test values ('Bye world');\" | su postgres -s /bin/sh -c 'psql --file - testdb'");
       
       # Restore the state of the databases and check whether the modifications
       # are gone.
@@ -183,7 +183,7 @@ makeTest {
           print "MySQL does not contain: Bye world!\n";
       }
       
-      $result = $machine->mustSucceed("echo 'select * from test' | psql --file - testdb");
+      $result = $machine->mustSucceed("echo 'select * from test' | su postgres -s /bin/sh -c 'psql --file - testdb'");
       
       if($result =~ /Bye world/) {
           die "PostgreSQL table should not contain: Bye world!\n";
