@@ -21,7 +21,7 @@ $ ejabberdctl
 - Create an admin account:
 
 ```
-$ su ejabberd -s /bin/sh -c "ejabberdctl register admin localhost admin"
+$ su ejabberd -s /bin/sh -c "ejabberdctl --spool /var/lib/ejabberd register admin localhost admin"
 ```
 
 - Make a copy of the config file:
