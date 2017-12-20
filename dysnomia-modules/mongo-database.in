@@ -12,6 +12,7 @@ shopt -s nullglob
 # This module also support snapshotting. It uses the output hash of the dump to
 # uniquely identify each snapshot.
 #
+# mongoDumpArgs: Optional arguments passed to the mongodump command-line invocation
 # mongoRestoreArgs: Optional arguments passed to the monogorestore command-line invocation
 
 # Autoconf settings
@@ -45,7 +46,7 @@ case "$1" in
         tmpdir=$(mktemp -d)
         cd $tmpdir
         
-        @mongodump@ -d $componentName -o .
+        @mongodump@ $mongoDumpArgs -d $componentName -o .
         hash=$((for i in $componentName/*; do echo $i; cat $i; done) | sha256sum)
         hash=${hash:0:64}
         
