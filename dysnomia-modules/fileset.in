@@ -1,0 +1,134 @@
+#!/bin/bash
+set -e
+set -o pipefail
+
+# Autoconf settings
+export prefix=@prefix@
+
+# Import utility functions
+source @datadir@/@PACKAGE@/util
+
+# Sets a number of common utility environment variables
+composeUtilityVariables $0 $2 $3
+
+composeDirectoryList()
+{
+    cat $1/.dysnomia-fileset | while read i
+    do
+        action=$(echo "$i" | cut -f 1 -d ' ' -)
+        path=$(echo "$i" | cut -f 2- -d ' ' -)
+
+        case "$action" in
+            symlink)
+                # Do nothing
+                ;;
+            mkdir)
+                echo "$path"
+                ;;
+            *)
+                echo "Unknown action: $action"
+                ;;
+        esac
+    done
+}
+
+composeSymlinkList()
+{
+    cat $1/.dysnomia-fileset | while read i
+    do
+        action=$(echo "$i" | cut -f 1 -d ' ' -)
+        path=$(echo "$i" | cut -f 2- -d ' ' -)
+
+        case "$action" in
+            symlink)
+                echo "$(basename "$path")"
+                ;;
+            mkdir)
+                # Do nothing
+                ;;
+            *)
+                echo "Unknown action: $action"
+                ;;
+        esac
+    done
+}
+
+targetDir=$(cat $2/.dysnomia-targetdir)
+
+case "$1" in
+    activate)
+        mkdir -p $targetDir
+        cd $targetDir
+
+        cat $2/.dysnomia-fileset | while read i
+        do
+            action=$(echo "$i" | cut -f 1 -d ' ' -)
+            path=$(echo "$i" | cut -f 2- -d ' ' -)
+
+            case "$action" in
+                symlink)
+                    ln -sfn "$path"
+                    ;;
+                mkdir)
+                    mkdir -p "$path"
+                    ;;
+                *)
+                    echo "Unknown action: $action"
+                    exit 1
+                    ;;
+            esac
+        done
+
+        markComponentAsActive
+        ;;
+
+    deactivate)
+        cd $targetDir
+        composeSymlinkList "$2" | xargs rm -f
+        markComponentAsGarbage
+        ;;
+
+    snapshot)
+        cd $targetDir
+
+        snapshotsPath=$(composeSnapshotsPath)
+        snapshotFile=$(mktemp state.XXXXXXXXX)
+
+        composeDirectoryList "$2" | xargs tar cfvJ $snapshotFile
+
+        hash=$(cat $snapshotFile | sha256sum)
+        hash=${hash:0:64}
+
+        if [ -d $snapshotsPath/$hash ]
+        then
+            rm $snapshotFile
+        else
+            mkdir -p $snapshotsPath/$hash
+            mv $snapshotFile $snapshotsPath/$hash/state.tar.xz
+        fi
+
+        createGenerationSymlink $hash
+        ;;
+
+    restore)
+        cd $targetDir
+
+        lastSnapshot=$(determineLastSnapshot)
+
+        if [ "$lastSnapshot" != "" ]
+        then
+            composeDirectoryList "$2" | xargs rm -rf
+            tar xfv $lastSnapshot/state.tar.xz
+        fi
+        ;;
+
+    collect-garbage)
+        cd $targetDir
+
+        if componentMarkedAsGarbage
+        then
+            composeDirectoryList "$2" | xargs rm -rf
+            unmarkComponentAsGarbage
+        fi
+        ;;
+esac

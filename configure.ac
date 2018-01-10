@@ -162,6 +162,7 @@ scripts/dysnomia-snapshots
 scripts/Makefile
 dysnomia-modules/apache-webapplication
 dysnomia-modules/nixos-configuration
+dysnomia-modules/fileset
 dysnomia-modules/process
 dysnomia-modules/wrapper
 dysnomia-modules/Makefile
