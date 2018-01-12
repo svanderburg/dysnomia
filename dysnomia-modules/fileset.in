@@ -22,6 +22,9 @@ composeDirectoryList()
             symlink)
                 # Do nothing
                 ;;
+            target)
+                # Do nothing
+                ;;
             mkdir)
                 echo "$path"
                 ;;
@@ -41,7 +44,10 @@ composeSymlinkList()
 
         case "$action" in
             symlink)
-                echo "$(basename "$path")"
+                symlink="$(basename "$path")"
+                ;;
+            target)
+                echo "$path/$symlink"
                 ;;
             mkdir)
                 # Do nothing
@@ -53,7 +59,10 @@ composeSymlinkList()
     done
 }
 
-targetDir=$(cat $2/.dysnomia-targetdir)
+if [ "$targetDir" = "" ]
+then
+    targetDir=$(cat $2/.dysnomia-targetdir)
+fi
 
 case "$1" in
     activate)
@@ -67,7 +76,11 @@ case "$1" in
 
             case "$action" in
                 symlink)
-                    ln -sfn "$path"
+                    symlink="$path"
+                    ;;
+                target)
+                    mkdir -p "$path"
+                    ln -sfn "$symlink" "$path"
                     ;;
                 mkdir)
                     mkdir -p "$path"
@@ -85,6 +98,30 @@ case "$1" in
     deactivate)
         cd $targetDir
         composeSymlinkList "$2" | xargs rm -f
+        cat $2/.dysnomia-fileset | while read i
+        do
+            action=$(echo "$i" | cut -f 1 -d ' ' -)
+            path=$(echo "$i" | cut -f 2- -d ' ' -)
+
+            case "$action" in
+                symlink)
+                    # Ignore
+                    ;;
+                target)
+                    if [ "$path" != "." ] && [ -d "$path" ]
+                    then
+                        rmdir --ignore-fail-on-non-empty "$path"
+                    fi
+                    ;;
+                mkdir)
+                    # Ignore
+                    ;;
+                *)
+                    echo "Unknown action: $action"
+                    exit 1
+                    ;;
+            esac
+        done
         markComponentAsGarbage
         ;;
 

@@ -24,21 +24,39 @@ fi
 
 case "$1" in
     activate)
-        mkdir -p $documentRoot
-        
-        ls $(readlink -f $2/webapps) | while read i
-        do
-            ln -sfn $2/webapps/$i $documentRoot
-        done
-        
-        markComponentAsActive
+        mkdir -p "$documentRoot"
+
+        if [ -f "$2/.dysnomia-fileset" ]
+        then
+            export targetDir="$documentRoot"
+            @libexecdir@/fileset activate "$2" apache-webapplication
+        else
+            ls $(readlink -f $2/webapps) | while read i
+            do
+                ln -sfn $2/webapps/$i $documentRoot
+                markComponentAsActive
+            done
+        fi
         ;;
     deactivate)
-        ls $(readlink -f $2/webapps) | while read i
-        do
-            rm -f $documentRoot/$(basename $i)
-        done
-        
-        unmarkComponentAsActive
+        if [ -f "$2/.dysnomia-fileset" ]
+        then
+            export targetDir="$documentRoot"
+            @libexecdir@/fileset deactivate "$2" apache-webapplication
+        else
+            ls $(readlink -f $2/webapps) | while read i
+            do
+                rm -f $documentRoot/$(basename $i)
+                unmarkComponentAsActive
+            done
+        fi
+        ;;
+
+    snapshot|restore|collect-garbage)
+        if [ -f "$2/.dysnomia-fileset" ]
+        then
+            export targetDir="$documentRoot"
+            @libexecdir@/fileset "$1" "$2" apache-webapplication
+        fi
         ;;
 esac

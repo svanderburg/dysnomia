@@ -47,6 +47,10 @@ let
             inherit nixpkgs tarball buildFun;
           };
 
+          apache-webapplication-with-state = import ./tests/apache-webapplication-with-state.nix {
+            inherit nixpkgs tarball buildFun;
+          };
+
           echo = import ./tests/echo.nix {
             inherit nixpkgs tarball buildFun;
           };

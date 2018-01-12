@@ -14,6 +14,7 @@ stdenv.mkDerivation {
 
     cat > $out/.dysnomia-fileset <<EOF
     symlink $out/bin
+    target .
     mkdir files
     EOF
   '';
