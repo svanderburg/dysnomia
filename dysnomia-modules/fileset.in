@@ -15,8 +15,8 @@ composeDirectoryList()
 {
     cat $1/.dysnomia-fileset | while read i
     do
-        action=$(echo "$i" | cut -f 1 -d ' ' -)
-        path=$(echo "$i" | cut -f 2- -d ' ' -)
+        local action=$(echo "$i" | cut -f 1 -d ' ' -)
+        local path=$(echo "$i" | cut -f 2- -d ' ' -)
 
         case "$action" in
             symlink)
@@ -35,33 +35,33 @@ composeDirectoryList()
     done
 }
 
-composeSymlinkList()
+removeDirectories()
 {
-    cat $1/.dysnomia-fileset | while read i
+    composeDirectoryList "$1" | while read i
     do
-        action=$(echo "$i" | cut -f 1 -d ' ' -)
-        path=$(echo "$i" | cut -f 2- -d ' ' -)
+        rm -rf "$i"
+        local baseDir="$(dirname "$i")"
 
-        case "$action" in
-            symlink)
-                symlink="$(basename "$path")"
-                ;;
-            target)
-                echo "$path/$symlink"
-                ;;
-            mkdir)
-                # Do nothing
-                ;;
-            *)
-                echo "Unknown action: $action"
-                ;;
-        esac
+        if [ "$baseDir" != "." ] && [ -d "$baseDir" ]
+        then
+            rmdir -p --ignore-fail-on-non-empty "$baseDir"
+        fi
     done
 }
 
 if [ "$targetDir" = "" ]
 then
     targetDir=$(cat $2/.dysnomia-targetdir)
+fi
+
+if [ "$filesetOwner" = "" ]
+then
+    if [ -f "$2/.dysnomia-filesetowner" ]
+    then
+        filesetOwner="$(cat $2/.dysnomia-filesetowner)"
+    else
+        filesetOwner="$(whoami):$(id -gn)"
+    fi
 fi
 
 case "$1" in
@@ -84,6 +84,7 @@ case "$1" in
                     ;;
                 mkdir)
                     mkdir -p "$path"
+                    chown "$filesetOwner" "$path"
                     ;;
                 *)
                     echo "Unknown action: $action"
@@ -97,7 +98,7 @@ case "$1" in
 
     deactivate)
         cd $targetDir
-        composeSymlinkList "$2" | xargs rm -f
+
         cat $2/.dysnomia-fileset | while read i
         do
             action=$(echo "$i" | cut -f 1 -d ' ' -)
@@ -105,12 +106,16 @@ case "$1" in
 
             case "$action" in
                 symlink)
-                    # Ignore
+                    symlink="$path"
                     ;;
                 target)
-                    if [ "$path" != "." ] && [ -d "$path" ]
+                    symlinkTarget="$path/$(basename "$symlink")"
+                    rm -f "$symlinkTarget"
+                    baseDir="$(dirname "$symlinkTarget")"
+
+                    if [ "$baseDir" != "." ] && [ -d "$baseDir" ]
                     then
-                        rmdir --ignore-fail-on-non-empty "$path"
+                        rmdir --ignore-fail-on-non-empty -p "$baseDir"
                     fi
                     ;;
                 mkdir)
@@ -154,8 +159,9 @@ case "$1" in
 
         if [ "$lastSnapshot" != "" ]
         then
-            composeDirectoryList "$2" | xargs rm -rf
+            removeDirectories "$2"
             tar xfv $lastSnapshot/state.tar.xz
+            composeDirectoryList "$2" | xargs chown -R "$filesetOwner"
         fi
         ;;
 
@@ -164,7 +170,7 @@ case "$1" in
 
         if componentMarkedAsGarbage
         then
-            composeDirectoryList "$2" | xargs rm -rf
+            removeDirectories "$2"
             unmarkComponentAsGarbage
         fi
         ;;

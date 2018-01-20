@@ -5,8 +5,12 @@ set -o pipefail
 # Activates or deactivates the web applications in the webapps/ subfolder by
 # symlinking them into the document root folder of the Apache HTTP server.
 #
+# When the component embeds a .dysnomia-fileset file in its root folder, then
+# it will also do state management
+#
 # Container properties (environment variables):
 # documentRoot: Path to the document root folder (defaults to: /var/www)
+# filesetOwner: Username and group that owns the state files (defaults to: wwwrun:wwwrun)
 
 # Autoconf settings
 export prefix=@prefix@
@@ -16,6 +20,15 @@ source @datadir@/@PACKAGE@/util
 
 # Sets a number of common utility environment variables
 composeUtilityVariables $0 $2 $3
+
+configureFilesetProperties()
+{
+    export targetDir="$documentRoot"
+    if [ "$filesetOwner" = "" ]
+    then
+        export filesetOwner="wwwrun:wwwrun"
+    fi
+}
 
 if [ "$documentRoot" = "" ]
 then
@@ -28,7 +41,7 @@ case "$1" in
 
         if [ -f "$2/.dysnomia-fileset" ]
         then
-            export targetDir="$documentRoot"
+            configureFilesetProperties
             @libexecdir@/fileset activate "$2" apache-webapplication
         else
             ls $(readlink -f $2/webapps) | while read i
@@ -41,7 +54,7 @@ case "$1" in
     deactivate)
         if [ -f "$2/.dysnomia-fileset" ]
         then
-            export targetDir="$documentRoot"
+            configureFilesetProperties
             @libexecdir@/fileset deactivate "$2" apache-webapplication
         else
             ls $(readlink -f $2/webapps) | while read i
@@ -55,7 +68,7 @@ case "$1" in
     snapshot|restore|collect-garbage)
         if [ -f "$2/.dysnomia-fileset" ]
         then
-            export targetDir="$documentRoot"
+            configureFilesetProperties
             @libexecdir@/fileset "$1" "$2" apache-webapplication
         fi
         ;;
