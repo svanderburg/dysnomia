@@ -71,6 +71,8 @@ be optionally enabled/disabled:
   activation or deactivation. Useful for debugging purposes.
 * `ejabberd-dump`. Deploys an [Ejabberd](http://www.ejabberd.im) configuration
   database.
+* `fileset`. Deploys a directory on the filesystem that is populated with
+  static/immutable and dynamic/mutable files.
 * `iis-webapplication`. Deploys a web application in a document root folder of
   the [Internet Information Services](http://www.iis.net) (IIS) server.
 * `mongo-database`. Deploys a [MongoDB](http://www.mongodb.org) database inside

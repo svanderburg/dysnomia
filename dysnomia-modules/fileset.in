@@ -2,6 +2,44 @@
 set -e
 set -o pipefail
 
+# Manages a set of files in a directory consisting of symlinks referring to
+# static files (that are read-only and immutable) and directories containing
+# dynamic (and mutable) files.
+#
+# Component properties:
+#
+# Deployment is driven by the following hidden files that must be bundled in the
+# root of the component's configuration folder:
+# * The .dysnomia-targetdir files contains an absolute path to the directory
+#     that must be managed
+# * The .dysnomia-filesetowner contains a colon-separated string that changes
+#     the ownership of the dynamic folders (optional)
+# * The .dysnomia-fileset file contains a declarative specification describing
+#     how to populate the target directory
+#
+# The .dysnomia-fileset file is a specification used to synthesize the directory
+# contents of the target directory. It is newline separated and currently
+# supports the following entries:
+#
+# mkdir <path>
+#
+# The above entry creates a directory with mutable/dynamic files, relative
+# to the target directory.
+#
+# symlink <absolute_path>
+# target <path>
+#
+# The above entry creates a symlink to a immutable/static file, with its
+# target relative to the target directory.
+#
+# Container properties (environment variables):
+# targetDir: Target directory in which symlinks or directories must be created
+#     (defaults to value provided by the .dysnomia-targetdir file)
+# filesetOwner: Colon separated string that changes the ownership of the
+#     created directories (defaults to the contents of the
+#     .dysnomia-filesetowner file or alternatively, the username and group of
+#     the caller)
+
 # Autoconf settings
 export prefix=@prefix@
 

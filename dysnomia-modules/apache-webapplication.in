@@ -6,7 +6,8 @@ set -o pipefail
 # symlinking them into the document root folder of the Apache HTTP server.
 #
 # When the component embeds a .dysnomia-fileset file in its root folder, then
-# it will also do state management
+# it will also do state management. It will invoke operations of the fileset
+# module to accomplish this.
 #
 # Container properties (environment variables):
 # documentRoot: Path to the document root folder (defaults to: /var/www)
