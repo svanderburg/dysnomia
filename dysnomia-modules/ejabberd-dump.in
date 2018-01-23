@@ -101,4 +101,17 @@ case "$1" in
             unmarkComponentAsGarbage
         fi
         ;;
+    shell)
+        cat <<EOF
+This is a shell session that can be used to control the '$componentName' Ejabberd database.
+
+Module specific environment variables:
+ejabberdUser  Username of the account that has the privileges to administer
+              the ejabberd node
+
+Some useful commands:
+su - $ejabberdUser -s /bin/sh  Get ejabberd administation privileges
+$ejabberdctl                   Run the ejabberd control tool
+EOF
+        ;;
 esac

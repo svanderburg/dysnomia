@@ -46,6 +46,12 @@ case "$1" in
     collect-garbage)
         echo "Echo module: Collect garbage of service: $2"
         ;;
+
+    # Script that gets executed when spawning a shell session. It is typically
+    # used to provide usage instructions to the user.
+    shell)
+        echo "This is the echo shell session"
+        ;;
 esac
 
 # Print the environment variables

@@ -1,5 +1,7 @@
 Version 0.8
 ===========
+- Added --shell parameter to dysnomia that can be used to spawn shell sessions in which container properties can be directly used. This is useful for arbitrary maintenance tasks.
+
 - new fileset module that can be used to manage directories with mutable and immutable files
 
 Version 0.7

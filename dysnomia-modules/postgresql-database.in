@@ -81,4 +81,17 @@ case "$1" in
             unmarkComponentAsGarbage
         fi
         ;;
+    shell)
+        cat <<EOF
+This is a shell session that can be used to control the '$componentName' PostgreSQL database.
+
+Module specific environment variables:
+postgresqlUsername  Username of the account that has the privileges to administer
+                    the database
+
+Some useful commands:
+su $postgresqlUsername -s /bin/sh  Open a shell session having administration privileges to PostgreSQL
+psql $componentName  Open a PostgreSQL interactive terminal
+EOF
+        ;;
 esac

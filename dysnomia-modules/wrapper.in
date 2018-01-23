@@ -161,4 +161,7 @@ case "$1" in
     collect-garbage)
         $2/bin/wrapper collect-garbage
         ;;
+    shell)
+        $2/bin/wrapper shell
+        ;;
 esac

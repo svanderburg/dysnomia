@@ -65,12 +65,16 @@ case "$1" in
             done
         fi
         ;;
-
     snapshot|restore|collect-garbage)
         if [ -f "$2/.dysnomia-fileset" ]
         then
             configureFilesetProperties
             @libexecdir@/fileset "$1" "$2" apache-webapplication
         fi
+        ;;
+    shell)
+        cat <<EOF
+This is a shell session that can be used to control the '$componentName' Apache web application.
+EOF
         ;;
 esac

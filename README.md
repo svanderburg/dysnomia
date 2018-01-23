@@ -116,11 +116,13 @@ parameters.
 file exists. However, this target file is not created by default. You need to do
 this yourself first. The following command typically suffices:
 
-    $ cat > /etc/systemd-mutable/system/dysnomia.target <<EOF
-    [Unit]
-    Description=Services that are activated and deactivated by Dysnomia
-    After=final.target
-    EOF
+```bash
+$ cat > /etc/systemd-mutable/system/dysnomia.target <<EOF
+[Unit]
+Description=Services that are activated and deactivated by Dysnomia
+After=final.target
+EOF
+```
 
 Apart from `systemd`, Dysnomia can also be used to generate plain old `init.d`
 scripts instead. The template that is used to generate these scripts reside in
@@ -296,6 +298,21 @@ The amount of snapshots that must be kept can be adjusted by providing the
 
 The above command states that the last 3 generations of snapshots should be
 kept.
+
+Spawning a shell session for arbitrary maintenance or debugging tasks
+---------------------------------------------------------------------
+When incidents occur and it is desired to debug or execute arbitrary maintenance
+tasks, it can be somewhat annoying to manually configure all properties so that
+we connect to a component deployed to a container.
+
+The Dysnomia shell can be used to spawn a session in which the environment
+variables are configured to contain the container's configuration properties:
+
+    $ dysnomia --shell --component ~/testdb --container ~/mysql-production
+
+In addition to a shell session that contains a container configuration
+properties, a Dysnomia module also typically displays command-line tool
+suggestions to the user executing common housekeeping tasks.
 
 Managing collections of containers
 ==================================
@@ -578,6 +595,12 @@ case "$1" in
     collect-garbage)
         echo "Echo module: Collect garbage of service: $2"
         ;;
+
+    # Script that gets executed when spawning a shell session. It is typically
+    # used to provide usage instructions to the user.
+    shell)
+        echo "This is the echo shell session"
+        ;;
 esac
 
 # Print the environment variables
@@ -681,6 +704,11 @@ case "$1" in
             exampleDeleteState
             unmarkComponentAsGarbage
         fi
+        ;;
+    shell)
+        cat <<EOF
+This is a shell session that can be used to control the '$componentName' database.
+EOF
         ;;
 esac
 ```

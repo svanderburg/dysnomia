@@ -212,4 +212,18 @@ case "$1" in
             unmarkComponentAsGarbage
         fi
         ;;
+
+    shell)
+        cat <<EOF
+This is a shell session that can be used to control the '$componentName' fileset
+
+Module specific environment variables:
+targetDir     Target directory in which symlinks or directories must be created
+              (defaults to value provided by the .dysnomia-targetdir file)
+filesetOwner  Colon separated string that changes the ownership of the
+              created directories (defaults to the contents of the
+              .dysnomia-filesetowner file or alternatively, the username and
+              group of the caller)
+EOF
+        ;;
 esac

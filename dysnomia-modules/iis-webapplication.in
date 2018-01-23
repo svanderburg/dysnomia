@@ -48,4 +48,9 @@ case "$1" in
         
         unmarkComponentAsActive
         ;;
+    shell)
+        cat <<EOF
+This is a shell session that can be used to control the '$componentName' IIS web application.
+EOF
+        ;;
 esac

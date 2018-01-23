@@ -29,6 +29,8 @@ showUsage()
     cat <<EOF
 Usage: $0 --operation OPERATION --component COMPONENT --container CONTAINER
   or: $0 --operation OPERATION --component COMPONENT --type TYPE --environment
+  or: $0 --shell --component COMPONENT --container CONTAINER
+  or: $0 --shell --component COMPONENT --type TYPE --environment
 
 The command \`dysnomia' modifies the state of a container in which a mutable
 component is hosted. This tool can be used to execute various deployment
@@ -42,6 +44,9 @@ Options:
   -C, --container=CONTAINER  Name of (or path to) a configuration describing the
                              container in which the mutable component should be
                              hosted
+  --shell                    Spawns a shell session in which all the containers
+                             properties are available as environment variables.
+  --command=COMMAND          Commands to execute in the shell session
   -E, --environment          Takes the container settings from the current
                              environment. Be careful with this!
   -t, --type=TYPE            Specifies Dysnomia to use the specified Dysnomia
@@ -90,7 +95,7 @@ export exec_prefix=@exec_prefix@
 
 # Parse valid argument options
 
-PARAMS=`@getopt@ -n $0 -o o:c:C:Et:hv -l operation:,component:,container:,environment,type:,help,version -- "$@"`
+PARAMS=`@getopt@ -n $0 -o o:c:C:Et:hv -l operation:,component:,container:,shell,command:,environment,type:,help,version -- "$@"`
 
 if [ $? != 0 ]
 then
@@ -113,6 +118,15 @@ do
             ;;
         -C|--container)
             container="$2"
+            ;;
+        --shell)
+            operation="shell"
+            shellOperation=1
+            ;;
+        --command)
+            commands="$2"
+            newline=$'\n'
+            commands="$commands$newline""exit"
             ;;
         -E|--environment)
             useEnvironment=1
@@ -247,38 +261,103 @@ then
     exit 1
 fi
 
-# Forward the requested operation to the Dysnomia module
+# Helper function that configures environment variables for the shell session
+composeSessionEnvironmentVariables()
+{
+    if [ "$containerConfig" != "" ]
+    then
+        cat $containerConfig | while read i
+        do
+            varName=$(echo ${i%%=*} | sed 's/"/\\"/g' )
 
-( echo $envFlags
-  
-  if [ "$containerConfig" != "" ]
-  then
-      cat $containerConfig | while read i
-      do
-          varName=$(echo ${i%%=*} | sed 's/"/\\"/g' )
-          
-          if [ "$varName" != "" ] && [ "$varName" != "type" ]
-          then
-              ( eval $i
-                
-                if declare -p $varName 2> /dev/null | grep -q 'declare \-a'
-                then
-                    varRef="$varName[@]"
-                    value=${!varRef}
-                else
-                    value=${!varName}
-                fi
-                
-                echo "$varName=$value"
-              )
-          fi
-      done
-  fi
-  
-  echo "PATH=$PATH"
-  echo "DYSNOMIA_STATEDIR=$DYSNOMIA_STATEDIR"
-  echo "$module"
-  echo "$operation"
-  echo "$componentFile"
-  echo "$container"
-) | xargs env
+            if [ "$varName" != "" ] && [ "$varName" != "type" ]
+            then
+                ( eval $i
+
+                  if declare -p $varName 2> /dev/null | grep -q 'declare \-a'
+                  then
+                      varRef="$varName[@]"
+                      value=${!varRef}
+                  else
+                      value=${!varName}
+                  fi
+
+                  echo "export $varName=$value"
+                )
+            fi
+        done
+    fi
+}
+
+if [ "$shellOperation" = "1" ]
+then
+    # Execute shell session
+
+    TMPDIR=$(mktemp -d)
+    cat > $TMPDIR/rc <<EOF
+# Remove tempdir
+rm -rf $TMPDIR
+
+# Set a prompt that clearly shows the user that we are in a dysnomia shell
+if [ -n "\$PS1" ]
+then
+    [ -e ~/.bashrc ] && source ~/.bashrc
+    export PS1="\n\[\033[1;32m\][dysnomia-shell:\w]$\[\033[0m\] "
+fi
+
+# Set configuration properties and invoke shell activity
+$(composeSessionEnvironmentVariables)
+source "$module" shell "$componentFile" "$container"
+
+# Set general convenience environment variables
+export this_dysnomia_module="$module"
+export this_component="$componentFile"
+export this_container="$container"
+
+# Display general documentation
+echo
+echo "General environment variables:"
+echo "this_dysnomia_module     Path to the Dysnomia module"
+echo "this_component           Path to the mutable component"
+echo "this_container           Path to the container configuration file"
+
+$commands
+EOF
+    bash --rcfile $TMPDIR/rc
+else
+    # Forward the requested operation to the Dysnomia module
+
+    ( echo $envFlags
+
+      if [ "$containerConfig" != "" ]
+      then
+          cat $containerConfig | while read i
+          do
+              varName=$(echo ${i%%=*} | sed 's/"/\\"/g' )
+
+              if [ "$varName" != "" ] && [ "$varName" != "type" ]
+              then
+                  ( eval $i
+
+                    if declare -p $varName 2> /dev/null | grep -q 'declare \-a'
+                    then
+                        varRef="$varName[@]"
+                        value=${!varRef}
+                    else
+                        value=${!varName}
+                    fi
+
+                    echo "$varName=$value"
+                  )
+              fi
+          done
+      fi
+
+      echo "PATH=$PATH"
+      echo "DYSNOMIA_STATEDIR=$DYSNOMIA_STATEDIR"
+      echo "$module"
+      echo "$operation"
+      echo "$componentFile"
+      echo "$container"
+    ) | xargs env
+fi

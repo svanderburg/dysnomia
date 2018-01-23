@@ -91,4 +91,19 @@ case "$1" in
             unmarkComponentAsGarbage
         fi
         ;;
+    shell)
+        cat <<EOF
+This is a shell session that can be used to control the '$componentName' MySQL database.
+
+Module specific environment variables:
+mysqlUsername  Username of the account that has the privileges to administer
+               the database
+mysqlPassword  Password of the above account
+mysqlSocket    Path to the UNIX domain socket that is used to connect to the
+               server (optional)
+
+Some useful commands:
+@mysql@ $socketArg --user=$mysqlUsername --password=$mysqlPassword  Start a MySQL interactive terminal
+EOF
+        ;;
 esac

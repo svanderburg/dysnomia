@@ -63,4 +63,9 @@ case "$1" in
         done
         unmarkComponentAsActive
         ;;
+    shell)
+        cat <<EOF
+This is a shell session that can be used to control the '$componentName' Tomcat web application.
+EOF
+        ;;
 esac
