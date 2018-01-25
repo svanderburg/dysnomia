@@ -110,7 +110,7 @@ ejabberdUser  Username of the account that has the privileges to administer
               the ejabberd node
 
 Some useful commands:
-su - $ejabberdUser -s /bin/sh  Get ejabberd administation privileges
+su - \$ejabberdUser -s /bin/sh  Get ejabberd administation privileges
 $ejabberdctl                   Run the ejabberd control tool
 EOF
         ;;

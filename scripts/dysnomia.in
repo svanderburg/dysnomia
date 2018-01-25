@@ -302,7 +302,11 @@ rm -rf $TMPDIR
 if [ -n "\$PS1" ]
 then
     [ -e ~/.bashrc ] && source ~/.bashrc
-    export PS1="\n\[\033[1;32m\][dysnomia-shell:\w]$\[\033[0m\] "
+
+    PROMPT_COLOR="1;32m"
+    [ "\$UID" = "0" ] && PROMPT_COLOR="1;31m"
+
+    export PS1="\n\[\033[\$PROMPT_COLOR\][dysnomia-shell:\w]\\\\$\[\033[0m\] "
 fi
 
 # Set configuration properties and invoke shell activity
