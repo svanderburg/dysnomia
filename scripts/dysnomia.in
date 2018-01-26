@@ -313,17 +313,21 @@ fi
 $(composeSessionEnvironmentVariables)
 source "$module" shell "$componentFile" "$container"
 
+# Don't exit the shell after error
+set +e
+
 # Set general convenience environment variables
 export this_dysnomia_module="$module"
 export this_component="$componentFile"
 export this_container="$container"
 
 # Display general documentation
-echo
-echo "General environment variables:"
-echo "this_dysnomia_module     Path to the Dysnomia module"
-echo "this_component           Path to the mutable component"
-echo "this_container           Path to the container configuration file"
+( echo
+  echo "General environment variables:"
+  echo "this_dysnomia_module     Path to the Dysnomia module"
+  echo "this_component           Path to the mutable component"
+  echo "this_container           Path to the container configuration file"
+) >&2
 
 $commands
 EOF

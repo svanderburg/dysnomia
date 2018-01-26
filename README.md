@@ -706,7 +706,7 @@ case "$1" in
         fi
         ;;
     shell)
-        cat <<EOF
+        cat >&2 <<EOF
 This is a shell session that can be used to control the '$componentName' database.
 EOF
         ;;

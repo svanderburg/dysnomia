@@ -50,7 +50,7 @@ case "$1" in
     # Script that gets executed when spawning a shell session. It is typically
     # used to provide usage instructions to the user.
     shell)
-        echo "This is the echo shell session"
+        echo "This is the echo shell session" >&2
         ;;
 esac
 

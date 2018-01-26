@@ -148,7 +148,7 @@ case "$1" in
         unmarkComponentAsActive
         ;;
     shell)
-        cat <<EOF
+        cat >&2 <<EOF
 This is a shell session that can be used to control the '$componentName'
 process.
 
@@ -158,7 +158,7 @@ EOF
 
         if [ "@job_template@" = "systemd" ]
         then
-            cat <<EOF
+            cat >&2 <<EOF
 systemctl start @systemd_rundir@/system/disnix-$serviceName.service  Start the process
 systemctl stop @systemd_rundir@/system/disnix-$serviceName.service   Stop the process
 journalctl -u @systemd_rundir@/system/disnix-$serviceName.service    Display log
