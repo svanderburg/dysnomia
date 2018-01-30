@@ -159,9 +159,9 @@ EOF
         if [ "@job_template@" = "systemd" ]
         then
             cat >&2 <<EOF
-systemctl start @systemd_rundir@/system/disnix-$serviceName.service  Start the process
-systemctl stop @systemd_rundir@/system/disnix-$serviceName.service   Stop the process
-journalctl -u @systemd_rundir@/system/disnix-$serviceName.service    Display log
+systemctl start disnix-$serviceName.service  Start the process
+systemctl stop disnix-$serviceName.service   Stop the process
+journalctl -u disnix-$serviceName.service    Display log
 EOF
         fi
         ;;
