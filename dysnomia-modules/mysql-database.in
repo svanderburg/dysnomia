@@ -103,7 +103,7 @@ mysqlSocket    Path to the UNIX domain socket that is used to connect to the
                server (optional)
 
 Some useful commands:
-@mysql@ $socketArg --user=\$mysqlUsername --password=\$mysqlPassword  Start a MySQL interactive terminal
+@mysql@ $socketArg --user=\$mysqlUsername --password=\$mysqlPassword $componentName Start a MySQL interactive terminal
 EOF
         ;;
 esac
