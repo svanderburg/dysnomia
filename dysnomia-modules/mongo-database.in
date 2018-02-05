@@ -85,7 +85,7 @@ case "$1" in
 This is a shell session that can be used to control the '$componentName' Mongo database.
 
 Some useful commands:
-@mongo@  Start MongoDB interactive terminal
+@mongo@ $componentName Start MongoDB interactive terminal
 EOF
         ;;
 esac
