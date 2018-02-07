@@ -86,6 +86,7 @@ case "$1" in
 This is a shell session that can be used to control the '$componentName' PostgreSQL database.
 
 Module specific environment variables:
+componentName       Name of the database
 postgresqlUsername  Username of the account that has the privileges to administer
                     the database
 

@@ -53,6 +53,7 @@ case "$1" in
 This is a shell session that can be used to control the '$componentName' MS SQL database.
 
 Module specific environment variables:
+componentName  Name of the database
 msSqlUsername  Username of the account that has the privileges to administer
                the database
 msSqlPassword  Password of the above account

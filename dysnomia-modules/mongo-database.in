@@ -84,6 +84,9 @@ case "$1" in
         cat >&2 <<EOF
 This is a shell session that can be used to control the '$componentName' Mongo database.
 
+Module specific environment variables:
+componentName       Name of the database
+
 Some useful commands:
 @mongo@ $componentName Start MongoDB interactive terminal
 EOF
