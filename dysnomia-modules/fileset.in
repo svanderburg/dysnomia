@@ -87,6 +87,63 @@ removeDirectories()
     done
 }
 
+createSymlinks()
+{
+    cat $1/.dysnomia-fileset | while read i
+    do
+        action=$(echo "$i" | cut -f 1 -d ' ' -)
+        path=$(echo "$i" | cut -f 2- -d ' ' -)
+
+        case "$action" in
+            symlink)
+                symlink="$path"
+                ;;
+            target)
+                mkdir -p "$path"
+                ln -sfn "$symlink" "$path"
+                ;;
+            mkdir)
+                mkdir -p "$path"
+                chown "$filesetOwner" "$path"
+                ;;
+            *)
+                echo "Unknown action: $action"
+                ;;
+        esac
+    done
+}
+
+removeSymlinks()
+{
+    cat $1/.dysnomia-fileset | while read i
+    do
+        action=$(echo "$i" | cut -f 1 -d ' ' -)
+        path=$(echo "$i" | cut -f 2- -d ' ' -)
+
+        case "$action" in
+            symlink)
+                symlink="$path"
+                ;;
+            target)
+                symlinkTarget="$path/$(basename "$symlink")"
+                rm -f "$symlinkTarget"
+                baseDir="$(dirname "$symlinkTarget")"
+
+                if [ "$baseDir" != "." ] && [ -d "$baseDir" ]
+                then
+                    rmdir --ignore-fail-on-non-empty -p "$baseDir"
+                fi
+                ;;
+            mkdir)
+                # Ignore
+                ;;
+            *)
+                echo "Unknown action: $action"
+                ;;
+        esac
+    done
+}
+
 if [ "$targetDir" = "" ]
 then
     targetDir=$(cat $2/.dysnomia-targetdir)
@@ -107,64 +164,14 @@ case "$1" in
         mkdir -p $targetDir
         cd $targetDir
 
-        cat $2/.dysnomia-fileset | while read i
-        do
-            action=$(echo "$i" | cut -f 1 -d ' ' -)
-            path=$(echo "$i" | cut -f 2- -d ' ' -)
-
-            case "$action" in
-                symlink)
-                    symlink="$path"
-                    ;;
-                target)
-                    mkdir -p "$path"
-                    ln -sfn "$symlink" "$path"
-                    ;;
-                mkdir)
-                    mkdir -p "$path"
-                    chown "$filesetOwner" "$path"
-                    ;;
-                *)
-                    echo "Unknown action: $action"
-                    exit 1
-                    ;;
-            esac
-        done
-
+        createSymlinks "$2" || (removeSymlinks "$2"; exit 1)
         markComponentAsActive
         ;;
 
     deactivate)
         cd $targetDir
 
-        cat $2/.dysnomia-fileset | while read i
-        do
-            action=$(echo "$i" | cut -f 1 -d ' ' -)
-            path=$(echo "$i" | cut -f 2- -d ' ' -)
-
-            case "$action" in
-                symlink)
-                    symlink="$path"
-                    ;;
-                target)
-                    symlinkTarget="$path/$(basename "$symlink")"
-                    rm -f "$symlinkTarget"
-                    baseDir="$(dirname "$symlinkTarget")"
-
-                    if [ "$baseDir" != "." ] && [ -d "$baseDir" ]
-                    then
-                        rmdir --ignore-fail-on-non-empty -p "$baseDir"
-                    fi
-                    ;;
-                mkdir)
-                    # Ignore
-                    ;;
-                *)
-                    echo "Unknown action: $action"
-                    exit 1
-                    ;;
-            esac
-        done
+        removeSymlinks "$2"
         markComponentAsGarbage
         ;;
 
