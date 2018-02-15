@@ -40,6 +40,8 @@ Operations:
                        collection of components
       --query-all      Queries the relative paths of all snapshots of a
                        collection of components
+      --check          Can be used in combination with the query operations to
+                       check the integrity of the snapshots
       --print-missing  Prints all the paths that do not exist in the snapshots
                        folder
       --gc             Removes older generations of snapshots of components
@@ -153,9 +155,38 @@ printSnapshotRelativePath()
     echo $container/$component/$(basename $snapshot)
 }
 
+# Checks whether the computed hash of a snapshot matches the provided hash.
+#
+# $1: Name of a container
+# $2: Name of a component deployed to the container
+# $3: Generation symlink to a snapshot
+
+checkSnapshot()
+{
+    local snapshot=$(readlink $DYSNOMIA_STATEDIR/generations/$1/$2/$3)
+    local checksumPath="$DYSNOMIA_STATEDIR/checksums/$1/$2/$(basename $snapshot)"
+    local status=0
+
+    if [ -f "$checksumPath" ]
+    then
+        local checksum=$(cat $checksumPath)
+        local computedChecksum=$(computeOutputHash "$DYSNOMIA_STATEDIR/snapshots/$1/$2/$(basename $snapshot)")
+
+        if [ "$checksum" != "$computedChecksum" ]
+        then
+            echo "Checksum mismatch detected for snapshot: $container/$component/$(basename $snapshot), we have: '$computedChecksum', we expect: '$checksum'" >&2
+            status=1
+        fi
+    else
+        echo "WARNING: no checksum found for snapshot: $container/$component/$(basename $snapshot)" >&2
+    fi
+
+    return $status
+}
+
 # Parse valid argument options
 
-PARAMS=`@getopt@ -n $0 -o C:c:hv -l print-missing,query-latest,query-all,gc,import,resolve,container:,component:,keep:,help,version -- "$@"`
+PARAMS=`@getopt@ -n $0 -o C:c:hv -l print-missing,query-latest,query-all,check,gc,import,resolve,container:,component:,keep:,help,version -- "$@"`
 
 if [ $? != 0 ]
 then
@@ -175,6 +206,9 @@ do
             ;;
         --query-all)
             operation="query-all"
+            ;;
+        --check)
+            check=1
             ;;
         --print-missing)
             operation="print-missing"
@@ -244,10 +278,15 @@ case "$operation" in
             for component in $(enumerateComponents $container $componentName)
             do
                 lastGeneration=$(enumerateSnapshotGenerations $container $component | sort -n | tail -1)
-                
+
                 if [ "$lastGeneration" != "" ]
                 then
                     printSnapshotRelativePath $container $component $lastGeneration
+
+                    if [ "$check" = "1" ]
+                    then
+                        checkSnapshot $container $component $lastGeneration
+                    fi
                 fi
             done
         done
@@ -260,6 +299,11 @@ case "$operation" in
                 for generation in $(enumerateSnapshotGenerations $container $component)
                 do
                     printSnapshotRelativePath $container $component $generation
+
+                    if [ "$check" = "1" ]
+                    then
+                        checkSnapshot $container $component $generation
+                    fi
                 done
             done
         done
@@ -327,19 +371,22 @@ case "$operation" in
                             then
                                 echo "Removing old snapshot: $container/$component/$snapshot" >&2
                                 rm -Rf $DYSNOMIA_STATEDIR/snapshots/$container/$component/$snapshot
+                                rm -f $DYSNOMIA_STATEDIR/checksums/$container/$component/$snapshot
                             fi
                         done
                     fi
                     
-                    # Attempt to remove the component's generation and snapshot folders if they are empty
-                    rmdir --ignore-fail-on-non-empty $DYSNOMIA_STATEDIR/generations/$container/$component
-                    rmdir --ignore-fail-on-non-empty $DYSNOMIA_STATEDIR/snapshots/$container/$component
+                    # Attempt to remove the component's generation, snapshot and checksum folders if they are empty
+                    [ ! -e $DYSNOMIA_STATEDIR/generations/$container/$component ] || rmdir --ignore-fail-on-non-empty $DYSNOMIA_STATEDIR/generations/$container/$component
+                    [ ! -e $DYSNOMIA_STATEDIR/snapshots/$container/$component ] || rmdir --ignore-fail-on-non-empty $DYSNOMIA_STATEDIR/snapshots/$container/$component
+                    [ ! -e $DYSNOMIA_STATEDIR/checksums/$container/$component ] || rmdir --ignore-fail-on-non-empty $DYSNOMIA_STATEDIR/checksums/$container/$component
                 fi
             done
             
-            # Attempt to remove the container's generation and snapshot folders if they are empty
-            rmdir --ignore-fail-on-non-empty $DYSNOMIA_STATEDIR/generations/$container
-            rmdir --ignore-fail-on-non-empty $DYSNOMIA_STATEDIR/snapshots/$container
+            # Attempt to remove the container's generation, snapshot and checksum folders if they are empty
+            [ ! -e $DYSNOMIA_STATEDIR/generations/$container ] || rmdir --ignore-fail-on-non-empty $DYSNOMIA_STATEDIR/generations/$container
+            [ ! -e $DYSNOMIA_STATEDIR/snapshots/$container ] || rmdir --ignore-fail-on-non-empty $DYSNOMIA_STATEDIR/snapshots/$container
+            [ ! -e $DYSNOMIA_STATEDIR/checksums/$container ] || rmdir --ignore-fail-on-non-empty $DYSNOMIA_STATEDIR/checksums/$container
         done
         ;;
     import)

@@ -190,5 +190,14 @@ makeTest {
       
       # Deactivate the MySQL database
       $machine->mustSucceed("dysnomia --operation deactivate --component ${mysql_database} --container ${mysql_container}");
+
+      # Do a check of the snapshots. It should succeed because we know there is
+      # no snapshot that we have tampered with.
+      $machine->mustSucceed("dysnomia-snapshots --query-all --check --container mysql-container --component ${mysql_database}");
+
+      # We now sabotage the snapshot and we check again. Now it should fail
+      # because the hash no longer matches
+      $machine->mustSucceed("echo '12345' > ".(substr $lastResolvedSnapshot, 0, -1)."/dump.sql.xz");
+      $machine->mustFail("dysnomia-snapshots --query-all --check --container mysql-container --component ${mysql_database}");
   '';
 }

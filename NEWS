@@ -4,6 +4,8 @@ Version 0.8
 
 - new fileset module that can be used to manage directories with mutable and immutable files
 
+- Added --check option to the dysnomia-snapshots tool that checks whether the integrity of the snapshots have been broken
+
 Version 0.7
 ===========
 - dysnomia-containers can now also garbage collect snapshots for specific containers and components

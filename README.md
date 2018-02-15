@@ -259,6 +259,17 @@ we can first check whether the repository is at the right revision. There is no
 need to restore a snapshot if the revision number equals the revision number of
 a snapshot.
 
+Checking the integrity of snapshots
+-----------------------------------
+In addition to querying the available snapshots, it is also possible to check
+their integrity to detect whether they have been corrupted or not.
+
+By running a query operation and adding the `--check` parameter, the integrity
+of the corresponding snapshots can be checked. For example, the following
+command checks the integrity of all MySQL database snapshots in the store:
+
+    $ dysnomia-snapshots --query-all --check --container mysql-database
+
 Deleting the state of components
 --------------------------------
 Apart from snapshotting and restoring the state of mutable components, it may

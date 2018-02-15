@@ -276,6 +276,21 @@ composeGenerationsPath()
     echo "$DYSNOMIA_STATEDIR/generations/$containerName/$componentName"
 }
 
+# Composes the path in which the checksums of component snapshots are stored
+#
+# Environment variables:
+# DYSNOMIA_STATEDIR: Path where Dysnomia stores state
+# containerName: Name of the container in which the mutable component is hosted
+# componentName: Name of the mutable component
+#
+# Returns:
+# The path to the directory in which the component's checksums are stored
+
+composeChecksumPath()
+{
+    echo "$DYSNOMIA_STATEDIR/checksums/$containerName/$componentName"
+}
+
 # Composes the path in which the components names are stored that have become
 # garbage
 #
@@ -380,6 +395,47 @@ determineLastSnapshot()
     fi
 }
 
+# Creates a serialization of the given directory by enumerating the file
+# structure first and then the content
+#
+# Parameters:
+# $1: Path to a directory to serialize
+
+serializeDirectory()
+{
+    ( cd "$1"
+      # Enumerate files
+      find .
+      # Concatenate files' contents
+      echo
+      find . -type f | while read file
+      do
+          cat $file
+      done
+    )
+}
+
+# Serializes a file or directory and returns the output hash.
+#
+# Parameter:
+# $1: Path to a file or directory to serialize
+#
+# Returns:
+# The SHA256 output hash
+
+computeOutputHash()
+{
+    if [ -f "$1" ]
+    then
+        hash=$(sha256sum "$1")
+    else
+        hash=$(serializeDirectory "$1" | sha256sum -)
+    fi
+
+    hash=${hash:0:64}
+    echo -n "sha256:$hash"
+}
+
 # Creates a new generation symlink to a given snapshot.
 #
 # Parameters:
@@ -410,6 +466,11 @@ createGenerationSymlink()
     then
         local newGeneration=$((lastGeneration+1))
         ln -s "../../../snapshots/$containerName/$componentName/$1" $generationsPath/$newGeneration
+
+        local checksumPath=$(composeChecksumPath)
+        local snapshotsPath=$(composeSnapshotsPath)
+        mkdir -p "$checksumPath"
+        computeOutputHash "$snapshotsPath/$1" > "$checksumPath/$1"
     fi
 }
 
@@ -429,7 +490,7 @@ componentMarkedAsGarbage()
 #
 # Parameters:
 # $1: Command to execute
-# $2: The amount of times to retry if te command fails
+# $2: The amount of times to retry if the command fails
 
 attemptSeveralTimes()
 {

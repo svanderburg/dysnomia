@@ -405,7 +405,7 @@ EOF
             echo -n "Are you sure you want to proceed? [n] "
             read answer
             
-            if [ "answer" = "y" ]
+            if [ "$answer" = "y" ]
             then
                 yes=1
             fi
