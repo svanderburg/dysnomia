@@ -162,7 +162,7 @@ create table author
 create table books
 ( ISBN       VARCHAR(255)  NOT NULL,
   Title      VARCHAR(255)  NOT NULL,
-  AUTHOR_ID  VARCHAR(255)  NOT NULL,
+  AUTHOR_ID  INTEGER       NOT NULL,
   PRIMARY KEY(ISBN),
   FOREIGN KEY(AUTHOR_ID) references author(AUTHOR_ID) on update cascade on delete cascade
 );
