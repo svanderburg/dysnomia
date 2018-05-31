@@ -6,6 +6,7 @@
 , enableTomcatWebApplication ? false
 , enableMongoDatabase ? false
 , enableSubversionRepository ? false
+, enableInfluxDatabase ? false
 , catalinaBaseDir ? "/var/tomcat"
 , jobTemplate ? "systemd"
 , pkgs
@@ -16,7 +17,7 @@ pkgs.releaseTools.nixBuild {
   name = "dysnomia";
   version = builtins.readFile ./version;
   src = tarball;
-  
+
   preConfigure = pkgs.stdenv.lib.optionalString enableEjabberdDump "export PATH=$PATH:${pkgs.ejabberd}/sbin";
 
   configureFlags = [
@@ -28,14 +29,16 @@ pkgs.releaseTools.nixBuild {
     (if enableMongoDatabase then "--with-mongodb" else "--without-mongodb")
     (if enableTomcatWebApplication then "--with-tomcat=${catalinaBaseDir}" else "--without-tomcat")
     (if enableSubversionRepository then "--with-subversion" else "--without-subversion")
+    (if enableInfluxDatabase then "--with-influxdb" else "--without-influxdb")
     "--with-job-template=${jobTemplate}"
   ];
-    
+
   buildInputs = [ pkgs.getopt ]
     ++ pkgs.stdenv.lib.optional enableEjabberdDump pkgs.ejabberd
     ++ pkgs.stdenv.lib.optional enableMySQLDatabase pkgs.mysql
     ++ pkgs.stdenv.lib.optional enablePostgreSQLDatabase pkgs.postgresql
     ++ pkgs.stdenv.lib.optional enableMongoDatabase pkgs.mongodb
     ++ pkgs.stdenv.lib.optional enableMongoDatabase pkgs.mongodb-tools
-    ++ pkgs.stdenv.lib.optional enableSubversionRepository pkgs.subversion;
+    ++ pkgs.stdenv.lib.optional enableSubversionRepository pkgs.subversion
+    ++ pkgs.stdenv.lib.optional enableInfluxDatabase pkgs.influxdb;
 }

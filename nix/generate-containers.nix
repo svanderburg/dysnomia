@@ -27,6 +27,13 @@
   tomcatPort = 8080;
 }; }
 // lib.optionalAttrs (config.services.mongodb.enable) { mongo-database = {}; }
+// lib.optionalAttrs (config.services.influxdb.enable) {
+  influx-database = {
+    influxdbUsername = config.services.influxdb.user;
+    influxdbDataDir = "${config.services.influxdb.dataDir}/data";
+    influxdbMetaDir = "${config.services.influxdb.dataDir}/meta";
+  };
+}
 // lib.optionalAttrs (config.services.svnserve.enable) { subversion-repository = {
   svnBaseDir = config.services.svnserve.svnBaseDir;
 }; }

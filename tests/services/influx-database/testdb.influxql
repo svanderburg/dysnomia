@@ -1,0 +1,6 @@
+# DDL
+CREATE DATABASE testdb
+
+# DML
+# CONTEXT-DATABASE: testdb
+cpu,host=serverA,region=us_west value=0.64

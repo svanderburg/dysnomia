@@ -1,3 +1,7 @@
+Version 0.9
+===========
+- Added influx-database module
+
 Version 0.8
 ===========
 - Added --shell parameter to dysnomia that can be used to spawn shell sessions in which container properties can be directly used. This is useful for arbitrary maintenance tasks.

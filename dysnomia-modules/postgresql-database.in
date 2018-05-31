@@ -9,7 +9,7 @@ shopt -s nullglob
 # contains a sub folder named postgresql-databases/, then the dump files stored
 # inside get imported.
 #
-# This module also support snapshotting. It uses the output hash of the dump to
+# This module also supports snapshotting. It uses the output hash of the dump to
 # uniquely identify each snapshot.
 #
 # Container properties (environment variables):

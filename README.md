@@ -82,6 +82,8 @@ be optionally enabled/disabled:
   instance.
 * `mysql-database`. Deploys a database to a [MySQL](http://www.mysql.com) DBMS
   instance.
+* `influx-database`. Deploys a timeseries database to a
+  [InfluxDB](https://www.influxdata.com) server instance.
 * `nixos-configuration`. Deploys a specific [NixOS](http://nixos.org/nixos)
   configuration.
 * `postgresql-database`. Deploys a database to a

@@ -4,7 +4,7 @@ with lib;
 
 let
   cfg = config.dysnomiaTest;
-  
+
   printProperties = properties:
     concatMapStrings (propertyName:
       let
@@ -28,7 +28,7 @@ let
     buildCommand = ''
       mkdir -p $out
       cd $out
-      
+
       ${concatMapStrings (containerName:
         let
           containerProperties = cfg.containers."${containerName}";
@@ -42,11 +42,11 @@ let
       ) (builtins.attrNames cfg.containers)}
     '';
   };
-  
+
   linkMutableComponents = {containerName}:
     ''
       mkdir ${containerName}
-      
+
       ${concatMapStrings (componentName:
         let
           component = cfg.components."${containerName}"."${componentName}";
@@ -54,13 +54,13 @@ let
         "ln -s ${component} ${containerName}/${componentName}\n"
       ) (builtins.attrNames (cfg.components."${containerName}" or {}))}
     '';
-  
+
   componentsDir = pkgs.stdenv.mkDerivation {
     name = "dysnomia-components";
     buildCommand = ''
       mkdir -p $out
       cd $out
-      
+
       ${concatMapStrings (containerName:
         let
           components = cfg.components."${containerName}";
@@ -73,58 +73,58 @@ in
 {
   options = {
     dysnomiaTest = {
-      
+
       enable = mkOption {
         type = types.bool;
         default = false;
         description = "Whether to enable Dysnomia";
       };
-      
+
       enableAuthentication = mkOption {
         type = types.bool;
         default = false;
         description = "Whether to publish privacy-sensitive authentication credentials";
       };
-      
+
       package = mkOption {
         type = types.path;
         description = "The Dysnomia package";
       };
-      
+
       properties = mkOption {
         description = "An attribute set in which each attribute represents a machine property. Optionally, these values can be shell substitutions.";
         default = {};
       };
-      
+
       containers = mkOption {
         description = "An attribute set in which each key represents a container and each value an attribute set providing its configuration properties";
         default = {};
       };
-      
+
       components = mkOption {
         description = "An atttribute set in which each key represents a container and each value an attribute set in which each key represents a component and each value a derivation constructing its initial state";
         default = {};
       };
-      
+
       extraContainerProperties = mkOption {
         description = "An attribute set providing additional container settings in addition to the default properties";
         default = {};
       };
-      
+
       extraContainerPaths = mkOption {
         description = "A list of paths containing additional container configurations that are added to the search folders";
         default = [];
       };
-      
+
       extraModulePaths = mkOption {
         description = "A list of paths containing additional modules that are added to the search folders";
         default = [];
       };
     };
   };
-  
+
   config = mkIf cfg.enable {
-  
+
     environment.etc = {
       "dysnomia/containers" = {
         source = containersDir;
@@ -136,15 +136,15 @@ in
         source = properties;
       };
     };
-    
+
     environment.variables = {
       DYSNOMIA_STATEDIR = "/var/state/dysnomia-nixos";
       DYSNOMIA_CONTAINERS_PATH = "${lib.concatMapStrings (containerPath: "${containerPath}:") cfg.extraContainerPaths}/etc/dysnomia/containers";
       DYSNOMIA_MODULES_PATH = "${lib.concatMapStrings (modulePath: "${modulePath}:") cfg.extraModulePaths}/etc/dysnomia/modules";
     };
-    
+
     environment.systemPackages = [ cfg.package ];
-    
+
     dysnomiaTest.package = mkDefault (import ./build.nix {
       enableApacheWebApplication = config.services.httpd.enable;
       enableAxis2WebService = config.services.tomcat.axis2.enable;
@@ -154,11 +154,12 @@ in
       enableTomcatWebApplication = config.services.tomcat.enable;
       enableMongoDatabase = config.services.mongodb.enable;
       enableSubversionRepository = config.services.svnserve.enable;
+      enableInfluxDatabase = config.services.influxdb.enable;
       jobTemplate = "systemd";
       inherit pkgs;
       tarball = (import ./release.nix {}).tarball;
     });
-    
+
     dysnomiaTest.properties = {
       hostname = config.networking.hostName;
       system = if config.nixpkgs.system == "" then builtins.currentSystem else config.nixpkgs.system;
@@ -176,12 +177,12 @@ in
         '';
       }}");
     };
-    
+
     dysnomiaTest.containers = lib.recursiveUpdate (import ./nix/generate-containers.nix {
       inherit config lib;
       inherit (cfg) enableAuthentication;
     }) cfg.extraContainerProperties;
-    
+
     system.activationScripts.dysnomia = ''
       mkdir -p /etc/systemd-mutable/system
       if [ ! -f /etc/systemd-mutable/system/dysnomia.target ]

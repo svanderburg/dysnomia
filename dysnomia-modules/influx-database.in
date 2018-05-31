@@ -1,0 +1,106 @@
+#!/bin/bash
+set -e
+set -o pipefail
+shopt -s nullglob
+
+# Manages the deployment lifecycle of an Influx database.
+#
+# On activation, an initial dump can be restored. If the mutable component
+# contains a sub folder named influx-databases/, then the script files stored
+# inside will be executed.
+#
+# This module also supports snapshotting. It uses the output hash of the dump to
+# uniquely identify each snapshot.
+#
+# Container properties (environment variables):
+# influxdbUsername: Username of the account that has the privileges to
+#    administer the database (defaults to: influxdb)
+
+# Autoconf settings
+export prefix=@prefix@
+
+# Import utility functions
+source @datadir@/@PACKAGE@/util
+
+# Sets a number of common utility environment variables
+composeUtilityVariables $0 $2 $3
+
+influxdbMetaDir="${influxdbMetaDir:-/var/db/influxdb/meta}"
+influxdbDataDir="${influxdbDataDir:-/var/db/influxdb/data}"
+influxdbStopCommand="systemctl stop influxdb"
+influxdbStartCommand="systemctl start influxdb"
+
+case "$1" in
+    activate)
+        # Initalize the given schema if the database does not exists
+        if [ "$(su $influxdbUsername -s /bin/sh -c "@influx@ -execute 'show databases' | grep -x "$componentName" | wc -l")" = "0" ]
+        then
+            if [ -d $2/influx-databases ]
+            then
+                su $influxdbUsername -s /bin/sh -c "@influx@ -import -path $2/influx-databases/* "
+            else
+                su $influxdbUsername -s /bin/sh -c "@influx@ -execute 'CREATE DATABASE $componentName'"
+            fi
+        fi
+        markComponentAsActive
+        ;;
+    deactivate)
+        markComponentAsGarbage
+        ;;
+    snapshot)
+        tmpdir=$(mktemp -d)
+        chown $influxdbUsername $tmpdir
+        cd $tmpdir
+
+        su $influxdbUsername -s /bin/sh -c "@influxd@ backup -database $componentName dump"
+
+        hash=$((for i in dump/*; do echo $i; cat $i; done) | sha256sum)
+        hash=${hash:0:64}
+
+        snapshotsPath=$(composeSnapshotsPath)
+
+        if [ -d $snapshotsPath/$hash ]
+        then
+            rm -Rf $tmpdir
+        else
+            mkdir -p $snapshotsPath/$hash
+            mv dump $snapshotsPath/$hash
+            rmdir $tmpdir
+        fi
+        createGenerationSymlink $hash
+        ;;
+    restore)
+        lastSnapshot=$(determineLastSnapshot)
+
+        if [ "$lastSnapshot" != "" ]
+        then
+            su $influxdbUsername -s /bin/sh -c "@influx@ -execute 'drop database $componentName'"
+            su $influxdbUsername -s /bin/sh -c "@influx@ -execute 'create database $componentName'"
+            $influxdbStopCommand
+            su $influxdbUsername -s /bin/sh -c "@influxd@ restore -metadir $influxdbMetaDir $lastSnapshot/dump"
+            su $influxdbUsername -s /bin/sh -c "@influxd@ restore -database $componentName -datadir $influxdbDataDir $lastSnapshot/dump"
+            $influxdbStartCommand
+        fi
+        ;;
+    collect-garbage)
+        if componentMarkedAsGarbage
+        then
+            su $influxdbUsername -s /bin/sh -c "@influx@ -execute 'drop database $componentName'"
+            unmarkComponentAsGarbage
+        fi
+        ;;
+    shell)
+        cat >&2 <<EOF
+This is a shell session that can be used to control the '$componentName' InfluxDB database.
+
+Module specific environment variables:
+componentName       Name of the database
+influxdbUsername    Username of the account that has the privileges to administer
+                    the database
+
+Some useful commands:
+su \$influxdbUsername -s /bin/sh  Open a shell session having administration privileges to InfluxDB
+@influx@ $componentName  Open a InfluxDB interactive terminal
+EOF
+        ;;
+esac

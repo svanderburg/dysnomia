@@ -10,7 +10,7 @@ shopt -s nullglob
 # imported. If the mutable component is a file, then it is considered to be the
 # initial dump.
 #
-# This module also support snapshotting. It uses the output hash of the dump to
+# This module also supports snapshotting. It uses the output hash of the dump to
 # uniquely identify each snapshot.
 #
 # ejabberdUser: Username of the account that has the privileges to administer

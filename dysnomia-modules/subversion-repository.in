@@ -9,7 +9,7 @@ shopt -s nullglob
 # contains a sub folder named subversion-repositories/, then the dump files
 # stored inside get imported.
 #
-# This module also support snapshotting. It uses the revision number of the
+# This module also supports snapshotting. It uses the revision number of the
 # repository to uniquely identify each snapshot.
 #
 # Container properties (environment variables):

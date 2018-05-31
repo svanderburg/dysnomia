@@ -67,6 +67,10 @@ let
             inherit nixpkgs tarball buildFun;
           };
 
+          influx-database = import ./tests/influx-database.nix {
+            inherit nixpkgs tarball buildFun;
+          };
+
           tomcat-webapplication = import ./tests/tomcat-webapplication.nix {
             inherit nixpkgs tarball buildFun;
           };
