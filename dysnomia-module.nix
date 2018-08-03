@@ -3,7 +3,7 @@
 with lib;
 
 let
-  cfg = config.dysnomiaTest;
+  cfg = config.services.dysnomiaTest;
 
   printProperties = properties:
     concatMapStrings (propertyName:
@@ -72,7 +72,7 @@ let
 in
 {
   options = {
-    dysnomiaTest = {
+    services.dysnomiaTest = {
 
       enable = mkOption {
         type = types.bool;
@@ -145,7 +145,7 @@ in
 
     environment.systemPackages = [ cfg.package ];
 
-    dysnomiaTest.package = mkDefault (import ./build.nix {
+    services.dysnomiaTest.package = mkDefault (import ./build.nix {
       enableApacheWebApplication = config.services.httpd.enable;
       enableAxis2WebService = config.services.tomcat.axis2.enable;
       enableEjabberdDump = config.services.ejabberd.enable;
@@ -160,9 +160,11 @@ in
       tarball = (import ./release.nix {}).tarball;
     });
 
-    dysnomiaTest.properties = {
+    services.dysnomiaTest.properties = {
       hostname = config.networking.hostName;
-      system = if config.nixpkgs.system == "" then builtins.currentSystem else config.nixpkgs.system;
+      system = if config.nixpkgs ? localSystem && config.nixpkgs.localSystem.system != "" then config.nixpkgs.localSystem.system # Support compatiblity with Nixpkgs 17.09 and newer versions
+        else if config.nixpkgs.system != "" then config.nixpkgs.system
+        else builtins.currentSystem;
 
       supportedTypes = (import "${pkgs.stdenv.mkDerivation {
         name = "supportedtypes";
@@ -178,7 +180,7 @@ in
       }}");
     };
 
-    dysnomiaTest.containers = lib.recursiveUpdate (import ./nix/generate-containers.nix {
+    services.dysnomiaTest.containers = lib.recursiveUpdate (import ./nix/generate-containers.nix {
       inherit config lib;
       inherit (cfg) enableAuthentication;
     }) cfg.extraContainerProperties;

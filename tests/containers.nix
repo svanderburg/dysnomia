@@ -10,7 +10,7 @@ makeTest {
     {
       imports = [ ../dysnomia-module.nix ];
       
-      dysnomiaTest = {
+      services.dysnomiaTest = {
         enable = true;
         enableAuthentication = true;
         
