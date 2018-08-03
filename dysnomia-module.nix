@@ -3,7 +3,7 @@
 with lib;
 
 let
-  cfg = config.services.dysnomiaTest;
+  cfg = config.dysnomiaTest;
 
   printProperties = properties:
     concatMapStrings (propertyName:
@@ -72,7 +72,7 @@ let
 in
 {
   options = {
-    services.dysnomiaTest = {
+    dysnomiaTest = {
 
       enable = mkOption {
         type = types.bool;
@@ -145,7 +145,7 @@ in
 
     environment.systemPackages = [ cfg.package ];
 
-    services.dysnomiaTest.package = mkDefault (import ./build.nix {
+    dysnomiaTest.package = mkDefault (import ./build.nix {
       enableApacheWebApplication = config.services.httpd.enable;
       enableAxis2WebService = config.services.tomcat.axis2.enable;
       enableEjabberdDump = config.services.ejabberd.enable;
@@ -160,7 +160,7 @@ in
       tarball = (import ./release.nix {}).tarball;
     });
 
-    services.dysnomiaTest.properties = {
+    dysnomiaTest.properties = {
       hostname = config.networking.hostName;
       system = if config.nixpkgs ? localSystem && config.nixpkgs.localSystem.system != "" then config.nixpkgs.localSystem.system # Support compatiblity with Nixpkgs 17.09 and newer versions
         else if config.nixpkgs.system != "" then config.nixpkgs.system
@@ -180,7 +180,7 @@ in
       }}");
     };
 
-    services.dysnomiaTest.containers = lib.recursiveUpdate (import ./nix/generate-containers.nix {
+    dysnomiaTest.containers = lib.recursiveUpdate (import ./nix/generate-containers.nix {
       inherit config lib;
       inherit (cfg) enableAuthentication;
     }) cfg.extraContainerProperties;
