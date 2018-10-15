@@ -60,7 +60,7 @@ makeTest {
       $machine->waitForJob("mysql");
       $machine->waitForJob("postgresql");
 
-      # Test NixOS configuration activation script. We activate the current
+      # Test NixOS configuration module. We activate the current
       # NixOS configuration
       $machine->mustSucceed("disableNixOSSystemProfile=1 testNixOS=1 DYSNOMIA_STATEDIR=/var/state/dysnomia dysnomia --type nixos-configuration --operation activate --component /var/run/current-system --environment");
 

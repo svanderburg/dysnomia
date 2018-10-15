@@ -36,7 +36,7 @@ makeTest {
     ''
       startAll;
 
-      # Test InfluxDB activation script. Here we activate a database
+      # Test InfluxDB module. Here we activate a database
       # and we check whether it is created. This test should succeed.
 
       $machine->waitForJob("influxdb");

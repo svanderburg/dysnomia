@@ -37,7 +37,7 @@ makeTest {
     ''
       startAll;
 
-      # Test echo activation script. Here we just invoke the activate
+      # Test echo module. Here we just invoke the activate
       # and deactivation steps. This test should succeed.
       $machine->mustSucceed("dysnomia --type echo --operation activate --component ${wrapper} --environment");
       $machine->mustSucceed("dysnomia --type echo --operation deactivate --component ${wrapper} --environment");

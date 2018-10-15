@@ -38,7 +38,7 @@ makeTest {
     ''
       startAll;
 
-      # Test PostgreSQL activation script. Here we activate a database
+      # Test PostgreSQL module. Here we activate a database
       # and we check whether it is created. This test should succeed.
 
       $machine->waitForJob("postgresql");
