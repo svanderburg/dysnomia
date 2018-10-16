@@ -198,5 +198,11 @@ makeTest {
       $machine->mustSucceed("grep \"^hostname=\\\"machine\\\"\$\" /etc/dysnomia/properties");
       $machine->mustSucceed("grep \"MemTotal\" /etc/dysnomia/properties");
       $machine->mustSucceed("grep \"supportedTypes=(\" /etc/dysnomia/properties");
+
+      # Visualize the current containers configuration. The output is produced
+      # as a Hydra report.
+
+      $machine->mustSucceed("dysnomia-containers --generate-dot > visualize.dot");
+      $machine->mustSucceed("${pkgs.graphviz}/bin/dot -Tpng visualize.dot > /tmp/xchg/visualize.png");
   '';
 }

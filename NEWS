@@ -1,5 +1,7 @@
 Version 0.9
 ===========
+- Added --generate-dot option to dysnomia-containers so that system configurations can be visualized
+
 - Added influx-database module
 
 Version 0.8

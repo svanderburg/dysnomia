@@ -42,6 +42,8 @@ Operations:
                                     deployed to containers
       --generate-expr               Generate a Nix expression from all the
                                     container configurations and their properties
+      --generate-dot                Generate a dot file that visualizes the
+                                    available components per container
   -o, --operation=OPERATION         Executes the given operation on all mutable
                                     components deployed to a container
       --deploy                      Deploys all unactivated available mutable
@@ -95,7 +97,7 @@ EOF
 
 # Parse valid argument options
 
-PARAMS=`@getopt@ -n $0 -o o:C:yhv -l query-containers,query-available-components,query-activated-components,generate-expr,operation:,deploy,snapshot,restore,collect-garbage,container:,help,version -- "$@"`
+PARAMS=`@getopt@ -n $0 -o o:C:yhv -l query-containers,query-available-components,query-activated-components,generate-expr,generate-dot,operation:,deploy,snapshot,restore,collect-garbage,container:,help,version -- "$@"`
 
 if [ $? != 0 ]
 then
@@ -121,6 +123,9 @@ do
             ;;
         --generate-expr)
             action="generate-expr"
+            ;;
+        --generate-dot)
+            action="generate-dot"
             ;;
         -o|--operation)
             action="execute-operation"
@@ -333,6 +338,35 @@ case "$action" in
         fi
         
         echo -n "}"
+        ;;
+    generate-dot)
+        echo "digraph G {"
+
+        for path in $(echo $DYSNOMIA_CONTAINERS_PATH | tr ':' ' ')
+        do
+            if [ -d "$path" ]
+            then
+                for container in $(ls $path)
+                do
+                    echo "  subgraph cluster_${container//-/_} {"
+                    echo "    style=filled;"
+                    echo "    label=\"$container\";"
+                    echo "    fillcolor=grey"
+                    echo "    node [style=filled,fillcolor=white,color=black];"
+                    availableComponents=$(queryAvailableComponents)
+
+                    for i in $availableComponents
+                    do
+                        componentName="$(basename "$i")"
+                        echo "    \"$i\" [ label = \"$componentName\" ];"
+                    done
+
+                    echo "  }"
+                done
+            fi
+        done
+
+        echo "}"
         ;;
     execute-operation)
         executeOperation
