@@ -92,7 +92,7 @@ makeTest {
       # Restore the last snapshot and check whether it contains the recently
       # added record. This test should succeed.
       $machine->mustSucceed("influxdbUsername=influxdb dysnomia --type influx-database --operation restore --component ${influx_database} --environment");
-      $result = $machine->mustSucceed("influx -database testdb -execute 'select * from cpu'");
+      $result = $machine->mustSucceed("sleep 10; influx -database testdb -execute 'select * from cpu'");
 
       if($result =~ /serverB/) {
           print "InfluxDB query returns: serverB!\n";
