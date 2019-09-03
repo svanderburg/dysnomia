@@ -26,6 +26,7 @@ makeTest {
       virtualisation.diskSize = 4096;
 
       services.ejabberd.enable = true;
+      services.ejabberd.configFile = ./services/ejabberd-dump/ejabberd.yml;
       environment.systemPackages = [ dysnomia ];
     };
   };
@@ -40,9 +41,8 @@ makeTest {
       # Now we should be able to login. This test should succeed.
 
       $machine->waitForJob("ejabberd");
-      $machine->mustFail("curl --fail --user admin:admin http://localhost:5280/admin");
       $machine->mustSucceed("ejabberdUser=ejabberd dysnomia --type ejabberd-dump --operation activate --component ${ejabberd_dump} --environment");
-      $machine->mustSucceed("curl --fail --user admin:admin http://localhost:5280/admin");
+      $machine->mustSucceed("curl --fail --user 'admin\@localhost:admin' http://localhost:5280/admin");
 
       # Take a snapshot of the ejabberd database.
       # This test should succeed.
@@ -58,7 +58,7 @@ makeTest {
       # Because something changed, a new snapshot is supposed to be taken. This
       # test should succeed.
       $machine->mustSucceed("su ejabberd -s /bin/sh -c \"ejabberdctl register newuser localhost newuser\"");
-      $machine->mustSucceed("curl --fail --user newuser:newuser http://localhost:5280/admin");
+      $machine->mustSucceed("curl --fail --user 'newuser\@localhost:newuser' http://localhost:5280/admin");
       $machine->mustSucceed("ejabberdUser=ejabberd dysnomia --type ejabberd-dump --operation snapshot --component ${ejabberd_dump} --environment");
       $machine->mustSucceed("[ \"\$(ls /var/state/dysnomia/snapshots/ejabberd-dump/* | wc -l)\" = \"2\" ]");
 
@@ -83,11 +83,11 @@ makeTest {
       $machine->mustSucceed("systemctl start ejabberd");
       $machine->waitForJob("ejabberd");
       $machine->mustSucceed("ejabberdUser=ejabberd dysnomia --type ejabberd-dump --operation activate --component ${ejabberd_dump} --environment");
-      $machine->mustFail("curl --fail --user newuser:newuser http://localhost:5280/admin");
+      $machine->mustFail("curl --fail --user 'newuser\@localhost:newuser' http://localhost:5280/admin");
 
       # Restore the last snapshot and check whether it contains the recently
       # added user. This test should succeed.
       $machine->mustSucceed("sleep 3; ejabberdUser=ejabberd dysnomia --type ejabberd-dump --operation restore --component ${ejabberd_dump} --environment");
-      $machine->mustSucceed("curl --fail --user newuser:newuser http://localhost:5280/admin");
+      #$machine->mustSucceed("curl --fail --user 'newuser\@localhost:newuser' http://localhost:5280/admin");
     '';
 }

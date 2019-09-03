@@ -15,7 +15,7 @@ $ nixos-rebuild switch
 - Figure out where the config file is by checking the output of the following command:
 
 ```
-$ ejabberdctl
+$ su ejabberd -s /bin/sh -c ejabberdctl
 ```
 
 - Create an admin account:
@@ -75,3 +75,18 @@ $ chown sander:users ejabberdcfg.dump
 ```
 
 - This is it!
+
+- For convenience and partial automation of the above procedure, a NixOps
+configuration has been created.
+
+A network can be created as follows:
+
+```
+$ nixops create ./ejabberd-machine.nix ./ejabberd-machine-virtualbox.nix -d ejabberd
+```
+
+The configuration can be deployed or upgraded by running:
+
+```
+$ nixops deploy -d ejabberd
+```

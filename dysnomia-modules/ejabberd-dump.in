@@ -31,7 +31,7 @@ case "$1" in
     activate)
         # Wait until the ejabberd daemon is available
         count=0
-        
+
         while ! su - $ejabberdUser -s /bin/sh -c "$ejabberdctl status"
         do
             if [ $count -eq 30 ]
@@ -39,22 +39,23 @@ case "$1" in
                 echo "Tried 30 times, giving up..." >&2
                 exit 1
             fi
-            
+
             echo "Ejabberd daemon not yet started. Waiting for 1 second..." >&2
             count2=$((count++))
             count=$count2
             sleep 1
         done
-        
+
         # Load the dump
         if [ -f $2 ]
         then
             su - $ejabberdUser -s /bin/sh -c "$ejabberdctl load $2"
         elif [ -d $2 ]
         then
-            su - $ejabberdUser -s /bin/sh -c "$ejabberdctl load $2/ejabberd-dump/*"
+            dumpFile=$(echo $2/ejabberd-dump/*)
+            su - $ejabberdUser -s /bin/sh -c "$ejabberdctl load $dumpFile"
         fi
-        
+
         markComponentAsActive
         ;;
     deactivate)
@@ -64,14 +65,14 @@ case "$1" in
         tmpdir=$(mktemp -d)
         chown $ejabberdUser $tmpdir
         cd $tmpdir
-        
+
         su - $ejabberdUser -s /bin/sh -c "$ejabberdctl dump $tmpdir/dump"
-        
+
         hash=$(cat dump | sha256sum)
         hash=${hash:0:64}
-        
+
         snapshotsPath=$(composeSnapshotsPath)
-        
+
         if [ -d $snapshotsPath/$hash ]
         then
             rm -Rf $tmpdir
@@ -85,7 +86,7 @@ case "$1" in
         ;;
     restore)
         lastSnapshot=$(determineLastSnapshot)
-        
+
         if [ "$lastSnapshot" != "" ]
         then
             su - $ejabberdUser -s /bin/sh -c "$ejabberdctl load $lastSnapshot/dump"
@@ -97,7 +98,7 @@ case "$1" in
             rm -Rf /var/lib/ejabberd
             rm -Rf /var/ejabberd
             rm -Rf /var/log/ejabberd
-            
+
             unmarkComponentAsGarbage
         fi
         ;;
