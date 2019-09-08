@@ -25,19 +25,19 @@ case "$1" in
         do
             # Link the web service
             ln -sfn $i $catalinaBaseDir/webapps/axis2/WEB-INF/services/`basename $i`
-            
+
             # Link the configuration files if they exist
             if [ -d $2/conf/Catalina ]
             then
                 mkdir -p $catalinaBaseDir/conf/Catalina/localhost
-                
+
                 for j in $2/conf/Catalina/*
                 do
                     ln -sfn $j $catalinaBaseDir/conf/Catalina/localhost/`basename $j`
                 done
             fi
         done
-        
+
         markComponentAsActive
         ;;
     deactivate)
@@ -46,7 +46,7 @@ case "$1" in
         do
             # Remove the web service
             rm -f $catalinaBaseDir/webapps/axis2/WEB-INF/services/`basename $i`
-            
+
             # Also remove the configuration files if they exist
             if [ -d $2/conf/Catalina ]
             then
@@ -56,7 +56,7 @@ case "$1" in
                 done
             fi
         done
-        
+
         unmarkComponentAsActive
         ;;
     shell)
