@@ -98,6 +98,7 @@ be optionally enabled/disabled:
 * `wrapper`. Wraps the `bin/wrapper` activation script inside the component into
   a [systemd](http://www.freedesktop.org/wiki/Software/systemd) or init.d job
   and activates or deactivates it.
+* `sysvinit-script` activates or deactivates a sysvinit script
 
 Configuration of the process and wrapper modules
 ------------------------------------------------

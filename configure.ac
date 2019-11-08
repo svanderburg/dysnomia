@@ -175,6 +175,7 @@ dysnomia-modules/nixos-configuration
 dysnomia-modules/fileset
 dysnomia-modules/process
 dysnomia-modules/wrapper
+dysnomia-modules/sysvinit-script
 dysnomia-modules/Makefile
 data/Makefile
 nix/Makefile

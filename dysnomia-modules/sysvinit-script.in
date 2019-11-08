@@ -1,0 +1,78 @@
+#!/bin/bash
+set -e
+set -o pipefail
+shopt -s nullglob
+
+# Activate or deactivate a sysvinit script.
+#
+# Files:
+# dysnomia-support/groups/*: Groups to add on activation
+# dysnomia-support/users/*: Users to add on activation
+#
+# Component properties (environment variables):
+# runlevel: Run level in which the init system should be in
+
+# Autoconf settings
+export prefix=@prefix@
+
+# Import utility functions
+source @datadir@/@PACKAGE@/util
+
+# Sets a number of common utility environment variables
+composeUtilityVariables $0 $2 $3
+
+export PATH=$prefix/bin:$PATH
+
+removeUsersAndGroups()
+{
+    dysnomia-delusers "$1"
+    dysnomia-delgroups "$1"
+}
+
+rollback()
+{
+    removeUsersAndGroups "$1"
+    exit 1
+}
+
+runlevel=${runlevel:-3}
+
+case "$1" in
+    activate)
+        dysnomia-addgroups "$2" || rollback
+        dysnomia-addusers "$2" || rollback
+        (
+        for i in $(ls $2/etc/rc.d/rc$runlevel.d)
+        do
+            $2/etc/rc.d/rc$runlevel.d/$i start
+        done
+        ) || rollback "$2"
+
+        markComponentAsActive
+        ;;
+
+    deactivate)
+        for i in $(ls $2/etc/rc.d/rc$runlevel.d | sort -r)
+        do
+            $2/etc/rc.d/rc$runlevel.d/$i stop
+        done
+
+        removeUsersAndGroups "$2"
+        unmarkComponentAsActive
+        ;;
+
+    shell)
+        cat >&2 <<EOF
+This is a shell session that can be used to control the '$componentName'
+SystemV init script.
+
+Some useful commands:
+EOF
+        for i in $(ls $2/etc/rc.d/init.d)
+        do
+            echo "$2/etc/rc.d/init.d/$i start # Start $i process" >&2
+            echo "$2/etc/rc.d/init.d/$i stop  # Stop $i process" >&2
+            echo "$2/etc/rc.d/init.d/$i help  # Shows the usage of $i process" >&2
+        done
+        ;;
+esac
