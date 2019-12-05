@@ -32,7 +32,7 @@ then
             fi
 
             echo "$group"
-            ) | xargs groupadd
+            ) | xargs -d '\n' groupadd
         fi
         )
     done

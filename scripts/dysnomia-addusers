@@ -70,7 +70,7 @@ then
             fi
 
             echo "$username"
-            ) | xargs useradd
+            ) | xargs -d '\n' useradd
         fi
     )
     done
