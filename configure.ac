@@ -23,6 +23,8 @@ AC_ARG_WITH([job-template], AS_HELP_STRING([--with-job-template], [Specifies whi
 AC_ARG_WITH([systemd-rundir], AS_HELP_STRING([--with-systemd-rundir], [Specifies the state directory of systemd. Defaults to: '/etc/systemd-mutable']))
 AC_ARG_WITH([systemd-path], AS_HELP_STRING([--with-systemd-path], [Specifies the path of the composed systemd jobs. Defaults to: '/run/current-system/sw/bin']))
 AC_ARG_WITH([sysvinit-initd-dir], AS_HELP_STRING([--with-sysvinit-initd-dir], [Specifies the init.d directory in which sysvinit init scripts are stored. Defaults to: '/etc/init.d']))
+AC_ARG_WITH([supervisord], AS_HELP_STRING([--without-supervisord], [Ignore presence of supervisord and disable it]))
+AC_ARG_WITH([systemd], AS_HELP_STRING([--without-systemd], [Ignore presence of systemd and disable it]))
 
 # Define environment variable options
 AC_ARG_WITH(CATALINA_HOME, [Location of the Apache Tomcat Catalina servlet container])
@@ -105,6 +107,12 @@ AS_IF([test "x$with_sysvinit_initd_dir" = "x"],
       [sysvinit_initd_dir=/etc/init.d],
       [sysvinit_initd_dir=$sysvinit_initd_dir])
 
+AS_IF([test "x$with_systemd" != "xno"],
+      [AC_PATH_PROG(systemctl, systemctl)])
+
+AS_IF([test "x$with_supervisord" != "xno"],
+      [AC_PATH_PROG(supervisorctl, supervisorctl)])
+
 # Substitute some variables
 AC_SUBST(job_template)
 AC_SUBST(systemd_rundir)
@@ -123,6 +131,8 @@ AM_CONDITIONAL(have_mongodb, [test x$mongo != "x"])
 AM_CONDITIONAL(have_influxdb, [test x$influx != "x"])
 AM_CONDITIONAL(have_tomcat, [test x$have_tomcat != "xno"])
 AM_CONDITIONAL(have_subversion, [test x$svnadmin != "x"])
+AM_CONDITIONAL(have_systemd, [test x$systemctl != "x"])
+AM_CONDITIONAL(have_supervisord, [test x$supervisorctl != "x"])
 
 # CATALINA_BASE setting
 
@@ -164,6 +174,12 @@ AS_IF([test "x$have_tomcat" != "xno"],
 AS_IF([test "x$svnadmin" != "x"],
       [subversion_repository=dysnomia-modules/subversion-repository])
 
+AS_IF([test "x$systemctl" != "x"],
+      [systemd_unit=dysnomia-modules/systemd-unit])
+
+AS_IF([test "x$supervisorctl" != "x"],
+      [supervisord_program=dysnomia-modules/supervisord-program])
+
 AC_CONFIG_FILES([
 Makefile
 scripts/dysnomia
@@ -189,5 +205,7 @@ $mongo_database
 $influx_database
 $tomcat_webapplication
 $subversion_repository
+$systemd_unit
+$supervisord_program
 ])
 AC_OUTPUT

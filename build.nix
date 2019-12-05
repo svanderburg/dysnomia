@@ -7,6 +7,8 @@
 , enableMongoDatabase ? false
 , enableSubversionRepository ? false
 , enableInfluxDatabase ? false
+, enableSupervisordProgram ? false
+, enableSystemdUnit ? false
 , catalinaBaseDir ? "/var/tomcat"
 , jobTemplate ? "systemd"
 , pkgs
@@ -30,6 +32,8 @@ pkgs.releaseTools.nixBuild {
     (if enableTomcatWebApplication then "--with-tomcat=${catalinaBaseDir}" else "--without-tomcat")
     (if enableSubversionRepository then "--with-subversion" else "--without-subversion")
     (if enableInfluxDatabase then "--with-influxdb" else "--without-influxdb")
+    (if enableSupervisordProgram then "--with-supervisord" else "--without-supervisord")
+    (if enableSystemdUnit then "--with-systemd" else "--without-systemd")
     "--with-job-template=${jobTemplate}"
   ];
 
@@ -40,5 +44,7 @@ pkgs.releaseTools.nixBuild {
     ++ pkgs.stdenv.lib.optional enableMongoDatabase pkgs.mongodb
     ++ pkgs.stdenv.lib.optional enableMongoDatabase pkgs.mongodb-tools
     ++ pkgs.stdenv.lib.optional enableSubversionRepository pkgs.subversion
-    ++ pkgs.stdenv.lib.optional enableInfluxDatabase pkgs.influxdb;
+    ++ pkgs.stdenv.lib.optional enableInfluxDatabase pkgs.influxdb
+    ++ pkgs.stdenv.lib.optional enableSystemdUnit pkgs.systemd
+    ++ pkgs.stdenv.lib.optional enableSupervisordProgram pkgs.pythonPackages.supervisor;
 }

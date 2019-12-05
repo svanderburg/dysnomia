@@ -39,9 +39,10 @@ runlevel=${runlevel:-3}
 
 case "$1" in
     activate)
-        dysnomia-addgroups "$2" || rollback
-        dysnomia-addusers "$2" || rollback
         (
+        dysnomia-addgroups "$2"
+        dysnomia-addusers "$2"
+
         for i in $(ls $2/etc/rc.d/rc$runlevel.d)
         do
             $2/etc/rc.d/rc$runlevel.d/$i start

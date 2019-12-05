@@ -1,0 +1,100 @@
+#!/bin/bash
+set -e
+set -o pipefail
+shopt -s nullglob
+
+# Activate or deactivate a systemd unit.
+#
+# Files:
+# dysnomia-support/groups/*: Groups to add on activation
+# dysnomia-support/users/*: Users to add on activation
+#
+# Component properties (environment variables):
+# systemdTargetDir: Directory where the systemd unit files should be installed
+
+# Autoconf settings
+export prefix=@prefix@
+
+# Import utility functions
+source @datadir@/@PACKAGE@/util
+
+# Sets a number of common utility environment variables
+composeUtilityVariables $0 $2 $3
+
+export PATH=$prefix/bin:$PATH
+
+systemdTargetDir=${systemdTargetDir:-/etc/systemd-mutable/system}
+
+cleanupResources()
+{
+    local storePath="$1"
+
+    for i in $(ls $storePath/etc/systemd/system)
+    do
+        if [ -f "$storePath/etc/systemd/system/$i" ]
+        then
+            @systemctl@ stop $i
+            rm -f $systemdTargetDir/$i
+        fi
+    done
+
+    @systemctl@ --system daemon-reload
+
+    dysnomia-delusers "$storePath"
+    dysnomia-delgroups "$storePath"
+}
+
+rollback()
+{
+    cleanupResources "$1"
+    exit 1
+}
+
+case "$1" in
+    activate)
+        (
+        dysnomia-addgroups "$2"
+        dysnomia-addusers "$2"
+
+        for i in $(ls $2/etc/systemd/system)
+        do
+            ln -sfn $2/etc/systemd/system/$i $systemdTargetDir
+        done
+
+        @systemctl@ --system daemon-reload
+
+        for i in $(ls $2/etc/systemd/system)
+        do
+            if [ -f "$2/etc/systemd/system/$i" ]
+            then
+                @systemctl@ start $i
+            fi
+        done
+        ) || rollback "$2"
+
+        markComponentAsActive
+        ;;
+
+    deactivate)
+        cleanupResources "$2"
+        unmarkComponentAsActive
+        ;;
+
+    shell)
+        cat >&2 <<EOF
+This is a shell session that can be used to control the '$componentName'
+systemd unit.
+
+Some useful commands:
+EOF
+        for i in $(ls $2/etc/systemd/system)
+        do
+            if [ -f "$2/etc/systemd/system/$i" ]
+            then
+                echo "systemctl start $i  # Start the process" >&2
+                echo "systemctl stop $i   # Stop the process" >&2
+                echo "journalctl -u $i    # Display log" >&2
+            fi
+        done
+        ;;
+esac

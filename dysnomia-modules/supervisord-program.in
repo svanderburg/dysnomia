@@ -1,0 +1,92 @@
+#!/bin/bash
+set -e
+set -o pipefail
+shopt -s nullglob
+
+# Activate or deactivate a program managed by supervisord.
+#
+# Files:
+# dysnomia-support/groups/*: Groups to add on activation
+# dysnomia-support/users/*: Users to add on activation
+#
+# Component properties (environment variables):
+# supervisordTargetDir: Directory where the program configuration snippets are stored
+
+# Autoconf settings
+export prefix=@prefix@
+
+# Import utility functions
+source @datadir@/@PACKAGE@/util
+
+# Sets a number of common utility environment variables
+composeUtilityVariables $0 $2 $3
+
+export PATH=$prefix/bin:$PATH
+
+supervisordTargetDir=${supervisordTargetDir:-/var/lib/supervisord/conf.d}
+
+cleanupResources()
+{
+    local storePath="$1"
+
+    for i in $(ls $storePath/conf.d)
+    do
+        if [ -f "$supervisordTargetDir/$i" ]
+        then
+            @supervisorctl@ stop $i
+            rm -f $supervisordTargetDir/$i
+        fi
+    done
+
+    @supervisorctl@ reread
+    @supervisorctl@ update
+
+    dysnomia-delusers "$storePath"
+    dysnomia-delgroups "$storePath"
+}
+
+rollback()
+{
+    cleanupResources
+    exit 1
+}
+
+case "$1" in
+    activate)
+        (
+        dysnomia-addgroups "$2"
+        dysnomia-addusers "$2"
+
+        mkdir -p $supervisordTargetDir
+
+        for i in $(ls $2/conf.d)
+        do
+            ln -sfn $2/conf.d/$i $supervisordTargetDir
+        done
+
+        @supervisorctl@ reread
+        @supervisorctl@ update
+        ) || rollback "$2"
+
+        markComponentAsActive
+        ;;
+
+    deactivate)
+        cleanupResources "$2"
+        unmarkComponentAsActive
+        ;;
+
+    shell)
+        cat >&2 <<EOF
+This is a shell session that can be used to control the '$componentName'
+program managed by supervisord.
+
+Some useful commands:
+EOF
+        for i in $(ls $2/conf.d)
+        do
+            echo "@supervisorctl@ start $i  # Start the process" >&2
+            echo "@supervisorctl@ stop $i   # Stop the process" >&2
+        done
+        ;;
+esac

@@ -39,6 +39,7 @@ let
           enableMongoDatabase = true;
           enableTomcatWebApplication = true;
           enableSubversionRepository = true;
+          enableSupervisordProgram = true;
         };
       in
       {
