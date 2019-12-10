@@ -45,7 +45,7 @@ case "$1" in
             configureFilesetProperties
             @libexecdir@/fileset activate "$2" apache-webapplication
         else
-            ls $(readlink -f $2/webapps) | while read i
+            ls $(@readlink@ -f $2/webapps) | while read i
             do
                 ln -sfn $2/webapps/$i $documentRoot
                 markComponentAsActive
@@ -58,7 +58,7 @@ case "$1" in
             configureFilesetProperties
             @libexecdir@/fileset deactivate "$2" apache-webapplication
         else
-            ls $(readlink -f $2/webapps) | while read i
+            ls $(@readlink@ -f $2/webapps) | while read i
             do
                 rm -f $documentRoot/$(basename $i)
                 unmarkComponentAsActive

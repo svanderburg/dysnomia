@@ -25,6 +25,7 @@ AC_ARG_WITH([systemd-path], AS_HELP_STRING([--with-systemd-path], [Specifies the
 AC_ARG_WITH([sysvinit-initd-dir], AS_HELP_STRING([--with-sysvinit-initd-dir], [Specifies the init.d directory in which sysvinit init scripts are stored. Defaults to: '/etc/init.d']))
 AC_ARG_WITH([supervisord], AS_HELP_STRING([--without-supervisord], [Ignore presence of supervisord and disable it]))
 AC_ARG_WITH([systemd], AS_HELP_STRING([--without-systemd], [Ignore presence of systemd and disable it]))
+AC_ARG_WITH([launchd], AS_HELP_STRING([--without-launchd], [Ignore presence of launchd and disable it]))
 
 # Define environment variable options
 AC_ARG_WITH(CATALINA_HOME, [Location of the Apache Tomcat Catalina servlet container])
@@ -41,6 +42,7 @@ fi
 # Checks for programs
 AC_PROG_INSTALL
 NEED_PROG(getopt, getopt)
+NEED_PROG(readlink, readlink)
 AC_PATH_PROG(HELP2MAN, help2man, false)
 
 AS_IF([test "x$with_apache" != "x" && test "x$with_apache" != "xno"],
@@ -113,6 +115,9 @@ AS_IF([test "x$with_systemd" != "xno"],
 AS_IF([test "x$with_supervisord" != "xno"],
       [AC_PATH_PROG(supervisorctl, supervisorctl)])
 
+AS_IF([test "x$with_launchd" != "xno"],
+      [AC_PATH_PROG(launchctl, launchctl)])
+
 # Substitute some variables
 AC_SUBST(job_template)
 AC_SUBST(systemd_rundir)
@@ -133,6 +138,7 @@ AM_CONDITIONAL(have_tomcat, [test x$have_tomcat != "xno"])
 AM_CONDITIONAL(have_subversion, [test x$svnadmin != "x"])
 AM_CONDITIONAL(have_systemd, [test x$systemctl != "x"])
 AM_CONDITIONAL(have_supervisord, [test x$supervisorctl != "x"])
+AM_CONDITIONAL(have_launchd, [test x$launchctl != "x"])
 
 # CATALINA_BASE setting
 
@@ -180,6 +186,9 @@ AS_IF([test "x$systemctl" != "x"],
 AS_IF([test "x$supervisorctl" != "x"],
       [supervisord_program=dysnomia-modules/supervisord-program])
 
+AS_IF([test "x$launchctl" != "x"],
+      [launchd_daemon=dysnomia-modules/launchd-daemon])
+
 AC_CONFIG_FILES([
 Makefile
 scripts/dysnomia
@@ -207,5 +216,6 @@ $tomcat_webapplication
 $subversion_repository
 $systemd_unit
 $supervisord_program
+$launchd_daemon
 ])
 AC_OUTPUT

@@ -1,0 +1,87 @@
+#!/bin/bash
+set -e
+set -o pipefail
+shopt -s nullglob
+
+# Activate or deactivate a launchd daemon.
+#
+# Files:
+# dysnomia-support/groups/*: Groups to add on activation
+# dysnomia-support/users/*: Users to add on activation
+#
+# Component properties (environment variables):
+# launchdTargetDir: Directory where the daemon plist files should be installed
+
+# Autoconf settings
+export prefix=@prefix@
+
+# Import utility functions
+source @datadir@/@PACKAGE@/util
+
+# Sets a number of common utility environment variables
+composeUtilityVariables $0 $2 $3
+
+export PATH=$prefix/bin:$PATH
+
+launchdTargetDir=${launchdTargetDir:-/Library/LaunchDaemons}
+
+cleanupResources()
+{
+    local storePath="$1"
+
+    for i in $(ls $storePath/Library/LaunchDaemons)
+    do
+        if [ -f "$launchdTargetDir/$i" ]
+        then
+            @launchctl@ stop $(basename "$i" .plist)
+            @launchctl@ unload $launchdTargetDir/$i
+            rm -f $launchdTargetDir/$i
+        fi
+    done
+
+    dysnomia-delusers "$storePath"
+    dysnomia-delgroups "$storePath"
+}
+
+rollback()
+{
+    cleanupResources "$1"
+    exit 1
+}
+
+case "$1" in
+    activate)
+        (
+        dysnomia-addgroups "$2"
+        dysnomia-addusers "$2"
+
+        for i in $(ls $2/Library/LaunchDaemons)
+        do
+            cp $2/Library/LaunchDaemons/$i $launchdTargetDir
+            @launchctl@ load -w $launchdTargetDir/$i
+            @launchctl@ start $(basename "$i" .plist)
+        done
+        ) || rollback "$2"
+
+        markComponentAsActive
+        ;;
+
+    deactivate)
+        cleanupResources "$2"
+        unmarkComponentAsActive
+        ;;
+
+    shell)
+        cat >&2 <<EOF
+This is a shell session that can be used to control the '$componentName'
+launchd daemon.
+
+Some useful commands:
+EOF
+        for i in $(ls $2/Library/LaunchDaemons)
+        do
+            echo "launchctl start $i  # Start the process" >&2
+            echo "launchctl stop $i   # Stop the process" >&2
+        done
+        ;;
+esac

@@ -151,7 +151,7 @@ enumerateSnapshotGenerations()
 
 printSnapshotRelativePath()
 {
-    local snapshot=$(readlink $DYSNOMIA_STATEDIR/generations/$1/$2/$3)
+    local snapshot=$(@readlink@ $DYSNOMIA_STATEDIR/generations/$1/$2/$3)
     echo $container/$component/$(basename $snapshot)
 }
 
@@ -163,7 +163,7 @@ printSnapshotRelativePath()
 
 checkSnapshot()
 {
-    local snapshot=$(readlink $DYSNOMIA_STATEDIR/generations/$1/$2/$3)
+    local snapshot=$(@readlink@ $DYSNOMIA_STATEDIR/generations/$1/$2/$3)
     local checksumPath="$DYSNOMIA_STATEDIR/checksums/$1/$2/$(basename $snapshot)"
     local status=0
 
@@ -338,7 +338,7 @@ case "$operation" in
                     
                     for generation in $(echo "$generations" | sort -n | tail -$keep)
                     do
-                        snapshot=$(basename $(readlink $DYSNOMIA_STATEDIR/generations/$container/$component/$generation))
+                        snapshot=$(basename $(@readlink@ $DYSNOMIA_STATEDIR/generations/$container/$component/$generation))
                         snapshotsToKeep="$snapshotsToKeep $snapshot"
                     done
                     

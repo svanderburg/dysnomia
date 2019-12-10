@@ -176,7 +176,7 @@ then
     if [ "${container:0:1}" = "/" ] || [ "${container:0:2}" = "./" ]
     then
         # File references to containers can be used directly
-        containerConfig="$(readlink -f $container)"
+        containerConfig="$(@readlink@ -f $container)"
     else
         # For ordinary strings, search for the container configuration in DYSNOMIA_CONTAINERS_PATH
         DYSNOMIA_CONTAINERS_PATHS=$(echo $DYSNOMIA_CONTAINERS_PATH | tr ':' ' ')
@@ -221,7 +221,7 @@ else
     if [ "${component:0:1}" = "/" ] || [ "${component:0:2}" = "./" ]
     then
         # File references to components can be used directly
-        componentFile="$(readlink -f $component)"
+        componentFile="$(@readlink@ -f $component)"
     else
         DYSNOMIA_COMPONENTS_PATHS=$(echo $DYSNOMIA_COMPONENTS_PATH | tr ':' ' ')
         
@@ -229,7 +229,7 @@ else
         do
             if [ -e $i/$container/$component ]
             then
-                componentFile="$(readlink -f $i/$container/$component)"
+                componentFile="$(@readlink@ -f $i/$container/$component)"
                 break
             fi
         done
