@@ -20,8 +20,6 @@ pkgs.releaseTools.nixBuild {
   version = builtins.readFile ./version;
   src = tarball;
 
-  preConfigure = pkgs.stdenv.lib.optionalString enableEjabberdDump "export PATH=$PATH:${pkgs.ejabberd}/sbin";
-
   configureFlags = [
     (if enableApacheWebApplication then "--with-apache" else "--without-apache")
     (if enableAxis2WebService then "--with-axis2" else "--without-axis2")
@@ -34,6 +32,7 @@ pkgs.releaseTools.nixBuild {
     (if enableInfluxDatabase then "--with-influxdb" else "--without-influxdb")
     (if enableSupervisordProgram then "--with-supervisord" else "--without-supervisord")
     (if enableSystemdUnit then "--with-systemd" else "--without-systemd")
+    (if pkgs.stdenv.isDarwin then "--with-launchd" else "--without-launchd")
     "--with-job-template=${jobTemplate}"
   ];
 

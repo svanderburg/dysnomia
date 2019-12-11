@@ -1,0 +1,24 @@
+#!/bin/bash
+set -e
+set -o pipefail
+shopt -s nullglob
+
+target="$1/dysnomia-support/users"
+
+if [ -d "$target" ]
+then
+    ls $target/* | while read userfile
+    do
+        username="$(basename "$userfile")"
+
+        if dscl . -read /Users/$username
+        then
+            if [ -n "$group" ]
+            then
+                dseditgroup -o edit -d "$username" -t user "$group"
+            fi
+
+            dscl . -delete /Users/$username
+        fi
+    done
+fi

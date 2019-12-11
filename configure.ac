@@ -42,7 +42,16 @@ fi
 # Checks for programs
 AC_PROG_INSTALL
 NEED_PROG(getopt, getopt)
-NEED_PROG(readlink, readlink)
+AC_PATH_PROGS(readlink, [greadlink readlink], [na])
+if test "$readlink" = na; then
+    AC_MSG_ERROR([We need a GNU compatible readlink command, i.e. greadlink or readlink needed])
+fi
+
+AC_PATH_PROGS(xargs, [gxargs xargs], [na])
+if test "$xargs" = na; then
+    AC_MSG_ERROR([We need a GNU compatible xargs command, i.e. gxargs or xargs needed])
+fi
+
 AC_PATH_PROG(HELP2MAN, help2man, false)
 
 AS_IF([test "x$with_apache" != "x" && test "x$with_apache" != "xno"],
@@ -116,7 +125,27 @@ AS_IF([test "x$with_supervisord" != "xno"],
       [AC_PATH_PROG(supervisorctl, supervisorctl)])
 
 AS_IF([test "x$with_launchd" != "xno"],
-      [AC_PATH_PROG(launchctl, launchctl)])
+      [launchctl=/bin/launchctl
+      AC_SUBST(launchctl)
+      ])
+
+# Check for which host we want to build and provide the corresponding scripts
+AC_CANONICAL_HOST
+
+AS_CASE([$host_os],
+ [darwin*], [
+ OSDIR=darwin
+ AC_CONFIG_FILES([
+ scripts/darwin/dysnomia-addusers
+ scripts/darwin/Makefile
+ ])
+ ],
+ [
+ OSDIR=default
+ AC_CONFIG_FILES([scripts/default/Makefile])
+ ]
+)
+AC_SUBST(OSDIR)
 
 # Substitute some variables
 AC_SUBST(job_template)
@@ -195,6 +224,7 @@ scripts/dysnomia
 scripts/dysnomia-containers
 scripts/dysnomia-snapshots
 scripts/Makefile
+$osspecificscripts
 dysnomia-modules/apache-webapplication
 dysnomia-modules/nixos-configuration
 dysnomia-modules/fileset

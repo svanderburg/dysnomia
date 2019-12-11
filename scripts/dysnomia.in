@@ -367,5 +367,5 @@ else
       echo "$operation"
       echo "$componentFile"
       echo "$container"
-    ) | xargs env
+    ) | @xargs@ env
 fi

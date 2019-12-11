@@ -1,0 +1,34 @@
+#!/bin/bash
+set -e
+set -o pipefail
+shopt -s nullglob
+
+target="$1/dysnomia-support/groups"
+
+if [ -d "$target" ]
+then
+    ls $target/* | while read groupfile
+    do
+        (
+        source "$groupfile"
+
+        group="$(basename "$groupfile")"
+
+        if dscl . -read /Groups/$group
+        then
+            echo "Group: $group already exists!" >&2
+        else
+            dscl . create /Groups/$group
+            dscl . create /Groups/$group passwd '*'
+            dscl . create /Groups/$group RealName "$group"
+
+            if [ -n "$gid" ]
+            then
+                dscl . create /Groups/$group PrimaryGroupID $gid
+            else
+                echo "WARNING: No gid assigned. A primary group id is required to make chown or chgrp operations work!" >&2
+            fi
+        fi
+        )
+    done
+fi

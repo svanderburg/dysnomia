@@ -72,6 +72,6 @@ then
             echo "$username"
             ) | xargs -d '\n' useradd
         fi
-    )
+        )
     done
 fi
