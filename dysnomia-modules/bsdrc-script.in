@@ -1,0 +1,104 @@
+#!/bin/bash
+set -e
+set -o pipefail
+shopt -s nullglob
+
+# Activate or deactivate a sysvinit script.
+#
+# Files:
+# dysnomia-support/groups/*: Groups to add on activation
+# dysnomia-support/users/*: Users to add on activation
+#
+# Component properties (environment variables):
+# enableAtBoot: if set to 1 the rc script will start on startup and stop on
+#   shutdown
+
+# Autoconf settings
+export prefix=@prefix@
+
+# Import utility functions
+source @datadir@/@PACKAGE@/util
+
+# Sets a number of common utility environment variables
+composeUtilityVariables $0 $2 $3
+
+export PATH=$prefix/bin:$PATH
+
+removeUsersAndGroups()
+{
+    dysnomia-delusers "$1"
+    dysnomia-delgroups "$1"
+}
+
+rollback()
+{
+    removeUsersAndGroups "$1"
+    exit 1
+}
+
+if [ "$enableAtBoot" = "" ]
+then
+    activityPrefix="one"
+fi
+
+case "$1" in
+    activate)
+        (
+        dysnomia-addgroups "$2"
+        dysnomia-addusers "$2"
+
+        for i in $(ls $2/etc/rc.d)
+        do
+            if [ "$enableAtBoot" = "1" ]
+            then
+                ln -s $2/etc/rc.d/$i /usr/local/etc
+                scriptName="$(basename $i)"
+                echo "${scriptName}_enabled=YES" >> /etc/rc.conf
+                /usr/local/etc/$scriptName start
+            else
+                $2/etc/rc.d/$i onestart
+            fi
+        done
+        ) || rollback "$2"
+
+        markComponentAsActive
+        ;;
+
+    deactivate)
+        for i in $(ls $2/etc/rc.d | sort -r)
+        do
+            # Ignore the outcome for the stop action. It seems that when
+            # multiple processes have been spawned all of them get killed.
+            # This results in a non-zero exit status, but it can be ignored.
+            # Hopefully, this gets fixed in a new FreeBSD release.
+
+            if [ "$enableAtBoot" = "1" ]
+            then
+                scriptName="$(basename $i)"
+                /usr/local/etc/$scriptName stop || true
+                @sed@ -i -e "/^${scriptName}_enabled=YES"'$'"/d" /etc/rc.conf
+                rm -f /usr/local/etc/$scriptName
+            else
+                $2/etc/rc.d/$i onestop || true
+            fi
+        done
+
+        removeUsersAndGroups "$2"
+        unmarkComponentAsActive
+        ;;
+
+    shell)
+        cat >&2 <<EOF
+This is a shell session that can be used to control the '$componentName'
+BSD rc script.
+
+Some useful commands:
+EOF
+        for i in $(ls $2/etc/rc.d)
+        do
+            echo "$2/etc/rc.d/$i ${activityPrefix}start # Start $i process" >&2
+            echo "$2/etc/rc.d/$i ${activityPrefix}stop  # Stop $i process" >&2
+            echo "$2/etc/rc.d/$i help  # Shows the usage of $i process" >&2
+        done
+        ;;
+esac

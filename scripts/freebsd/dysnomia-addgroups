@@ -1,0 +1,30 @@
+#!/bin/bash
+set -e
+set -o pipefail
+shopt -s nullglob
+
+target="$1/dysnomia-support/groups"
+
+if [ -d "$target" ]
+then
+    ls $target/* | while read groupfile
+    do
+        (
+        source "$groupfile"
+
+        group="$(basename "$groupfile")"
+
+        if pw group show $group > /dev/null
+        then
+            echo "Group: $group already exists!" >&2
+        else
+            if [ -n "$gid" ]
+            then
+                gidArg="-g $gid"
+            fi
+
+            pw group add $gidArg $group
+        fi
+        )
+    done
+fi

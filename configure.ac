@@ -52,6 +52,11 @@ if test "$xargs" = na; then
     AC_MSG_ERROR([We need a GNU compatible xargs command, i.e. gxargs or xargs needed])
 fi
 
+AC_PATH_PROGS(sed, [gsed sed], [na])
+if test "$sed" = na; then
+    AC_MSG_ERROR([We need a GNU compatible gsed command, i.e. gsed or sed needed])
+fi
+
 AC_PATH_PROG(HELP2MAN, help2man, false)
 
 AS_IF([test "x$with_apache" != "x" && test "x$with_apache" != "xno"],
@@ -138,6 +143,13 @@ AS_CASE([$host_os],
  AC_CONFIG_FILES([
  scripts/darwin/dysnomia-addusers
  scripts/darwin/Makefile
+ ])
+ ],
+ [freebsd*], [
+ OSDIR=freebsd
+ AC_CONFIG_FILES([
+ scripts/freebsd/dysnomia-addusers
+ scripts/freebsd/Makefile
  ])
  ],
  [
@@ -231,6 +243,7 @@ dysnomia-modules/fileset
 dysnomia-modules/process
 dysnomia-modules/wrapper
 dysnomia-modules/sysvinit-script
+dysnomia-modules/bsdrc-script
 dysnomia-modules/Makefile
 data/Makefile
 nix/Makefile

@@ -1,0 +1,69 @@
+#!/bin/bash
+set -e
+set -o pipefail
+shopt -s nullglob
+
+target="$1/dysnomia-support/users"
+
+if [ -d "$target" ]
+then
+    ls $target/* | while read userfile
+    do
+        (
+        source "$userfile"
+
+        username="$(basename "$userfile")"
+
+        if pw user show "$username" > /dev/null
+        then
+            echo "User: $username already exists!" >&2
+        else
+            (
+                echo "user"
+                echo "add"
+
+                echo "-n"
+                echo "$username"
+
+                if [ -n "$uid" ]
+                then
+                    echo "-u"
+                    echo "$uid"
+                fi
+
+                if [ -n "$group" ]
+                then
+                    echo "-g"
+                    echo "$group"
+                fi
+
+                echo "-d"
+
+                if [ -n "$homeDir" ]
+                then
+                    echo "$homeDir"
+                else
+                    echo "/dev/null"
+                fi
+
+                if [ -n "$description" ]
+                then
+                    echo "-c"
+                    echo "$description"
+                fi
+
+                if [ -n "$shell" ]
+                then
+                    echo "-s"
+                    echo "$shell"
+                fi
+
+                if [ "$createHomeDir" = "1" ]
+                then
+                    echo "-m"
+                fi
+            ) | @xargs@ -d '\n' pw
+        fi
+    )
+    done
+fi

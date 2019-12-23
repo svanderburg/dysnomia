@@ -1,0 +1,19 @@
+#!/bin/bash
+set -e
+set -o pipefail
+shopt -s nullglob
+
+target="$1/dysnomia-support/groups"
+
+if [ -d "$target" ]
+then
+    ls $target/* | while read groupfile
+    do
+        group="$(basename "$groupfile")"
+
+        if pw group show $group > /dev/null
+        then
+            pw group del $group
+        fi
+    done
+fi
