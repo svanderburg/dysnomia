@@ -1,5 +1,5 @@
 { nixpkgs ? <nixpkgs>
-, systems ? [ "i686-linux" "x86_64-linux" "x86_64-darwin" "x86_64-freebsd" ]
+, systems ? [ "i686-linux" "x86_64-linux" "x86_64-darwin" "x86_64-freebsd" "x86_64-cygwin" ]
 , dysnomia ? { outPath = ./.; rev = 1234; }
 , officialRelease ? false
 }:

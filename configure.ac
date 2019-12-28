@@ -26,6 +26,7 @@ AC_ARG_WITH([sysvinit-initd-dir], AS_HELP_STRING([--with-sysvinit-initd-dir], [S
 AC_ARG_WITH([supervisord], AS_HELP_STRING([--without-supervisord], [Ignore presence of supervisord and disable it]))
 AC_ARG_WITH([systemd], AS_HELP_STRING([--without-systemd], [Ignore presence of systemd and disable it]))
 AC_ARG_WITH([launchd], AS_HELP_STRING([--without-launchd], [Ignore presence of launchd and disable it]))
+AC_ARG_WITH([cygrunsrv], AS_HELP_STRING([--without-cygrunsrv], [Ignore presence of cygrunsrv and disable it]))
 
 # Define environment variable options
 AC_ARG_WITH(CATALINA_HOME, [Location of the Apache Tomcat Catalina servlet container])
@@ -134,6 +135,9 @@ AS_IF([test "x$with_launchd" != "xno"],
       AC_SUBST(launchctl)
       ])
 
+AS_IF([test "x$with_cygrunsrv" != "xno"],
+      [AC_PATH_PROG(cygrunsrv, cygrunsrv)])
+
 # Check for which host we want to build and provide the corresponding scripts
 AC_CANONICAL_HOST
 
@@ -180,6 +184,7 @@ AM_CONDITIONAL(have_subversion, [test x$svnadmin != "x"])
 AM_CONDITIONAL(have_systemd, [test x$systemctl != "x"])
 AM_CONDITIONAL(have_supervisord, [test x$supervisorctl != "x"])
 AM_CONDITIONAL(have_launchd, [test x$launchctl != "x"])
+AM_CONDITIONAL(have_cygrunsrv, [test x$cygrunsrv != "x"])
 
 # CATALINA_BASE setting
 
@@ -230,6 +235,9 @@ AS_IF([test "x$supervisorctl" != "x"],
 AS_IF([test "x$launchctl" != "x"],
       [launchd_daemon=dysnomia-modules/launchd-daemon])
 
+AS_IF([test "x$cygrunsrv" != "x"],
+      [cygrunsrv_service=dysnomia-modules/cygrunsrv-service])
+
 AC_CONFIG_FILES([
 Makefile
 scripts/dysnomia
@@ -260,5 +268,6 @@ $subversion_repository
 $systemd_unit
 $supervisord_program
 $launchd_daemon
+$cygrunsrv_service
 ])
 AC_OUTPUT

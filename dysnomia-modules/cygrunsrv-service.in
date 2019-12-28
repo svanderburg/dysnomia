@@ -1,0 +1,61 @@
+#!/bin/bash
+set -e
+set -o pipefail
+shopt -s nullglob
+
+# Activate or deactivate a Windows service via cygrunsrv
+#
+# Files:
+# cygrunsrvparams: Linefeed separated text file in which every line specifies a
+#   parameter passed to cygrunsrv
+
+# Autoconf settings
+export prefix=@prefix@
+
+# Import utility functions
+source @datadir@/@PACKAGE@/util
+
+# Sets a number of common utility environment variables
+composeUtilityVariables $0 $2 $3
+
+cleanupResources()
+{
+    local storePath="$1"
+
+    @cygrunsrv@ --stop $componentName
+    @cygrunsrv@ --remove $componentName
+}
+
+rollback()
+{
+    cleanupResources "$1"
+    exit 1
+}
+
+case "$1" in
+    activate)
+        (
+        cat $2/*-cygrunsrvparams | @xargs@ -d '\n' @cygrunsrv@ --install $componentName
+        @cygrunsrv@ --start $componentName
+        ) || rollback "$2"
+
+        markComponentAsActive
+        ;;
+
+    deactivate)
+        cleanupResources "$2"
+        unmarkComponentAsActive
+        ;;
+
+    shell)
+        cat >&2 <<EOF
+This is a shell session that can be used to control the '$componentName'
+Windows service.
+
+Some useful commands:
+EOF
+        echo "cygrunsrv --start $componentName  # Start the process" >&2
+        echo "cygrunsrv --stop $componentName   # Stop the process" >&2
+        echo "cygrunsrv --query $componentName  # Query the process" >&2
+        ;;
+esac
