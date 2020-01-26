@@ -51,7 +51,7 @@ case "$1" in
         do
             if [ "$enableAtBoot" = "1" ]
             then
-                ln -s $2/etc/rc.d/$i /usr/local/etc
+                ln -sfn $2/etc/rc.d/$i /usr/local/etc
                 scriptName="$(basename $i)"
                 echo "${scriptName}_enabled=YES" >> /etc/rc.conf
                 /usr/local/etc/$scriptName start
