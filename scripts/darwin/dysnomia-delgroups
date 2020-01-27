@@ -3,17 +3,26 @@ set -e
 set -o pipefail
 shopt -s nullglob
 
+deleteGroup()
+{
+    local groupfile="$1"
+    group="$(basename "$groupfile")"
+
+    if dscl . -read /Groups/$group
+    then
+        dscl . -delete /Groups/$group
+    fi
+}
+
 target="$1/dysnomia-support/groups"
 
-if [ -d "$target" ]
+if [ -f "$1" ]
+then
+    deleteGroup "$1"
+elif [ -d "$target" ]
 then
     ls $target/* | while read groupfile
     do
-        group="$(basename "$groupfile")"
-
-        if dscl . -read /Groups/$group
-        then
-            dscl . -delete /Groups/$group
-        fi
+        deleteGroup "$groupfile"
     done
 fi

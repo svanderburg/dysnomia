@@ -3,17 +3,27 @@ set -e
 set -o pipefail
 shopt -s nullglob
 
+deleteUser()
+{
+    local userfile="$1"
+
+    username="$(basename "$userfile")"
+
+    if pw user show "$username" > /dev/null
+    then
+        pw user del "$username"
+    fi
+}
+
 target="$1/dysnomia-support/users"
 
-if [ -d "$target" ]
+if [ -f "$1" ]
+then
+    deleteUser "$1"
+elif [ -d "$target" ]
 then
     ls $target/* | while read userfile
     do
-        username="$(basename "$userfile")"
-
-        if pw user show "$username" > /dev/null
-        then
-            pw user del "$username"
-        fi
+        deleteUser "$userfile"
     done
 fi

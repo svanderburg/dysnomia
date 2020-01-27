@@ -3,13 +3,11 @@ set -e
 set -o pipefail
 shopt -s nullglob
 
-target="$1/dysnomia-support/users"
+createUser()
+{
+    export userfile="$1"
 
-if [ -d "$target" ]
-then
-    ls $target/* | while read userfile
-    do
-        (
+    (
         source "$userfile"
 
         username="$(basename "$userfile")"
@@ -72,6 +70,18 @@ then
             echo "$username"
             ) | xargs -d '\n' useradd
         fi
-        )
+    )
+}
+
+target="$1/dysnomia-support/users"
+
+if [ -f "$1" ]
+then
+    createUser "$1"
+elif [ -d "$target" ]
+then
+    ls $target/* | while read userfile
+    do
+        createUser "$userfile"
     done
 fi

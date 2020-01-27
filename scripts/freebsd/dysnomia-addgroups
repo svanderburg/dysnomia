@@ -3,13 +3,11 @@ set -e
 set -o pipefail
 shopt -s nullglob
 
-target="$1/dysnomia-support/groups"
+createGroup()
+{
+    export groupfile="$1"
 
-if [ -d "$target" ]
-then
-    ls $target/* | while read groupfile
-    do
-        (
+    (
         source "$groupfile"
 
         group="$(basename "$groupfile")"
@@ -25,6 +23,18 @@ then
 
             pw group add $gidArg $group
         fi
-        )
+    )
+}
+
+target="$1/dysnomia-support/groups"
+
+if [ -f "$target" ]
+then
+    createGroup "$1"
+elif [ -d "$target" ]
+then
+    ls $target/* | while read groupfile
+    do
+        createGroup "$groupfile"
     done
 fi
