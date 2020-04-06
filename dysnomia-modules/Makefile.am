@@ -62,7 +62,7 @@ endif
 
 # Build settings
 
-libexec_SCRIPTS = echo fileset process nixos-configuration wrapper sysvinit-script bsdrc-script $(apache_webapplication) $(axis2_webservice) $(ejabberd_dump) $(iis_webapplication) $(mysql_database) $(mssql_database) $(tomcat_webapplication) $(postgresql_database) $(subversion_repository) $(mongo_database) $(influx_database) $(systemd_unit) $(supervisord_program) $(launchd_daemon) $(cygrunsrv_service)
+libexec_SCRIPTS = echo fileset process nixos-configuration wrapper sysvinit-script bsdrc-script managed-process $(apache_webapplication) $(axis2_webservice) $(ejabberd_dump) $(iis_webapplication) $(mysql_database) $(mssql_database) $(tomcat_webapplication) $(postgresql_database) $(subversion_repository) $(mongo_database) $(influx_database) $(systemd_unit) $(supervisord_program) $(launchd_daemon) $(cygrunsrv_service)
 pkgdata_SCRIPTS = util
 
-EXTRA_DIST = apache-webapplication.in axis2-webservice.in echo ejabberd-dump.in fileset.in iis-webapplication.in mssql-database.in mysql-database.in process.in nixos-configuration.in tomcat-webapplication.in wrapper.in postgresql-database.in subversion-repository.in mongo-database.in influx-database.in sysvinit-script.in bsdrc-script.in systemd-unit.in supervisord-program.in launchd-daemon.in cygrunsrv-service.in util
+EXTRA_DIST = apache-webapplication.in axis2-webservice.in echo ejabberd-dump.in fileset.in iis-webapplication.in mssql-database.in mysql-database.in process.in nixos-configuration.in tomcat-webapplication.in wrapper.in postgresql-database.in subversion-repository.in mongo-database.in influx-database.in sysvinit-script.in bsdrc-script.in systemd-unit.in supervisord-program.in launchd-daemon.in cygrunsrv-service.in managed-process.in util

@@ -1,0 +1,86 @@
+#!/bin/bash
+set -e
+set -o pipefail
+shopt -s nullglob
+
+# Activate or deactivate a managed process.
+#
+# Files:
+# dysnomia-support/groups/*: Groups to add on activation
+# dysnomia-support/users/*: Users to add on activation
+#
+# Component properties (environment variables):
+# processManager: Specifies which process manager we want to use to manage the process
+# stateDir: Directory in which the state is managed (typically /var)
+# runtimeDir: Directory in which the runtime files are managed (typically $stateDir/run)
+# logDir: Directory in which log files are stored (typically $stateDir/log)
+# tmpDir: Directory in which temp files are stored (typically $stateDir/tmp)
+
+# Autoconf settings
+export prefix=@prefix@
+export exec_prefix=@exec_prefix@
+
+# Import utility functions
+source @datadir@/@PACKAGE@/util
+
+# Sets a number of common utility environment variables
+composeUtilityVariables $0 $2 $3
+
+if [ -n "$stateDir" ]
+then
+    stateDirArg="--state-dir $stateDir"
+fi
+
+if [ -n "$runtimeDir" ]
+then
+    runtimeDirArg="--runtime-dir $runtimeDir"
+fi
+
+if [ -n "$logDir" ]
+then
+    logDirArg="--log-dir $logDir"
+fi
+
+if [ -n "$tmpDir" ]
+then
+    tmpDirArg="--tmp-dir $tmpDir"
+fi
+
+if [ "$1" = "lock" ] || [ "$1" = "unlock" ]
+then
+    # There is no action for this so it also does not make sense to do a
+    # conversion first. If we proceed, then the action would fail because there
+    # are no target properties configured
+    exit 0
+fi
+
+# Create a process manager specific configuration
+targetSpecificConfig=$(nixproc-generate-config --process-manager $processManager $stateDirArg $runtimeDirArg $logDirArg $tmpDirArg --no-out-link $2/*.json)
+
+# Invoke the corresponding Dysnomia module for the desired process manager
+case "$processManager" in
+    bsdrc)
+        dysnomiaModule=bsdrc-script
+        ;;
+    sysvinit)
+        dysnomiaModule=sysvinit-script
+        ;;
+    systemd)
+        dysnomiaModule=systemd-unit
+        ;;
+    supervisord)
+        dysnomiaModule=supervisord-program
+        ;;
+    launchd)
+        dysnomiaModule=launchd-daemon
+        ;;
+    cygrunsrv)
+        dysnomiaModule=cygrunsrv-service
+        ;;
+    *)
+        echo "Unknown process manager: $processManager"
+        exit 1
+        ;;
+esac
+
+@libexecdir@/$dysnomiaModule "$1" "$targetSpecificConfig" "$3"

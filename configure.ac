@@ -252,6 +252,7 @@ dysnomia-modules/process
 dysnomia-modules/wrapper
 dysnomia-modules/sysvinit-script
 dysnomia-modules/bsdrc-script
+dysnomia-modules/managed-process
 dysnomia-modules/Makefile
 data/Makefile
 nix/Makefile
