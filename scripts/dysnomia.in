@@ -244,21 +244,35 @@ fi
 
 # Search for Dysnomia modules in the DYSNOMIA_MODULES_PATH and the libexecdir
 
-DYSNOMIA_MODULES_PATHS=$(echo $DYSNOMIA_MODULES_PATH | tr ':' ' ')
-
-for i in $DYSNOMIA_MODULES_PATHS @libexecdir@
-do
-    if [ -x "$i/$type" ]
-    then
-        module="$i/$type"
-        break
-    fi
-done
-
-if [ -z $module ]
+if [ "${type:0:1}" = "/" ] || [ "${type:0:2}" = "./" ]
 then
-    echo "Module: $type cannot be found!" >&2
-    exit 1
+    if [ -d "$type" ]
+    then
+        module="$(echo $type/libexec/dysnomia/*)"
+    elif [ -f "$type" ]
+    then
+        module="$type"
+    else
+        echo "Module: $type cannot be found!" >&2
+        exit 1
+    fi
+else
+    DYSNOMIA_MODULES_PATHS=$(echo $DYSNOMIA_MODULES_PATH | tr ':' ' ')
+
+    for i in $DYSNOMIA_MODULES_PATHS @libexecdir@
+    do
+        if [ -x "$i/$type" ]
+        then
+            module="$i/$type"
+            break
+        fi
+    done
+
+    if [ -z $module ]
+    then
+        echo "Module: $type cannot be found!" >&2
+        exit 1
+    fi
 fi
 
 # Helper function that configures environment variables for the shell session
