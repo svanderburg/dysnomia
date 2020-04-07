@@ -60,15 +60,58 @@ configuration parameters. More information on this can be found by running:
 
 Dysnomia modules
 ================
-The Dysnomia package contains the following modules, of which some of them can
-be optionally enabled/disabled:
+To deploy mutable components, Dysnomia uses a plugin system and delegates the
+reposibility of executing deployment activities for a certain component to
+Dysnomia modules.
+
+Dysnomia provides the following modules that have no external service
+dependencies:
+
+* `echo`. Mereley echos the parameters and environment variables used during
+  activation or deactivation. Useful for debugging purposes.
+* `process`. Wraps a process inside a
+  [systemd](http://www.freedesktop.org/wiki/Software/systemd) or init.d job and
+  activates or deactivates it.
+* `wrapper`. Wraps the `bin/wrapper` activation script inside the component into
+  a [systemd](http://www.freedesktop.org/wiki/Software/systemd) or init.d job
+  and activates or deactivates it.
+
+To deploy running processes (e.g. system or application services, such
+microservices) you Dysnomia offers a number of plugins that use a variety
+of process managers to manage the lifecycle of a process:
+
+* `sysvinit-script` activates or deactivates a sysvinit script (also known as
+  [LSB Init](https://wiki.debian.org/LSBInitScripts) compliant scripts)
+* `bsdrc-script` activates or deactivates a
+  [BSD rc](https://www.freebsd.org/doc/en_US.ISO8859-1/articles/rc-scripting/index.html)
+  script.
+* `systemd-unit` activates or deactivates a
+  [systemd](https://www.freedesktop.org/wiki/Software/systemd) unit
+* `launchd-daemon` activates or deactivates a
+  [launchd](https://www.launchd.info) daemon
+* `supervisord-program` activates or deactivates a
+  [supervisord](http://supervisord.org) program configuration section.
+* `cygrunsrv-service` activates or deactivates a Windows service via
+  [cygrunsrv](http://web.mit.edu/cygwin/cygwin_v1.3.2/usr/doc/Cygwin/cygrunsrv.README)
+
+Dysnomia will try to autodetect which process managers are available and will
+automatically install the appropriate plugins.
+
+It is also possible to work with a process manager-agnostic configuration file
+and target any of the process managers listed above with one single configuration
+file:
+
+* `managed-process` translates a process manager-agnostic JSON configuration to
+  a desired process manament-specific configuration and activates or deactivates
+  the process using a process manager listed above.
+
+The Dysnomia package contains the following application-specific modules, that
+can be optionally enabled/disabled:
 
 * `apache-webapplication`. Deploys a web application in a document root folder
   of the [Apache HTTP server](http://httpd.apache.org).
 * `axis2-webservice`. Deploys an Axis2 ARchive (AAR) file inside an
   [Axis2](http://axis2.apache.org) container.
-* `echo`. Mereley echos the parameters and environment variables used during
-  activation or deactivation. Useful for debugging purposes.
 * `ejabberd-dump`. Deploys an [Ejabberd](http://www.ejabberd.im) configuration
   database.
 * `fileset`. Deploys a directory on the filesystem that is populated with
@@ -88,17 +131,10 @@ be optionally enabled/disabled:
   configuration.
 * `postgresql-database`. Deploys a database to a
   [PostgreSQL](http://www.postgresql.com) DBMS instance.
-* `process`. Wraps a process inside a
-  [systemd](http://www.freedesktop.org/wiki/Software/systemd) or init.d job and
-  activates or deactivates it.
 * `subversion-repository`. Deploys [Subversion](http://subversion.apache.org)
   repository dump into a Subversion working directory.
 * `tomcat-webapplication`. Deploys a Java Web Application ARchive (WAR) file
   inside an [Apache Tomcat](http://tomcat.apache.org) servlet container.
-* `wrapper`. Wraps the `bin/wrapper` activation script inside the component into
-  a [systemd](http://www.freedesktop.org/wiki/Software/systemd) or init.d job
-  and activates or deactivates it.
-* `sysvinit-script` activates or deactivates a sysvinit script
 
 Configuration of the process and wrapper modules
 ------------------------------------------------
