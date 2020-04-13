@@ -5,7 +5,7 @@
   wrapper = {};
 }
 // lib.optionalAttrs (config.services.httpd.enable) { apache-webapplication = {
-  documentRoot = config.services.httpd.documentRoot;
+  documentRoot = config.services.httpd.documentRoot or config.services.httpd.virtualHosts.localhost.documentRoot;
 }; }
 // lib.optionalAttrs (config.services.tomcat.axis2.enable) { axis2-webservice = {}; }
 // lib.optionalAttrs (config.services.ejabberd.enable) { ejabberd-dump = {
@@ -13,9 +13,6 @@
 }; }
 // lib.optionalAttrs (config.services.mysql.enable) { mysql-database = {
     mysqlPort = config.services.mysql.port;
-  } // lib.optionalAttrs enableAuthentication {
-    mysqlUsername = "root";
-    mysqlPassword = builtins.readFile (config.services.mysql.rootPassword);
   };
 }
 // lib.optionalAttrs (config.services.postgresql.enable) { postgresql-database = {
