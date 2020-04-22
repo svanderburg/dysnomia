@@ -5,7 +5,7 @@
   wrapper = {};
 }
 // lib.optionalAttrs (config.services.httpd.enable) { apache-webapplication = {
-  documentRoot = config.services.httpd.documentRoot or config.services.httpd.virtualHosts.localhost.documentRoot;
+  documentRoot = config.services.httpd.virtualHosts.localhost.documentRoot;
 }; }
 // lib.optionalAttrs (config.services.tomcat.axis2.enable) { axis2-webservice = {}; }
 // lib.optionalAttrs (config.services.ejabberd.enable) { ejabberd-dump = {

@@ -32,14 +32,43 @@ then
     socketArg="--socket=$mysqlSocket"
 fi
 
+timeout=${timeout:-10}
+
 case "$1" in
     activate)
+        if [ "$mysqlSocket" != "" ]
+        then
+            # Wait for socket file to become available
+            numOfTries=1
+            detectedSocketFile=0
+
+            while [ $numOfTries -lt $timeout ]
+            do
+                echo "Waiting for the MySQL socket file to become available..." >&2
+
+                if [ -e "$mysqlSocket" ]
+                then
+                    detectedSocketFile=1
+                    break
+                fi
+
+                sleep 1
+                ((numOfTries++))
+            done
+
+            if [ "$detectedSocketFile" = "0" ]
+            then
+                echo "Could not detect MySQL socket file within $timeout seconds! Failing..." >&2
+                exit 1
+            fi
+        fi
+
         # Initalize the given schema if the database does not exists
         if [ "$(echo "show databases" | @mysql@ $socketArg --user=$mysqlUsername --password=$mysqlPassword -N | grep -x $componentName)" = "" ]
         then
             ( echo "create database $componentName;"
               echo "use $componentName;"
-              
+
               if [ -d $2/mysql-databases ]
               then
                   cat $2/mysql-databases/*.sql
@@ -58,12 +87,12 @@ case "$1" in
         # line because that contains a comment with a timestamp Without it we
         # can compare output hashes to see whether dumps are identical
         @mysqldump@ $socketArg --single-transaction --quick --user=$mysqlUsername --password=$mysqlPassword $componentName | head -n-1 | xz > dump.sql.xz
-        
+
         hash=$(cat dump.sql.xz | sha256sum)
         hash=${hash:0:64}
-        
+
         snapshotsPath=$(composeSnapshotsPath)
-        
+
         if [ -d $snapshotsPath/$hash ]
         then
             rm -Rf $tmpdir
@@ -76,7 +105,7 @@ case "$1" in
         ;;
     restore)
         lastSnapshot=$(determineLastSnapshot)
-        
+
         if [ "$lastSnapshot" != "" ]
         then
             ( echo "use $componentName;"

@@ -28,7 +28,6 @@ makeTest {
       services.mysql = {
         enable = true;
         package = pkgs.mysql;
-        rootPassword = pkgs.writeTextFile { name = "mysqlpw"; text = "verysecret"; };
       };
 
       environment.systemPackages = [ dysnomia ];
@@ -41,6 +40,9 @@ makeTest {
       # we check whether it is created. This test should succeed.
 
       $machine->waitForJob("mysql");
+
+      $machine->mustSucceed("mysqladmin -u root password verysecret");
+
       $machine->mustSucceed("mysqlUsername=root mysqlPassword=verysecret dysnomia --type mysql-database --operation activate --component ${mysql_database} --environment");
       my $result = $machine->mustSucceed("echo 'select * from test' | mysql --user=root --password=verysecret -N testdb");
 
@@ -51,7 +53,7 @@ makeTest {
       }
 
       # Activate the database again. It should proceed without doing anything.
-      $machine->mustSucceed("mysqlUsername=root mysqlPassword=verysecret dysnomia --type mysql-database --operation activate --component ${mysql_database} --environment");
+      $machine->mustSucceed("mysqlUsername=root mysqlSocket=/run/mysqld/mysqld.pid mysqlPassword=verysecret dysnomia --type mysql-database --operation activate --component ${mysql_database} --environment");
 
       # Take a snapshot of the MySQL database.
       # This test should succeed.

@@ -9,6 +9,7 @@ shopt -s nullglob
 #
 # Container properties (environment variables):
 # catalinaBaseDir: Base directory in which Apache Tomcat is installed (defaults to: @CATALINA_BASE@)
+# timout: Maximum amount of seconds we should wait for the webapps base directory to become available
 
 # Autoconf settings
 export prefix=@prefix@
@@ -24,8 +25,34 @@ then
     catalinaBaseDir=@CATALINA_BASE@
 fi
 
+timeout=${timeout:-10}
+
 case "$1" in
     activate)
+        # Wait for the webapps deployment directory to become available
+        numOfTries=1
+        detectedWebappsBaseDir=0
+
+        while [ $numOfTries -lt $timeout ]
+        do
+            echo "Waiting for the webapps base directory to become available..." >&2
+
+            if [ -d "$catalinaBaseDir/webapps" ]
+            then
+                detectedWebappsBaseDir=1
+                break
+            fi
+
+            sleep 1
+            ((numOfTries++))
+        done
+
+        if [ "$detectedWebappsBaseDir" = "0" ]
+        then
+            echo "The webapps base directory did not appear within $timeout seconds! Failing..." >&2
+            exit 1
+        fi
+
         # Link all WAR files in the deployment directory, so that they will be activated with hot-deployment
         find $(@readlink@ -f $2/webapps) -name \*.war | while read i
         do
@@ -66,6 +93,10 @@ case "$1" in
     shell)
         cat >&2 <<EOF
 This is a shell session that can be used to control the '$componentName' Tomcat web application.
+
+Module specific environment variables:
+componentName    Name of the application
+catalinaBaseDir  Directory in which the Servlet container resides
 EOF
         ;;
 esac

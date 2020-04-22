@@ -6,6 +6,9 @@ shopt -s nullglob
 # Activates or deactivates web service archives (*.aar files) in the
 # axis2/WEB-INF/services subfolder by symlinking them into an Apache Axis2
 # container.
+#
+# Environment variables:
+# timout: Maximum amount of seconds we should wait for the Axis2 base directory to become available
 
 # Autoconf settings
 export prefix=@prefix@
@@ -16,15 +19,49 @@ source @datadir@/@PACKAGE@/util
 # Sets a number of common utility environment variables
 composeUtilityVariables $0 $2 $3
 
-catalinaBaseDir=@CATALINA_BASE@
+if [ "$catalinaBaseDir" = "" ]
+then
+    catalinaBaseDir=@CATALINA_BASE@
+fi
+
+if [ "$axis2BaseDir" = "" ]
+then
+    axis2BaseDir=@CATALINA_BASE@/webapps/axis2/WEB-INF/services
+fi
+
+timeout=${timeout:-10}
 
 case "$1" in
     activate)
+        # Wait for the Axis2 deployment directory to become available
+        numOfTries=1
+        detectedAxis2BaseDir=0
+
+        while [ $numOfTries -lt $timeout ]
+        do
+            echo "Waiting for the Axis2 base directory to become available..." >&2
+
+            if [ -d "$axis2BaseDir" ]
+            then
+                detectedAxis2BaseDir=1
+                break
+            fi
+
+            sleep 1
+            ((numOfTries++))
+        done
+
+        if [ "$detectedAxis2BaseDir" = "0" ]
+        then
+            echo "The Axis2 base directory did not appear within $timeout seconds! Failing..." >&2
+            exit 1
+        fi
+
         # Link all AAR files in the deployment directory, so that they will be activated with hot-deployment
         find $(@readlink@ -f $2/webapps/axis2/WEB-INF/services) -name \*.aar | while read i
         do
             # Link the web service
-            ln -sfn $i $catalinaBaseDir/webapps/axis2/WEB-INF/services/`basename $i`
+            ln -sfn $i $axis2BaseDir/`basename $i`
 
             # Link the configuration files if they exist
             if [ -d $2/conf/Catalina ]
@@ -45,7 +82,7 @@ case "$1" in
         find $(@readlink@ -f $2/webapps/axis2/WEB-INF/services) -name \*.aar | while read i
         do
             # Remove the web service
-            rm -f $catalinaBaseDir/webapps/axis2/WEB-INF/services/`basename $i`
+            rm -f $axis2BaseDir/`basename $i`
 
             # Also remove the configuration files if they exist
             if [ -d $2/conf/Catalina ]
@@ -62,6 +99,11 @@ case "$1" in
     shell)
         cat >&2 <<EOF
 This is a shell session that can be used to control the '$componentName' Axis2 webservice.
+
+Module specific environment variables:
+componentName    Name of the application
+axis2BaseDir     Directory in which AAR archives are deployed
+catalinaBaseDir  Directory in which the Servlet container resides
 EOF
         ;;
 esac
