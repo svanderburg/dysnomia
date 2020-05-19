@@ -1,5 +1,7 @@
 Version 0.10
 ============
+- State is managed in the user's home directory by default for unprivileged users
+
 - Type parameters can also be paths (files or directories). Then Dysnomia will load a Dysnomia module from that path instead of using the search directories
 
 - Added Dysnomia modules for various kinds of process managers: sysvinit, bsdrc, systemd, launchd, supervisord, cygrunsrv

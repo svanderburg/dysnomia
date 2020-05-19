@@ -39,56 +39,56 @@ createUnprivilegedUserAndGroup()
     if [ "$container_group" != "" ]
     then
         params=""
-        
+
         if [ "$container_gid" != "" ]
         then
             params="$params -g $container_gid"
         fi
-        
+
         params="$params $container_group"
-        
+
         if ! getent group $container_group
         then
             groupadd $params
         fi
     fi
-    
+
     # Create unprivileged user that runs the process, if requested
     if [ "$container_username" != "" ]
     then
         params=""
-        
+
         if [ "$container_uid" != "" ]
         then
             params="$params -u $container_uid"
         fi
-        
+
         if [ "$container_group" != "" ]
         then
             params="$params -g $container_group"
         fi
-        
+
         if [ "$container_homeDir" = "" ]
         then
             params="$params -d /dev/null"
         else
             params="$params -d $container_homeDir"
         fi
-        
+
         if [ "$container_createHomeDir" != "" ]
         then
             params="$params -m"
         fi
-        
+
         if [ "$container_shell" = "" ]
         then
             params="$params -s /bin/sh"
         else
             params="$params -s $container_shell"
         fi
-        
+
         params="$params $container_username"
-        
+
         if ! id -u $container_username
         then
             useradd $params
@@ -105,7 +105,7 @@ createUnprivilegedUserAndGroup()
 removeUnprivilegedUserAndGroup()
 {
     # Remove unprivileged user, if requested
-    
+
     if [ "$container_username" != "" ]
     then
         if id -u $container_username
@@ -113,9 +113,9 @@ removeUnprivilegedUserAndGroup()
             userdel $container_username
         fi
     fi
-    
+
     # Remove unprivileged group, if requested
-    
+
     if [ "$container_group" != "" ]
     then
         if getent group $container_group
@@ -137,7 +137,7 @@ addUserSettingsToSystemdConfig()
     then
         echo "Group=$container_group" >> $1
     fi
-    
+
     if [ "$container_username" != "" ]
     then
         echo "User=$container_username" >> $1
@@ -173,7 +173,12 @@ checkStateDir()
 {
     if [ "$DYSNOMIA_STATEDIR" = "" ]
     then
-        DYSNOMIA_STATEDIR="/var/state/dysnomia"
+        if [ "$(id -u)" = "0" ]
+        then
+            DYSNOMIA_STATEDIR="/var/state/dysnomia"
+        else
+            DYSNOMIA_STATEDIR="$HOME/.dysnomia"
+        fi
     fi
 }
 
@@ -195,7 +200,7 @@ determineComponentName()
     then
         componentName="${componentName:33}"
     fi
-    
+
     echo "$componentName"
 }
 
@@ -213,19 +218,19 @@ determineComponentName()
 determineContainerName()
 {
     local storePrefix="${NIX_STORE_DIR:-/nix/store}/"
-    
+
     if [ "$1" = "" ]
     then
         local containerName="$2" # If no container name is provided then the type identifier is the container name
     else
         local containerName=$(basename "$1")
-        
+
         if [ "${1:0:${#storePrefix}}" = "$storePrefix" ]
         then
             containerName="${containerName:33}" # If container name is a Nix store path, then strip off the hash component
         fi
     fi
-    
+
     echo "$containerName"
 }
 
@@ -330,9 +335,9 @@ markComponentAsActive()
 {
     local garbagePath=$(composeGarbagePath)
     local activatedPath=$(composeActivatedPath)
-    
+
     mkdir -p $(dirname $activatedPath)
-    
+
     if [ -f $garbagePath ]
     then
         mv $garbagePath $activatedPath
@@ -357,7 +362,7 @@ markComponentAsGarbage()
 {
     local garbagePath=$(composeGarbagePath)
     local activatedPath=$(composeActivatedPath)
-    
+
     if [ ! -e $garbagePath ]
     then
         mkdir -p $(dirname $garbagePath)
@@ -383,11 +388,11 @@ determineLastSnapshot()
 {
     local snapshotsPath=$(composeSnapshotsPath)
     local generationsPath=$(composeGenerationsPath)
-    
+
     if [ -d $generationsPath ]
     then
         local lastGeneration=$(ls $generationsPath | sort -n | tail -1)
-        
+
         if [ "$lastGeneration" != "" ]
         then
             echo "$snapshotsPath/$(basename $(readlink $generationsPath/$lastGeneration))"
@@ -448,11 +453,11 @@ computeOutputHash()
 createGenerationSymlink()
 {
     local generationsPath=$(composeGenerationsPath)
-    
+
     if [ -d $generationsPath ]
     then
         local lastGeneration=$(ls $generationsPath | sort -n | tail -1)
-        
+
         if [ "$lastGeneration" = "" ]
         then
             lastGeneration=0
@@ -461,7 +466,7 @@ createGenerationSymlink()
         mkdir -p $generationsPath
         local lastGeneration=0
     fi
-    
+
     if [ "$lastGeneration" = "0" ] || [ "$(basename $(readlink $generationsPath/$lastGeneration))" != "$1" ] # Only create the generation symlink if the previous symlink refers to a different snapshot
     then
         local newGeneration=$((lastGeneration+1))
@@ -501,12 +506,12 @@ attemptSeveralTimes()
         then
             break
         fi
-        
+
         echo "Commmand failed, trying again in a second..." >&2
         sleep 1
         num=$((num + 1))
     done
-    
+
     if [ $num -eq $2 ]
     then
         echo "Still does not work after $num attempts!" >&2
@@ -524,7 +529,7 @@ removeSystemdService()
 {
     local jobsDir=$(dirname "$1")
     local jobName=$(basename "$1" .service)
-    
+
     if [ -f $2/etc/socket ]
     then
         rm -f $jobsDir/dysnomia.target.wants/$jobName.socket
@@ -532,7 +537,7 @@ removeSystemdService()
     else
         rm -f $jobsDir/dysnomia.target.wants/$jobName.service
     fi
-    
+
     rm -f "$1"
 }
 
@@ -546,40 +551,40 @@ activateSystemdService()
 {
     local jobsDir=$(dirname "$1")
     local jobName=$(basename "$1" .service)
-    
+
     addUserSettingsToSystemdConfig "$1"
     if [ -f $2/etc/systemd-config ]
     then
         cat $2/etc/systemd-config >> "$1"
     fi
-    
+
     if [ -f $jobsDir/dysnomia.target ]
     then
         mkdir -p $jobsDir/dysnomia.target.wants
     fi
-    
+
     if [ -f $2/etc/socket ]
     then
         if [ ! -f $jobsDir/$jobName.socket ]
         then
             cp $2/etc/socket $jobsDir/$jobName.socket
-            
+
             if [ -f $jobsDir/dysnomia.target ]
             then
                 ln -sf ../$jobName.socket $jobsDir/dysnomia.target.wants/$jobName.socket
             fi
         fi
-        
+
         startUnit=$jobName.socket
     else
         if [ -f $jobsDir/dysnomia.target ]
         then
             ln -sf ../$jobName.service $jobsDir/dysnomia.target.wants/$jobName.service
         fi
-        
+
         startUnit=$jobName.service
     fi
-    
+
     systemctl --system daemon-reload
     systemctl start $startUnit || (removeSystemdService $jobsDir/$jobName.service $2; removeUnprivilegedUserAndGroup; false)
 }
