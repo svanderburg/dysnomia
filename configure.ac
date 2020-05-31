@@ -28,6 +28,9 @@ AC_ARG_WITH([systemd], AS_HELP_STRING([--without-systemd], [Ignore presence of s
 AC_ARG_WITH([launchd], AS_HELP_STRING([--without-launchd], [Ignore presence of launchd and disable it]))
 AC_ARG_WITH([cygrunsrv], AS_HELP_STRING([--without-cygrunsrv], [Ignore presence of cygrunsrv and disable it]))
 
+# Define enable options
+AC_ARG_ENABLE([legacy], AS_HELP_STRING([--enable-legacy]. [Enable legacy implemenations of the process and wrapper modules]), [enable_legacy=yes], [enable_legacy=no])
+
 # Define environment variable options
 AC_ARG_WITH(CATALINA_HOME, [Location of the Apache Tomcat Catalina servlet container])
 
@@ -185,6 +188,7 @@ AM_CONDITIONAL(have_systemd, [test x$systemctl != "x"])
 AM_CONDITIONAL(have_supervisord, [test x$supervisorctl != "x"])
 AM_CONDITIONAL(have_launchd, [test x$launchctl != "x"])
 AM_CONDITIONAL(have_cygrunsrv, [test x$cygrunsrv != "x"])
+AM_CONDITIONAL(enable_legacy, [test x$enable_legacy = "xyes"])
 
 # CATALINA_BASE setting
 
@@ -254,6 +258,9 @@ dysnomia-modules/sysvinit-script
 dysnomia-modules/bsdrc-script
 dysnomia-modules/managed-process
 dysnomia-modules/Makefile
+dysnomia-modules/legacy/process
+dysnomia-modules/legacy/wrapper
+dysnomia-modules/legacy/Makefile
 data/Makefile
 nix/Makefile
 $axis2_webservice

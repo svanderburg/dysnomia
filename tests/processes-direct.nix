@@ -5,6 +5,7 @@ let
     pkgs = import nixpkgs {};
     inherit tarball;
     jobTemplate = "direct";
+    enableLegacy = true;
   };
 in
 with import nixpkgs {};

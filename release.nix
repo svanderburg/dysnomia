@@ -103,6 +103,14 @@ let
           processes_direct = import ./tests/processes-direct.nix {
             inherit nixpkgs tarball buildFun;
           };
+
+          process = import ./tests/process.nix {
+            inherit nixpkgs tarball buildFun;
+          };
+
+          wrapper = import ./tests/wrapper.nix {
+            inherit nixpkgs tarball buildFun;
+          };
         };
 
         snapshots = import ./tests/snapshots.nix {

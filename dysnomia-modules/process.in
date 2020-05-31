@@ -3,27 +3,16 @@ set -e
 set -o pipefail
 shopt -s nullglob
 
-# Activates or deactivates a generic process by modifying the host system's
-# service manager's configuration (e.g. systemd, sysvinit)
+# Activate or deactivate a process script. A process can either be a single
+# executable in the bin/ sub folder, or a process specification in
+# etc/dysnomia/process/*
 #
 # Files:
-# etc/process_config: Configuration file bundled with the component that
-#     configures specific container settings
-# etc/systemd-config: Configuration file bundled with the component that
-#     augments the generated systemd configuration with additional settings
-# etc/socket: Configuration file bundled with the component that defines a
-#     socket unit file that can be used to activate the service on-demand
+# dysnomia-support/groups/*: Groups to add on activation
+# dysnomia-support/users/*: Users to add on activation
 #
 # Component properties (environment variables):
-# container_process: Path to the executable that must be run when activated. If
-#     empty, it takes the first executable in the bin/ sub folder.
-# container_group: Name of the group to create. If empty, no group will be created.
-# container_gid: GID of the group to create. If empty, an aribitrary one will be chosen.
-# container_username: Name of the user to create. If empty, no user will be created.
-# container_uid: UID of the user to create. If empty, an aribitrary one will be chosen.
-# container_homeDir: Path to the home directory of the user
-# container_createHomeDir: When set to 1 the home directory will be created if it does not exists
-# container_shell: Path to the shell of the user
+# runtimeDir: Directory in which PID files are stored (defaults to: /var/run)
 
 # Autoconf settings
 export prefix=@prefix@
@@ -34,135 +23,110 @@ source @datadir@/@PACKAGE@/util
 # Sets a number of common utility environment variables
 composeUtilityVariables $0 $2 $3
 
-serviceName=$(basename $2)
+export PATH=$prefix/bin:$PATH
 
-# Open container configuration file if it exists
-if [ -f "$2/etc/process_config" ]
-then
-    source $2/etc/process_config
-fi
+removeUsersAndGroups()
+{
+    dysnomia-delusers "$1"
+    dysnomia-delgroups "$1"
+}
+
+rollback()
+{
+    removeUsersAndGroups "$1"
+    exit 1
+}
+
+determineProcess()
+{
+    if [ "$process" = "" ]
+    then
+        processes=( $1/bin/* )
+        local length="${#processes[@]}"
+
+        if [ "$length" = "0" ]
+        then
+            echo "No process could be found. Make sure there is an executable in bin/ or a process config" >&2
+            exit 1
+        elif [ "$length" = "1" ]
+        then
+            echo "${process[0]}"
+        else
+            echo "More than one process found. Specify which executable to start in a process config file" >&2
+            exit 1
+        fi
+    else
+        echo "$process"
+    fi
+}
+
+determinePIDFile()
+{
+    local process="$1"
+    local pidFile="$2"
+
+    if [ "$pidFile" = "" ]
+    then
+        echo "$runtimeDir/$(basename $process).pid"
+    else
+        echo "$pidFile"
+    fi
+}
+
+runtimeDir=${runtimeDir:-/var/run}
 
 case "$1" in
     activate)
-        createUnprivilegedUserAndGroup
-        
-        # Determine which process to run
-        
-        if [ "$container_process" = "" ]
+        (
+        dysnomia-addgroups "$2"
+        dysnomia-addusers "$2"
+
+        if [ -f $2/etc/dysnomia/process/* ]
         then
-            runProcess="$(echo $2/bin/*)" # Do a guess which process to run if none is specified
-        else
-            runProcess="$container_process" # Otherwise use specified one
+            source $2/etc/dysnomia/process/*
         fi
-    
-        if [ "@job_template@" = "systemd" ]
+
+        process=$(determineProcess "$2")
+        pidFile=$(determinePIDFile "$process" "$pidFile")
+
+        if [ -e "$pidFile" ]
         then
-            mkdir -p @systemd_rundir@/system
-            
-            # Systemd activation
-            sed -e "s|@name@|disnix-$serviceName|" \
-                -e "s|@description@|$serviceName|" \
-                -e "s|@process@|$runProcess|" \
-                -e "s|@""systemd_path@|@systemd_path@|" \
-                @datadir@/@PACKAGE@/process.template.systemd > @systemd_rundir@/system/disnix-$serviceName.service
-            
-            activateSystemdService @systemd_rundir@/system/disnix-$serviceName.service $2
-        elif [ "@job_template@" = "init.d" ]
-        then
-            if [ "$container_username" != "" ]
-            then
-                runProcess="su $container_username -c \"$runProcess\""
-            fi
-            
-            # init.d activation
-            sed -e "s|@name@|disnix-$serviceName|" \
-                -e "s|@description@|$serviceName|" \
-                -e "s|@process@|$runProcess|" \
-                @datadir@/@PACKAGE@/process.template.initd > @sysvinit_initd_dir@/$serviceName
-                
-                @sysvinit_initd_dir@/$serviceName start || (removeUnprivilegedUserAndGroup; false)
+            cat >&2 <<EOF
+PID file: $pidFile already exists, assuming that the process has been started
+already! If not, you should remove it, and try starting the process again"
+EOF
         else
-            # Direct activation
-            if [ ! -f /var/run/$serviceName.pid ]
-            then
-                if [ "$container_username" = "" ]
-                then
-                    nohup $runProcess > /var/log/$serviceName.log & pid=$!
-                else
-                    touch /var/log/$serviceName.log
-                    chown $container_username /var/log/$serviceName.log
-                    su $container_username -c "nohup $runProcess > /var/log/$serviceName.log" & pid=$!
-                fi
-                
-                echo $pid > /var/run/$serviceName.pid
-            fi
+            $process
         fi
-        
+        ) || rollback "$2"
+
         markComponentAsActive
         ;;
-    
+
     deactivate)
-        if [ "@job_template@" = "systemd" ]
+        if [ -f $2/etc/dysnomia/process/* ]
         then
-            # Systemd deactivation
-            if [ -e @systemd_rundir@/system/disnix-$serviceName.socket ]
-            then
-                systemctl stop disnix-$serviceName.socket
-            fi
-            
-            if [ -e @systemd_rundir@/system/disnix-$serviceName.service ]
-            then
-                systemctl stop disnix-$serviceName.service
-            fi
-        elif [ "@job_template@" = "init.d" ]
+            source $2/etc/dysnomia/process/*
+        fi
+
+        process=$(determineProcess "$2")
+        pidFile=$(determinePIDFile "$process" "$pidFile")
+
+        if [ -e "$pidFile" ]
         then
-            # init.d deactivation
-            if [ -e @sysvinit_initd_dir@/$serviceName ]
-            then
-                @sysvinit_initd_dir@/$serviceName stop
-            fi
+            kill "$(cat $pidFile)"
         else
-            # Direct deactivation
-            if [ -f /var/run/$serviceName.pid ]
-            then
-                kill $(cat /var/run/$serviceName.pid)
-                rm -f /var/run/$serviceName.pid
-            fi
+            echo "$pidFile does not exists! Assuming that it was stopped already!" >&2
         fi
-        
-        attemptSeveralTimes removeUnprivilegedUserAndGroup 10
-        
-        if [ "@job_template@" = "systemd" ]
-        then
-            if [ -e @systemd_rundir@/system/disnix-$serviceName.service ]
-            then
-                removeSystemdService @systemd_rundir@/system/disnix-$serviceName.service $2
-                systemctl --system daemon-reload
-            fi
-        elif [ "@job_template@" = "init.d" ]
-        then
-            # init.d cleanup
-            rm @sysvinit_initd_dir@/$serviceName
-        fi
-        
+
+        removeUsersAndGroups "$2"
         unmarkComponentAsActive
         ;;
+
     shell)
         cat >&2 <<EOF
 This is a shell session that can be used to control the '$componentName'
 process.
-
-Some useful commands:
-
 EOF
-
-        if [ "@job_template@" = "systemd" ]
-        then
-            cat >&2 <<EOF
-systemctl start disnix-$serviceName.service  Start the process
-systemctl stop disnix-$serviceName.service   Stop the process
-journalctl -u disnix-$serviceName.service    Display log
-EOF
-        fi
         ;;
 esac

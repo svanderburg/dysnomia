@@ -11,6 +11,7 @@
 , enableSystemdUnit ? false
 , catalinaBaseDir ? "/var/tomcat"
 , jobTemplate ? "systemd"
+, enableLegacy ? false
 , pkgs
 , tarball
 }:
@@ -34,7 +35,7 @@ pkgs.releaseTools.nixBuild {
     (if enableSystemdUnit then "--with-systemd" else "--without-systemd")
     (if pkgs.stdenv.isDarwin then "--with-launchd" else "--without-launchd")
     "--with-job-template=${jobTemplate}"
-  ];
+  ] ++ pkgs.lib.optional enableLegacy "--enable-legacy";
 
   buildInputs = [ pkgs.getopt ]
     ++ pkgs.stdenv.lib.optional enableEjabberdDump pkgs.ejabberd

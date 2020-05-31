@@ -1,5 +1,12 @@
 Version 0.10
 ============
+- The process and wrapper modules are simplified, and no longer use a process
+  manager. The depreceated old implementations can still be used by passing the
+  --enable-legacy parameter to the configure script. As a resolution, if it
+  desired to use systemd, use: systemd-unit. For init scripts, use:
+  sysvinit-script. Platform agnostic process management can be done with the
+  managed-process module.
+
 - State is managed in the user's home directory by default for unprivileged users
 
 - Type parameters can also be paths (files or directories). Then Dysnomia will load a Dysnomia module from that path instead of using the search directories

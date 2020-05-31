@@ -1,0 +1,168 @@
+#!/bin/bash
+set -e
+set -o pipefail
+shopt -s nullglob
+
+# Activates or deactivates a generic process by modifying the host system's
+# service manager's configuration (e.g. systemd, sysvinit)
+#
+# Files:
+# etc/process_config: Configuration file bundled with the component that
+#     configures specific container settings
+# etc/systemd-config: Configuration file bundled with the component that
+#     augments the generated systemd configuration with additional settings
+# etc/socket: Configuration file bundled with the component that defines a
+#     socket unit file that can be used to activate the service on-demand
+#
+# Component properties (environment variables):
+# container_process: Path to the executable that must be run when activated. If
+#     empty, it takes the first executable in the bin/ sub folder.
+# container_group: Name of the group to create. If empty, no group will be created.
+# container_gid: GID of the group to create. If empty, an aribitrary one will be chosen.
+# container_username: Name of the user to create. If empty, no user will be created.
+# container_uid: UID of the user to create. If empty, an aribitrary one will be chosen.
+# container_homeDir: Path to the home directory of the user
+# container_createHomeDir: When set to 1 the home directory will be created if it does not exists
+# container_shell: Path to the shell of the user
+
+# Autoconf settings
+export prefix=@prefix@
+
+# Import utility functions
+source @datadir@/@PACKAGE@/util
+
+# Sets a number of common utility environment variables
+composeUtilityVariables $0 $2 $3
+
+serviceName=$(basename $2)
+
+# Open container configuration file if it exists
+if [ -f "$2/etc/process_config" ]
+then
+    source $2/etc/process_config
+fi
+
+case "$1" in
+    activate)
+        createUnprivilegedUserAndGroup
+        
+        # Determine which process to run
+        
+        if [ "$container_process" = "" ]
+        then
+            runProcess="$(echo $2/bin/*)" # Do a guess which process to run if none is specified
+        else
+            runProcess="$container_process" # Otherwise use specified one
+        fi
+    
+        if [ "@job_template@" = "systemd" ]
+        then
+            mkdir -p @systemd_rundir@/system
+            
+            # Systemd activation
+            sed -e "s|@name@|disnix-$serviceName|" \
+                -e "s|@description@|$serviceName|" \
+                -e "s|@process@|$runProcess|" \
+                -e "s|@""systemd_path@|@systemd_path@|" \
+                @datadir@/@PACKAGE@/process.template.systemd > @systemd_rundir@/system/disnix-$serviceName.service
+            
+            activateSystemdService @systemd_rundir@/system/disnix-$serviceName.service $2
+        elif [ "@job_template@" = "init.d" ]
+        then
+            if [ "$container_username" != "" ]
+            then
+                runProcess="su $container_username -c \"$runProcess\""
+            fi
+            
+            # init.d activation
+            sed -e "s|@name@|disnix-$serviceName|" \
+                -e "s|@description@|$serviceName|" \
+                -e "s|@process@|$runProcess|" \
+                @datadir@/@PACKAGE@/process.template.initd > @sysvinit_initd_dir@/$serviceName
+                
+                @sysvinit_initd_dir@/$serviceName start || (removeUnprivilegedUserAndGroup; false)
+        else
+            # Direct activation
+            if [ ! -f /var/run/$serviceName.pid ]
+            then
+                if [ "$container_username" = "" ]
+                then
+                    nohup $runProcess > /var/log/$serviceName.log & pid=$!
+                else
+                    touch /var/log/$serviceName.log
+                    chown $container_username /var/log/$serviceName.log
+                    su $container_username -c "nohup $runProcess > /var/log/$serviceName.log" & pid=$!
+                fi
+                
+                echo $pid > /var/run/$serviceName.pid
+            fi
+        fi
+        
+        markComponentAsActive
+        ;;
+    
+    deactivate)
+        if [ "@job_template@" = "systemd" ]
+        then
+            # Systemd deactivation
+            if [ -e @systemd_rundir@/system/disnix-$serviceName.socket ]
+            then
+                systemctl stop disnix-$serviceName.socket
+            fi
+            
+            if [ -e @systemd_rundir@/system/disnix-$serviceName.service ]
+            then
+                systemctl stop disnix-$serviceName.service
+            fi
+        elif [ "@job_template@" = "init.d" ]
+        then
+            # init.d deactivation
+            if [ -e @sysvinit_initd_dir@/$serviceName ]
+            then
+                @sysvinit_initd_dir@/$serviceName stop
+            fi
+        else
+            # Direct deactivation
+            if [ -f /var/run/$serviceName.pid ]
+            then
+                kill $(cat /var/run/$serviceName.pid)
+                rm -f /var/run/$serviceName.pid
+            fi
+        fi
+        
+        attemptSeveralTimes removeUnprivilegedUserAndGroup 10
+        
+        if [ "@job_template@" = "systemd" ]
+        then
+            if [ -e @systemd_rundir@/system/disnix-$serviceName.service ]
+            then
+                removeSystemdService @systemd_rundir@/system/disnix-$serviceName.service $2
+                systemctl --system daemon-reload
+            fi
+        elif [ "@job_template@" = "init.d" ]
+        then
+            # init.d cleanup
+            rm @sysvinit_initd_dir@/$serviceName
+        fi
+        
+        unmarkComponentAsActive
+        ;;
+    shell)
+        cat >&2 <<EOF
+This is a shell session that can be used to control the '$componentName'
+process.
+
+Some useful commands:
+
+EOF
+
+        if [ "@job_template@" = "systemd" ]
+        then
+            cat >&2 <<EOF
+systemctl start disnix-$serviceName.service  Start the process
+systemctl stop disnix-$serviceName.service   Stop the process
+journalctl -u disnix-$serviceName.service    Display log
+EOF
+        fi
+        ;;
+esac
