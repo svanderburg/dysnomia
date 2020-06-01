@@ -1,75 +1,106 @@
-# Optional scripts
-
-if have_apache
-    apache_webapplication = apache-webapplication
-endif
-
-if have_axis2
-    axis2_webservice = axis2-webservice
-endif
-
-if have_ejabberd
-    ejabberd_dump = ejabberd-dump
-endif
-
-if have_iis
-    iis_webapplication = iis-webapplication
-endif
-
-if have_mssql
-    mssql_database = mssql-database
-endif
-
-if have_mysql
-    mysql_database = mysql-database
-endif
-
-if have_postgresql
-    postgresql_database = postgresql-database
-endif
-
-if have_tomcat
-    tomcat_webapplication = tomcat-webapplication
-endif
-
-if have_subversion
-    subversion_repository = subversion-repository
-endif
-
-if have_mongodb
-    mongo_database = mongo-database
-endif
-
-if have_influxdb
-    influx_database = influx-database
-endif
-
-if have_systemd
-    systemd_unit = systemd-unit
-endif
-
-if have_supervisord
-    supervisord_program = supervisord-program
-endif
-
-if have_launchd
-    launchd_daemon = launchd-daemon
-endif
-
-if have_cygrunsrv
-    cygrunsrv_service = cygrunsrv-service
-endif
-
 # Build settings
 
-libexec_SCRIPTS = echo fileset nixos-configuration sysvinit-script bsdrc-script managed-process $(apache_webapplication) $(axis2_webservice) $(ejabberd_dump) $(iis_webapplication) $(mysql_database) $(mssql_database) $(tomcat_webapplication) $(postgresql_database) $(subversion_repository) $(mongo_database) $(influx_database) $(systemd_unit) $(supervisord_program) $(launchd_daemon) $(cygrunsrv_service)
+libexec_SCRIPTS = echo fileset nixos-configuration managed-process
+
+# Append optional modules
 
 if !enable_legacy
     libexec_SCRIPTS += process wrapper
 endif
 
+if LINUX
+    libexec_SCRIPTS += sysvinit-script
+endif
+
+if BSD
+    libexec_SCRIPTS += bsdrc-script
+endif
+
+if have_apache
+    libexec_SCRIPTS += apache-webapplication
+endif
+
+if have_axis2
+    libexec_SCRIPTS += axis2-webservice
+endif
+
+if have_ejabberd
+    libexec_SCRIPTS += ejabberd-dump
+endif
+
+if have_iis
+    libexec_SCRIPTS += iis-webapplication
+endif
+
+if have_mssql
+    libexec_SCRIPTS += mssql-database
+endif
+
+if have_mysql
+    libexec_SCRIPTS += mysql-database
+endif
+
+if have_postgresql
+    libexec_SCRIPTS += postgresql-database
+endif
+
+if have_tomcat
+    libexec_SCRIPTS += tomcat-webapplication
+endif
+
+if have_subversion
+    libexec_SCRIPTS += subversion-repository
+endif
+
+if have_mongodb
+    libexec_SCRIPTS += mongo-database
+endif
+
+if have_influxdb
+    libexec_SCRIPTS += influx-database
+endif
+
+if have_systemd
+    libexec_SCRIPTS += systemd-unit
+endif
+
+if have_supervisord
+    libexec_SCRIPTS += supervisord-program
+endif
+
+if have_launchd
+    libexec_SCRIPTS += launchd-daemon
+endif
+
+if have_cygrunsrv
+    libexec_SCRIPTS += cygrunsrv-service
+endif
+
 pkgdata_SCRIPTS = util
 
-EXTRA_DIST = apache-webapplication.in axis2-webservice.in echo ejabberd-dump.in fileset.in iis-webapplication.in mssql-database.in mysql-database.in process.in nixos-configuration.in tomcat-webapplication.in wrapper.in postgresql-database.in subversion-repository.in mongo-database.in influx-database.in sysvinit-script.in bsdrc-script.in systemd-unit.in supervisord-program.in launchd-daemon.in cygrunsrv-service.in managed-process.in util
+EXTRA_DIST = apache-webapplication.in \
+	axis2-webservice.in \
+	bsdrc-script.in \
+	cygrunsrv-service.in \
+	echo \
+	ejabberd-dump.in \
+	fileset.in \
+	iis-webapplication.in \
+	influx-database.in \
+	launchd-daemon.in \
+	managed-process.in \
+	mongo-database.in \
+	mssql-database.in \
+	mysql-database.in \
+	nixos-configuration.in \
+	postgresql-database.in \
+	process.in \
+	subversion-repository.in \
+	supervisord-program.in \
+	systemd-unit.in \
+	sysvinit-script.in \
+	tomcat-webapplication.in \
+	util \
+	wrapper.in
 
 SUBDIRS = legacy

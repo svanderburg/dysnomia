@@ -166,6 +166,15 @@ AS_CASE([$host_os],
 )
 AC_SUBST(OSDIR)
 
+case "${host_os}" in
+    linux*)
+        build_linux=yes
+        ;;
+    *bsd*)
+        build_bsd=yes
+        ;;
+esac
+
 # Substitute some variables
 AC_SUBST(job_template)
 AC_SUBST(systemd_rundir)
@@ -189,6 +198,8 @@ AM_CONDITIONAL(have_supervisord, [test x$supervisorctl != "x"])
 AM_CONDITIONAL(have_launchd, [test x$launchctl != "x"])
 AM_CONDITIONAL(have_cygrunsrv, [test x$cygrunsrv != "x"])
 AM_CONDITIONAL(enable_legacy, [test x$enable_legacy = "xyes"])
+AM_CONDITIONAL(LINUX, [test x$build_linux = "xyes"])
+AM_CONDITIONAL(BSD, [test x$build_bsd = "xyes"])
 
 # CATALINA_BASE setting
 
