@@ -29,13 +29,35 @@ cleanupResources()
 {
     local storePath="$1"
 
+    # Stop all sockets
+
+    for i in $storePath/etc/systemd/system/*.socket
+    do
+        socketName="$(basename $i)"
+        if [ -f "$systemdTargetDir/$socketName" ]
+        then
+            @systemctl@ stop "$socketName"
+            rm -f $systemdTargetDir/$socketName
+        fi
+    done
+
+    # Stop all services
+
+    for i in $storePath/etc/systemd/system/*.service
+    do
+        serviceName="$(basename $i)"
+        if [ -f "$systemdTargetDir/$serviceName" ]
+        then
+            @systemctl@ stop "$serviceName"
+            rm -f $systemdTargetDir/$serviceName
+        fi
+    done
+
+    # Remove remainder of the files
+
     for i in $(ls $storePath/etc/systemd/system)
     do
-        if [ -f "$storePath/etc/systemd/system/$i" ]
-        then
-            @systemctl@ stop $i
-            rm -f $systemdTargetDir/$i
-        fi
+        rm -f $systemdTargetDir/$i
     done
 
     @systemctl@ --system daemon-reload
@@ -63,11 +85,18 @@ case "$1" in
 
         @systemctl@ --system daemon-reload
 
-        for i in $(ls $2/etc/systemd/system)
+        # Start all services, unless a socket unit exists -> then start the socket unit instead
+        for service in $2/etc/systemd/system/*.service
         do
-            if [ -f "$2/etc/systemd/system/$i" ]
+            serviceName="$(basename $service)"
+            socketName="$(basename $serviceName .service).socket"
+
+            if [ -f "$systemdTargetDir/$socketName" ]
             then
-                @systemctl@ start $i
+                @systemctl@ start "$socketName"
+            elif [ -f "$systemdTargetDir/$serviceName" ]
+            then
+                @systemctl@ start "$serviceName"
             fi
         done
         ) || rollback "$2"
