@@ -27,21 +27,6 @@ let
     );
 
     tests =
-      let
-        dysnomia = buildFun {
-          pkgs = import nixpkgs {};
-          inherit tarball;
-          enableApacheWebApplication = true;
-          enableAxis2WebService = true;
-          enableEjabberdDump = true;
-          enableMySQLDatabase = true;
-          enablePostgreSQLDatabase = true;
-          enableMongoDatabase = true;
-          enableTomcatWebApplication = true;
-          enableSubversionRepository = true;
-          enableSupervisordProgram = true;
-        };
-      in
       {
         modules = {
           apache-webapplication = import ./tests/apache-webapplication.nix {
@@ -109,6 +94,18 @@ let
           };
 
           wrapper = import ./tests/wrapper.nix {
+            inherit nixpkgs tarball buildFun;
+          };
+
+          sysvinit-script = import ./tests/sysvinit-script.nix {
+            inherit nixpkgs tarball buildFun;
+          };
+
+          systemd-unit = import ./tests/systemd-unit.nix {
+            inherit nixpkgs tarball buildFun;
+          };
+
+          supervisord-program = import ./tests/supervisord-program.nix {
             inherit nixpkgs tarball buildFun;
           };
         };

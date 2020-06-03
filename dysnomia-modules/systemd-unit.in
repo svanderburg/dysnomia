@@ -3,7 +3,11 @@ set -e
 set -o pipefail
 shopt -s nullglob
 
-# Activate or deactivate a systemd unit.
+# Activate or deactivate a systemd service.
+#
+# Optionally, it can also work with socket activation. If the component contains
+# both a service and socket unit with the same name, it will only start the
+# socket. On deactivation, it stops both the socket and service.
 #
 # Files:
 # dysnomia-support/groups/*: Groups to add on activation

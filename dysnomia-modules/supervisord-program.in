@@ -33,7 +33,7 @@ cleanupResources()
     do
         if [ -f "$supervisordTargetDir/$i" ]
         then
-            @supervisorctl@ stop $i
+            @supervisorctl@ stop $(basename $i .conf)
             rm -f $supervisordTargetDir/$i
         fi
     done

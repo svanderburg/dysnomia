@@ -33,6 +33,19 @@ composeUtilityVariables $0 $2 $3
 
 serviceName=$(basename $2)
 
+# Display deprecation warning
+
+cat >&2 <<EOF
+WARNING: This module is deprecated and you should migrate to any of the
+following alternatives:
+
+- If your only objective is to delegate the responsibility of executing
+  activities to the component, then migrate to the new wrapper module
+- If you want to manage a daemon, then migrate to the new process module
+- If you want a daemon to be managed by a process manager then pick any of the
+  process management modules described in the README.md
+EOF
+
 # Open container configuration file if it exists
 if [ -f "$2/etc/wrapper_config" ]
 then

@@ -36,6 +36,20 @@ composeUtilityVariables $0 $2 $3
 
 serviceName=$(basename $2)
 
+# Display deprecation warning
+
+cat >&2 <<EOF
+WARNING: This module is deprecated and you should migrate to any of the
+following alternatives:
+
+- If you want to deploy a systemd unit, then use: systemd-unit
+- If you want to deploy an init script, then use: sysvinit-script
+- If you want to directly manage a daemon, then use the new process module
+- If you wish to use other process managers, check the README.md
+- If you want to dynamically translate a process manager agnostic config file
+  to any supported process manager, then use: managed-process
+EOF
+
 # Open container configuration file if it exists
 if [ -f "$2/etc/process_config" ]
 then
