@@ -15,6 +15,7 @@ shopt -s nullglob
 #
 # Component properties (environment variables):
 # systemdTargetDir: Directory where the systemd unit files should be installed
+# systemdRootTarget: Root target that can be used to start all Dysnomia managed services
 
 # Autoconf settings
 export prefix=@prefix@
@@ -28,6 +29,7 @@ composeUtilityVariables $0 $2 $3
 export PATH=$prefix/bin:$PATH
 
 systemdTargetDir=${systemdTargetDir:-/etc/systemd-mutable/system}
+systemdRootTargetDir=${systemdRootTarget:-dysnomia.target.wants}
 
 cleanupResources()
 {
@@ -41,6 +43,7 @@ cleanupResources()
         if [ -f "$systemdTargetDir/$socketName" ]
         then
             @systemctl@ stop "$socketName"
+            rm -f $systemdTargetDir/$systemdRootTargetDir/$socketName
             rm -f $systemdTargetDir/$socketName
         fi
     done
@@ -53,6 +56,7 @@ cleanupResources()
         if [ -f "$systemdTargetDir/$serviceName" ]
         then
             @systemctl@ stop "$serviceName"
+            rm -f $systemdTargetDir/$systemdRootTargetDir/$serviceName
             rm -f $systemdTargetDir/$serviceName
         fi
     done
@@ -82,11 +86,31 @@ case "$1" in
         dysnomia-addgroups "$2"
         dysnomia-addusers "$2"
 
+        # Symlink all systemd files
         for i in $(ls $2/etc/systemd/system)
         do
             ln -sfn $2/etc/systemd/system/$i $systemdTargetDir
         done
 
+        # Symlink all units to be started in the root target wants directory so that
+        # they will start again after a reboot
+
+        mkdir -p $systemdTargetDir/$systemdRootTargetDir
+
+        for service in $2/etc/systemd/system/*.service
+        do
+            serviceName="$(basename $service)"
+            socketName="$(basename $serviceName .service).socket"
+
+            if [ -f "$2/etc/systemd/system/$socketName" ]
+            then
+                ln -sfn $2/etc/systemd/system/$socketName $systemdTargetDir/$systemdRootTargetDir
+            else
+                ln -sfn $2/etc/systemd/system/$serviceName $systemdTargetDir/$systemdRootTargetDir
+            fi
+        done
+
+        # Reload systemd so that it can use all unit files
         @systemctl@ --system daemon-reload
 
         # Start all services, unless a socket unit exists -> then start the socket unit instead
@@ -98,8 +122,7 @@ case "$1" in
             if [ -f "$systemdTargetDir/$socketName" ]
             then
                 @systemctl@ start "$socketName"
-            elif [ -f "$systemdTargetDir/$serviceName" ]
-            then
+            else
                 @systemctl@ start "$serviceName"
             fi
         done

@@ -34,6 +34,17 @@ makeTest {
       virtualisation.diskSize = 4096;
 
       environment.systemPackages = [ dysnomia ];
+
+      system.activationScripts.dysnomia = ''
+        mkdir -p /etc/systemd-mutable/system
+        if [ ! -f /etc/systemd-mutable/system/dysnomia.target ]
+        then
+            ( echo "[Unit]"
+              echo "Description=Services that are activated and deactivated by Dysnomia"
+              echo "After=final.target"
+            ) > /etc/systemd-mutable/system/dysnomia.target
+        fi
+      '';
     };
   };
 
@@ -41,12 +52,14 @@ makeTest {
     ''
       startAll;
 
+      # Check if Dysnomia systemd target exists. It should exist, or the
+      # remaining tests will not work reliably.
+      $machine->mustSucceed("[ -f /etc/systemd-mutable/system/dysnomia.target ]");
+
       # Test the systemd-unit module. Here we start a process which
       # loops forever. We check whether it has been started and
       # then we deactivate it again and verify whether it has been
       # stopped. We also check if the process runs as root.
-
-      $machine->mustSucceed("mkdir -p /etc/systemd-mutable/system");
 
       $machine->mustSucceed("dysnomia --type systemd-unit --operation activate --component ${systemd-unit} --environment");
       $machine->mustSucceed("sleep 5");
@@ -86,10 +99,10 @@ makeTest {
       $machine->mustSucceed("[ \"\$(ps aux | grep ${systemd-unit-unprivileged}/bin/loop | grep -v grep | grep unprivi)\" != \"\" ]");
 
       # Wreck the service and activate again. This test should succeed as the operation is idempotent.
-      #my $serviceName = "process-unprivileged.service";
+      my $serviceName = "process-unprivileged.service";
 
-      #$machine->mustSucceed("systemctl stop $serviceName"); # We deliberately stop the service manually
-      #$machine->mustSucceed("rm /etc/systemd-mutable/system/dysnomia.target.wants/$serviceName"); # We, by accident, remove the unit from the wants/ directory
+      $machine->mustSucceed("systemctl stop $serviceName"); # We deliberately stop the service manually
+      $machine->mustSucceed("rm /etc/systemd-mutable/system/dysnomia.target.wants/$serviceName"); # We, by accident, remove the unit from the wants/ directory
 
       $machine->mustSucceed("dysnomia --type systemd-unit --operation activate --component ${systemd-unit-unprivileged} --environment");
       $machine->mustSucceed("sleep 5");
