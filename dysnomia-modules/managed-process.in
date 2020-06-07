@@ -62,20 +62,23 @@ case "$processManager" in
     bsdrc)
         dysnomiaModule=bsdrc-script
         ;;
-    sysvinit)
-        dysnomiaModule=sysvinit-script
+    cygrunsrv)
+        dysnomiaModule=cygrunsrv-service
         ;;
-    systemd)
-        dysnomiaModule=systemd-unit
-        ;;
-    supervisord)
-        dysnomiaModule=supervisord-program
+    disnix)
+        dysnomiaModule=process
         ;;
     launchd)
         dysnomiaModule=launchd-daemon
         ;;
-    cygrunsrv)
-        dysnomiaModule=cygrunsrv-service
+    supervisord)
+        dysnomiaModule=supervisord-program
+        ;;
+    systemd)
+        dysnomiaModule=systemd-unit
+        ;;
+    sysvinit)
+        dysnomiaModule=sysvinit-script
         ;;
     *)
         echo "Unknown process manager: $processManager"

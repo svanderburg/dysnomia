@@ -93,7 +93,7 @@ case "$1" in
         then
             cat >&2 <<EOF
 PID file: $pidFile already exists, assuming that the process has been started
-already! If not, you should remove it, and try starting the process again"
+already! If not, you should remove it, and try starting the process again
 EOF
         else
             $process
