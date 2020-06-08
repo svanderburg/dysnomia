@@ -28,11 +28,11 @@ case "$1" in
         cd $2/Package
         script=$(ls *.deploy.cmd)
         ./$script /Y
-        
+
         # Copy the package contents manually, because all
         # the timestamps are 1 hour after 1970-01-01.
         # MSDeploy does not like that.
-        
+
         cd PackageTmp
         find . -type f ! -name "Web.config" | while read file
         do
@@ -40,12 +40,12 @@ case "$1" in
             mkdir -p "$iisWwwRoot/$webappName/$dir"
             cp "$file" "$iisWwwRoot/$webappName/$dir"
         done
-        
+
         markComponentAsActive
         ;;
     deactivate)
         echo \"$(cygpath --windows "@msdeploy@")\" -verb:delete -dest:apphostconfig=\"Default Web Site/$webappName\" | cmd
-        
+
         unmarkComponentAsActive
         ;;
     shell)

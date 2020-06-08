@@ -89,7 +89,7 @@ svnBaseDir  Base directory in which Subversion repositories are stored
 svnGroup    The group that owns the files stored in the Subversion base directory
 
 Some useful commands:
-@svnadmin@  Run the SVN administration tool
+@svnadmin@  # Run the SVN administration tool
 EOF
         ;;
 esac

@@ -90,8 +90,8 @@ influxdbUsername    Username of the account that has the privileges to administe
                     the database
 
 Some useful commands:
-su \$influxdbUsername -s /bin/sh  Open a shell session having administration privileges to InfluxDB
-@influx@ $componentName  Open a InfluxDB interactive terminal
+su \$influxdbUsername -s /bin/sh   # Open a shell session having administration privileges to InfluxDB
+@influx@ -database $componentName  # Open a InfluxDB interactive terminal
 EOF
         ;;
 esac

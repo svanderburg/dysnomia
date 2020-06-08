@@ -28,30 +28,30 @@ case "$1" in
     activate)
         # Nothing needs to be done to create a mongo database. It gets created
         # automatically once an object is saved.
-        
+
         if [ -d $2/mongo-databases ] && [ "$((echo "use $componentName;"; echo "db.getCollectionNames();") | @mongo@ | grep -x '\[ \]')" != "" ]
         then
             ( echo "use $componentName;"
               cat $2/mongo-databases/*
             ) | @mongo@
         fi
-        
+
         markComponentAsActive
         ;;
-        
+
     deactivate)
         markComponentAsGarbage
         ;;
     snapshot)
         tmpdir=$(mktemp -d)
         cd $tmpdir
-        
+
         @mongodump@ $mongoDumpArgs -d $componentName -o .
         hash=$((for i in $componentName/*; do echo $i; cat $i; done) | sha256sum)
         hash=${hash:0:64}
-        
+
         snapshotsPath=$(composeSnapshotsPath)
-        
+
         if [ -d $snapshotsPath/$hash ]
         then
             rm -Rf $tmpdir
@@ -64,7 +64,7 @@ case "$1" in
         ;;
     restore)
         lastSnapshot=$(determineLastSnapshot)
-        
+
         if [ "$lastSnapshot" != "" ]
         then
             @mongorestore@ $mongoRestoreArgs --drop -d $componentName $lastSnapshot/$componentName
@@ -76,7 +76,7 @@ case "$1" in
             ( echo "use $componentName;"
               echo "db.dropDatabase();"
             ) | @mongo@
-            
+
             unmarkComponentAsGarbage
         fi
         ;;
@@ -88,7 +88,7 @@ Module specific environment variables:
 componentName       Name of the database
 
 Some useful commands:
-@mongo@ $componentName Start MongoDB interactive terminal
+@mongo@ $componentName  # Start MongoDB interactive terminal
 EOF
         ;;
 esac

@@ -26,11 +26,11 @@ composeUtilityVariables $0 $2 $3
 case "$1" in
     activate)
         dbName=$componentName
-        
+
         ( echo "use master"
           echo "select name from sys.databases where name='$dbName'"
           echo "go" ) | "@osql@" -S ".\\SQLEXPRESS" -U $msSqlUsername -P $msSqlPassword -n -h-1 | [ "$(grep "$dbName")" = "" ] && createDatabase=1
-        
+
         if [ "$createDatabase" = "1" ]
         then
             ( echo "create database $dbName"
@@ -41,13 +41,13 @@ case "$1" in
         fi
         markComponentAsActive
         ;;
-        
+
     deactivate)
         # A MS SQL database cannot be deactivated, we do not want to drop a database
         # with all data in it, right?
         unmarkComponentAsActive
         ;;
-    
+
     shell)
         cat >&2 <<EOF
 This is a shell session that can be used to control the '$componentName' MS SQL database.
