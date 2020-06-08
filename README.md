@@ -69,12 +69,10 @@ dependencies:
 
 * `echo`. Mereley echos the parameters and environment variables used during
   activation or deactivation. Useful for debugging purposes.
-* `process`. Wraps a process inside a
-  [systemd](http://www.freedesktop.org/wiki/Software/systemd) or init.d job and
-  activates or deactivates it.
-* `wrapper`. Wraps the `bin/wrapper` activation script inside the component into
-  a [systemd](http://www.freedesktop.org/wiki/Software/systemd) or init.d job
-  and activates or deactivates it.
+* `process` starts a process that daemonizes and terminates a process by using
+  its corresponding PID file
+* `wrapper` delegates the execution of activities to the `bin/wrapper`
+  executable that is bundled with a component
 
 To deploy running processes (e.g. system or application services, such
 microservices) you Dysnomia offers a number of plugins that use a variety
@@ -136,24 +134,11 @@ can be optionally enabled/disabled:
 * `tomcat-webapplication`. Deploys a Java Web Application ARchive (WAR) file
   inside an [Apache Tomcat](http://tomcat.apache.org) servlet container.
 
-Configuration of the process and wrapper modules
-------------------------------------------------
-The `process` and `wrapper` modules are supposed to use the host system's
-"service manager". Unfortunately, this component differs among operating systems
-and system distributions.
-
-By default, Dysnomia is preconfigured to use NixOS' service manager, namely
-`systemd`, which expects runtime state files to reside in
-`/etc/systemd-mutable/system` and sets `/run/current-system/sw/bin` as the
-default `PATH` for services.
-
-If you are planning to use a different Linux distribution, these settings can be
-changed through the `--with-systemd-rundir` and `--with-systemd-path` configure
-parameters.
-
-`systemd` jobs deployed by Dysnomia are wanted by the `dysnomia.target`, if this
-file exists. However, this target file is not created by default. You need to do
-this yourself first. The following command typically suffices:
+Additional configuration of for systemd
+---------------------------------------
+`systemd` units deployed by Dysnomia are wanted by the `dysnomia.target`, if
+this file exists. However, this target file is not created by default. You need
+to do this yourself first. The following command typically suffices:
 
 ```bash
 $ cat > /etc/systemd-mutable/system/dysnomia.target <<EOF
@@ -163,17 +148,8 @@ After=final.target
 EOF
 ```
 
-Apart from `systemd`, Dysnomia can also be used to generate plain old `init.d`
-scripts instead. The template that is used to generate these scripts reside in
-`data/*.template.initd` of the source distribution. By default, it's configured
-to generate an `init.d` script for Ubuntu 12.04 LTS.
-
-If none of the operating system's service manager can be used, Dysnomia can also
-activate and deactivate services directly. To accomplish this use the `direct`
-template option.
-
-To support other kinds of Linux distributions, you need to adapt these templates
-to match your distribution's convention.
+A `dysnomia.target` file makes it possible to automatically start all Dysnomia
+deployed services after a reboot.
 
 Usage
 =====
@@ -736,7 +712,7 @@ case "$1" in
             mv dump.xz $snapshotsPath/$hash
             rmdir $tmpdir
         fi
-        
+
         # Create a generation symlink for the snapshot
         createGenerationSymlink $hash
         ;;

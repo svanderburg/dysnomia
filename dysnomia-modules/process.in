@@ -7,6 +7,11 @@ shopt -s nullglob
 # executable in the bin/ sub folder, or a process specification in
 # etc/dysnomia/process/*
 #
+# The process specification is a key=value pair configuration file that supports
+# two fields. The process field refers to the process to execute, the pidFile to
+# the path of the PID file that contains the PID of the daemon. If no pidFile is
+# given, then it will be inferred from the process executable name.
+#
 # Files:
 # dysnomia-support/groups/*: Groups to add on activation
 # dysnomia-support/users/*: Users to add on activation
