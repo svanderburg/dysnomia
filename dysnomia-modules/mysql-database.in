@@ -32,7 +32,7 @@ then
     socketArg="--socket=$mysqlSocket"
 fi
 
-timeout=${timeout:-10}
+timeout=${timeout:-20}
 
 case "$1" in
     activate)
@@ -56,7 +56,7 @@ case "$1" in
                 ((numOfTries++))
             done
 
-            if [ "$detectedSocketFile" = "0" ]
+            if [ "$detectedSocketFile" != "1" ]
             then
                 echo "Could not detect MySQL socket file within $timeout seconds! Failing..." >&2
                 exit 1

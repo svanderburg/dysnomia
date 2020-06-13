@@ -25,10 +25,6 @@ composeUtilityVariables $0 $2 $3
 configureFilesetProperties()
 {
     export targetDir="$documentRoot"
-    if [ "$filesetOwner" = "" ]
-    then
-        export filesetOwner="wwwrun:wwwrun"
-    fi
 }
 
 if [ "$documentRoot" = "" ]
