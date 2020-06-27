@@ -91,6 +91,8 @@ of process managers to manage the lifecycle of a process:
   [supervisord](http://supervisord.org) program configuration section.
 * `cygrunsrv-service` activates or deactivates a Windows service via
   [cygrunsrv](http://web.mit.edu/cygwin/cygwin_v1.3.2/usr/doc/Cygwin/cygrunsrv.README)
+* `docker-container` activates or deactivates a [Docker](https://www.docker.com)
+  container.
 
 Dysnomia will try to autodetect which process managers are available and will
 automatically install the appropriate plugins.

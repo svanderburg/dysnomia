@@ -1,0 +1,111 @@
+#!/bin/bash
+set -e
+#set -o pipefail
+shopt -s nullglob
+
+# Activates or deactivates a Docker container
+#
+# Files:
+# *-docker-settings: Containing global Docker container configuration settings
+# *-docker-createparams: Linefeed delimited configuration file container command-line arguments passed to: docker create
+#
+# A settings file is key=value pair based, and supports the following properties:
+# dockerContainerName: Name of the container (defaults to: dysnomia-$componentName)
+# dockerStopTimeout: Timeout in seconds before the container stops (defaults to: 1)
+# dockerStatelessDeployment: If enabled, the container will be removed, as well
+#   as the underlying image if it is no longer used by any other containers
+#   (defaults to: 1)
+
+# Autoconf settings
+export prefix=@prefix@
+
+# Import utility functions
+source @datadir@/@PACKAGE@/util
+
+# Sets a number of common utility environment variables
+composeUtilityVariables $0 $2 $3
+
+source $2/*-docker-settings
+
+# Provide default settings
+dockerContainerName="dysnomia-$componentName"
+dockerStopTimeout=${dockerStopTimeout:-1}
+dockerStatelessDeployment=${dockerStatelessDeployment:-1}
+
+removeContainerAndImage()
+{
+    if [ "$(@docker@ ps -a -f "name=$dockerContainerName" | wc -l)" = "2" ]
+    then
+        @docker@ rm $dockerContainerName
+    fi
+
+    if [ "$(@docker@ images -f "reference=$dockerImageTag" | wc -l)" = "2" ]
+    then
+        @docker@ rmi $dockerImageTag
+    fi
+}
+
+case "$1" in
+    activate)
+        # Load the Docker image if it does not exists
+        if [ "$(@docker@ images -f "reference=$dockerImageTag" | wc -l)" = "1" ]
+        then
+            @docker@ load -i $dockerImage
+        fi
+
+        # Create the container if it does not exists yet
+        if [ "$(@docker@ ps -a -f "name=$dockerContainerName" | wc -l)" = "1" ]
+        then
+            (
+            cat $2/*-docker-createparams
+            echo "--name"
+            echo "$dockerContainerName"
+            echo "$dockerImageTag"
+            ) | @xargs@ -d '\n' @docker@ create
+        fi
+
+        @docker@ start $dockerContainerName
+
+        if [ "$dockerStatelessDeployment" != "1" ]
+        then
+            markComponentAsActive
+        fi
+        ;;
+    deactivate)
+        # Stop the container if it is still running
+        if [ "$(@docker@ ps -f "name=$dockerContainerName" | wc -l)" = "2" ]
+        then
+            @docker@ stop -t $dockerStopTimeout $dockerContainerName
+        fi
+
+        if [ "$dockerStatelessDeployment" = "1" ]
+        then
+            removeContainerAndImage
+        else
+            markComponentAsGarbage
+        fi
+        ;;
+    collect-garbage)
+        if componentMarkedAsGarbage
+        then
+            removeContainerAndImage
+            unmarkComponentAsGarbage
+        fi
+        ;;
+    shell)
+        cat >&2 <<EOF
+This is a shell session that can be used to control the '$componentName' Docker container.
+
+Module specific environment variables:
+dockerContainerName  Name of the container
+
+Some useful commands:
+docker ps -f "name=$dockerContainerName" # Check status of the running container
+docker ps -a -f "name=$dockerContainerName" # Check status of the container
+docker stop $dockerContainerName # Stop the container
+docker start $dockerContainerName # Start the container
+docker stats $dockerContainerName # Show resource consumption statistics of the container
+docker exec -it $dockerContainerName /bin/sh # Run a diagnostic shell inside the container (works, if it provides a /bin/sh executable)
+EOF
+        ;;
+esac

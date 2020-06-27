@@ -19,7 +19,7 @@ AC_ARG_WITH([mongodb], AS_HELP_STRING([--without-mongodb], [Ignore presence of M
 AC_ARG_WITH([influxdb], AS_HELP_STRING([--without-influxdb], [Ignore presence of InfluxDB and disable it]))
 AC_ARG_WITH([tomcat], AS_HELP_STRING([--with-tomcat], [Enable Apache Tomcat module and specifies location of the Apache Tomcat base directory]))
 AC_ARG_WITH([subversion], AS_HELP_STRING([--with-subversion], [Enable subversion repository module]))
-AC_ARG_WITH([job-template], AS_HELP_STRING([--with-job-template], [Specifies which template to use for the wrapper and process modules. Possible options are: 'systemd' (the default), 'init.d' or 'direct']))
+AC_ARG_WITH([job-template], AS_HELP_STRING([--with-job-template], [Specifies which template to use for the legacy wrapper and process modules. Possible options are: 'systemd' (the default), 'init.d' or 'direct']))
 AC_ARG_WITH([systemd-rundir], AS_HELP_STRING([--with-systemd-rundir], [Specifies the state directory of systemd. Defaults to: '/etc/systemd-mutable']))
 AC_ARG_WITH([systemd-path], AS_HELP_STRING([--with-systemd-path], [Specifies the path of the composed systemd jobs. Defaults to: '/run/current-system/sw/bin']))
 AC_ARG_WITH([sysvinit-initd-dir], AS_HELP_STRING([--with-sysvinit-initd-dir], [Specifies the init.d directory in which sysvinit init scripts are stored. Defaults to: '/etc/init.d']))
@@ -27,6 +27,7 @@ AC_ARG_WITH([supervisord], AS_HELP_STRING([--without-supervisord], [Ignore prese
 AC_ARG_WITH([systemd], AS_HELP_STRING([--without-systemd], [Ignore presence of systemd and disable it]))
 AC_ARG_WITH([launchd], AS_HELP_STRING([--without-launchd], [Ignore presence of launchd and disable it]))
 AC_ARG_WITH([cygrunsrv], AS_HELP_STRING([--without-cygrunsrv], [Ignore presence of cygrunsrv and disable it]))
+AC_ARG_WITH([docker], AS_HELP_STRING([--without-docker], [Ignore presence of docker and disable it]))
 
 # Define enable options
 AC_ARG_ENABLE([legacy], AS_HELP_STRING([--enable-legacy]. [Enable legacy implemenations of the process and wrapper modules]), [enable_legacy=yes], [enable_legacy=no])
@@ -141,6 +142,9 @@ AS_IF([test "x$with_launchd" != "xno"],
 AS_IF([test "x$with_cygrunsrv" != "xno"],
       [AC_PATH_PROG(cygrunsrv, cygrunsrv)])
 
+AS_IF([test "x$with_docker" != "xno"],
+      [AC_PATH_PROG(docker, docker)])
+
 # Check for which host we want to build and provide the corresponding scripts
 AC_CANONICAL_HOST
 
@@ -197,6 +201,7 @@ AM_CONDITIONAL(have_systemd, [test x$systemctl != "x"])
 AM_CONDITIONAL(have_supervisord, [test x$supervisorctl != "x"])
 AM_CONDITIONAL(have_launchd, [test x$launchctl != "x"])
 AM_CONDITIONAL(have_cygrunsrv, [test x$cygrunsrv != "x"])
+AM_CONDITIONAL(have_docker, [test x$docker != "x"])
 AM_CONDITIONAL(enable_legacy, [test x$enable_legacy = "xyes"])
 AM_CONDITIONAL(LINUX, [test x$build_linux = "xyes"])
 AM_CONDITIONAL(BSD, [test x$build_bsd = "xyes"])
@@ -253,6 +258,9 @@ AS_IF([test "x$launchctl" != "x"],
 AS_IF([test "x$cygrunsrv" != "x"],
       [cygrunsrv_service=dysnomia-modules/cygrunsrv-service])
 
+AS_IF([test "x$docker" != "x"],
+      [docker_container=dysnomia-modules/docker-container])
+
 AC_CONFIG_FILES([
 Makefile
 scripts/dysnomia
@@ -275,6 +283,7 @@ dysnomia-modules/legacy/Makefile
 data/Makefile
 nix/Makefile
 $axis2_webservice
+$docker_container
 $ejabberd_dump
 $iis_webapplication
 $mssql_database

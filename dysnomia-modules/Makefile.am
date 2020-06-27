@@ -76,12 +76,17 @@ if have_cygrunsrv
     libexec_SCRIPTS += cygrunsrv-service
 endif
 
+if have_docker
+    libexec_SCRIPTS += docker-container
+endif
+
 pkgdata_SCRIPTS = util
 
 EXTRA_DIST = apache-webapplication.in \
 	axis2-webservice.in \
 	bsdrc-script.in \
 	cygrunsrv-service.in \
+	docker-container.in \
 	echo \
 	ejabberd-dump.in \
 	fileset.in \

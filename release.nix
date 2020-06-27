@@ -108,6 +108,10 @@ let
           supervisord-program = import ./tests/supervisord-program.nix {
             inherit nixpkgs tarball buildFun;
           };
+
+          docker-container = import ./tests/docker-container.nix {
+            inherit nixpkgs tarball buildFun;
+          };
         };
 
         snapshots = import ./tests/snapshots.nix {
