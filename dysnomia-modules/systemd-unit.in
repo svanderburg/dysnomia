@@ -5,9 +5,9 @@ shopt -s nullglob
 
 # Activate or deactivate a systemd service.
 #
-# Optionally, it can also work with socket activation. If the component contains
-# both a service and socket unit with the same name, it will only start the
-# socket. On deactivation, it stops both the socket and service.
+# Optionally, it can also work with socket or timer activation. If the component contains
+# both a service and socket or timer unit with the same name, it will only start the
+# socket or timer. On deactivation, it stops both the socket, timer and service.
 #
 # Files:
 # dysnomia-support/groups/*: Groups to add on activation
@@ -45,6 +45,19 @@ cleanupResources()
             @systemctl@ stop "$socketName"
             rm -f $systemdTargetDir/$systemdRootTargetDir/$socketName
             rm -f $systemdTargetDir/$socketName
+        fi
+    done
+
+    # Stop all timers
+
+    for i in $storePath/etc/systemd/system/*.timer
+    do
+        timerName="$(basename $i)"
+        if [ -f "$systemdTargetDir/$timerName" ]
+        then
+            @systemctl@ stop "$timerName"
+            rm -f $systemdTargetDir/$systemdRootTargetDir/$timerName
+            rm -f $systemdTargetDir/$timerName
         fi
     done
 
@@ -101,10 +114,14 @@ case "$1" in
         do
             serviceName="$(basename $service)"
             socketName="$(basename $serviceName .service).socket"
+            timerName="$(basename $serviceName .service).timer"
 
             if [ -f "$2/etc/systemd/system/$socketName" ]
             then
                 ln -sfn $2/etc/systemd/system/$socketName $systemdTargetDir/$systemdRootTargetDir
+            elif [ -f "$2/etc/systemd/system/$timerName" ]
+            then
+                ln -sfn $2/etc/systemd/system/$timerName $systemdTargetDir/$systemdRootTargetDir
             else
                 ln -sfn $2/etc/systemd/system/$serviceName $systemdTargetDir/$systemdRootTargetDir
             fi
@@ -113,15 +130,19 @@ case "$1" in
         # Reload systemd so that it can use all unit files
         @systemctl@ --system daemon-reload
 
-        # Start all services, unless a socket unit exists -> then start the socket unit instead
+        # Start all services, unless a socket or timer unit exists -> then start the socket or timer unit instead
         for service in $2/etc/systemd/system/*.service
         do
             serviceName="$(basename $service)"
             socketName="$(basename $serviceName .service).socket"
+            timerName="$(basename $serviceName .service).timer"
 
             if [ -f "$systemdTargetDir/$socketName" ]
             then
                 @systemctl@ start "$socketName"
+            elif [ -f "$systemdTargetDir/$timerName" ]
+            then
+                @systemctl@ start "$timerName"
             else
                 @systemctl@ start "$serviceName"
             fi

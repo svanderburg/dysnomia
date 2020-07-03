@@ -24,6 +24,10 @@ let
   systemd-unit-socketactivation = import ./deployment/systemd-unit-socketactivation.nix {
     inherit (pkgs) stdenv coreutils;
   };
+
+  systemd-unit-timeractivation = import ./deployment/systemd-unit-timeractivation.nix {
+    inherit (pkgs) stdenv coreutils hello;
+  };
 in
 makeTest {
   nodes = {
@@ -133,5 +137,19 @@ makeTest {
       $machine->mustSucceed("sleep 5");
       $machine->mustFail("ps aux | grep ${systemd-unit-socketactivation} | grep -v grep");
       $machine->mustFail("nc -z -n -v 127.0.0.1 5123");
+
+      # Timer activation test.
+
+      $machine->mustSucceed("dysnomia --type systemd-unit --operation activate --component ${systemd-unit-timeractivation} --environment");
+
+      $machine->mustSucceed("sleep 5");
+      $machine->mustSucceed("systemctl status hello.timer | grep -q \"Active: active\"");
+      $machine->mustSucceed("systemctl status hello.service | grep \"Finished Hello.\"");
+      $machine->mustSucceed("systemctl status hello.service | grep -v \"Failed\"");
+
+      $machine->mustSucceed("dysnomia --type systemd-unit --operation deactivate --component ${systemd-unit-timeractivation} --environment");
+      $machine->mustSucceed("sleep 5");
+      $machine->mustFail("systemctl status hello.service");
+      $machine->mustFail("systemctl status hello.socket");
     '';
 }
