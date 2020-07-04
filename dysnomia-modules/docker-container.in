@@ -34,7 +34,7 @@ dockerStatelessDeployment=${dockerStatelessDeployment:-1}
 
 removeContainerAndImage()
 {
-    if [ "$(@docker@ ps -a -f "name=$dockerContainerName" | wc -l)" = "2" ]
+    if [ "$(@docker@ ps -a -f "name=$dockerContainerName\$" | wc -l)" = "2" ]
     then
         @docker@ rm $dockerContainerName
     fi
@@ -54,7 +54,7 @@ case "$1" in
         fi
 
         # Create the container if it does not exists yet
-        if [ "$(@docker@ ps -a -f "name=$dockerContainerName" | wc -l)" = "1" ]
+        if [ "$(@docker@ ps -a -f "name=$dockerContainerName\$" | wc -l)" = "1" ]
         then
             (
             cat $2/*-docker-createparams
@@ -73,7 +73,7 @@ case "$1" in
         ;;
     deactivate)
         # Stop the container if it is still running
-        if [ "$(@docker@ ps -f "name=$dockerContainerName" | wc -l)" = "2" ]
+        if [ "$(@docker@ ps -f "name=$dockerContainerName\$" | wc -l)" = "2" ]
         then
             @docker@ stop -t $dockerStopTimeout $dockerContainerName
         fi
@@ -106,6 +106,7 @@ docker stop $dockerContainerName # Stop the container
 docker start $dockerContainerName # Start the container
 docker stats $dockerContainerName # Show resource consumption statistics of the container
 docker exec -it $dockerContainerName /bin/sh # Run a diagnostic shell inside the container (works, if it provides a /bin/sh executable)
+docker logs $dockerContainerName # Show container logs
 EOF
         ;;
 esac
