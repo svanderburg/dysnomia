@@ -27,24 +27,15 @@ composeUtilityVariables $0 $2 $3
 
 ejabberdctl=@ejabberdctl@
 
+checkEjabberdStatus()
+{
+    su - $ejabberdUser -s /bin/sh -c "$ejabberdctl status"
+}
+
 case "$1" in
     activate)
         # Wait until the ejabberd daemon is available
-        count=0
-
-        while ! su - $ejabberdUser -s /bin/sh -c "$ejabberdctl status"
-        do
-            if [ $count -eq 30 ]
-            then
-                echo "Tried 30 times, giving up..." >&2
-                exit 1
-            fi
-
-            echo "Ejabberd daemon not yet started. Waiting for 1 second..." >&2
-            count2=$((count++))
-            count=$count2
-            sleep 1
-        done
+        attemptSeveralTimes checkEjabberdStatus 10
 
         # Load the dump
         if [ -f $2 ]
@@ -95,7 +86,8 @@ case "$1" in
     collect-garbage)
         if componentMarkedAsGarbage
         then
-            rm -Rf /var/lib/ejabberd
+            rm -Rf /var/lib/ejabberd/*
+            rm -f /var/lib/ejabberd/.erlang.cookie
             rm -Rf /var/ejabberd
             rm -Rf /var/log/ejabberd
 

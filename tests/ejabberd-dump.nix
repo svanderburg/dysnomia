@@ -77,7 +77,13 @@ makeTest {
       # deactivated it is considered garbage, so it should be removed.
       $machine->mustSucceed("systemctl stop ejabberd");
       $machine->mustSucceed("ejabberdUser=ejabberd dysnomia --type ejabberd-dump --operation collect-garbage --component ${ejabberd_dump} --environment");
-      $machine->mustSucceed("[ ! -e /var/lib/ejabberd ]");
+      my $result = $machine->mustSucceed("ls -A /var/lib/ejabberd | wc -l");
+
+      if($result == 0) {
+          print "There are no files left in the spool directory!\n";
+      } else {
+          die("There are $result files left in the spool directory!\n");
+      }
 
       # Activate the ejabberd database again. This test should succeed.
       $machine->mustSucceed("systemctl start ejabberd");

@@ -483,7 +483,8 @@ waitForSocket()
 
 attemptSeveralTimes()
 {
-    local num=0
+    local num=1
+
     while [ $num -lt $2 ]
     do
         if $1
@@ -493,7 +494,7 @@ attemptSeveralTimes()
 
         echo "Commmand failed, trying again in a second..." >&2
         sleep 1
-        num=$((num + 1))
+        ((num + 1))
     done
 
     if [ $num -eq $2 ]
