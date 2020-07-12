@@ -32,35 +32,13 @@ then
     socketArg="--socket=$mysqlSocket"
 fi
 
-timeout=${timeout:-20}
+timeout=${timeout:-10}
 
 case "$1" in
     activate)
         if [ "$mysqlSocket" != "" ]
         then
-            # Wait for socket file to become available
-            numOfTries=1
-            detectedSocketFile=0
-
-            while [ $numOfTries -lt $timeout ]
-            do
-                echo "Waiting for the MySQL socket file to become available..." >&2
-
-                if [ -e "$mysqlSocket" ]
-                then
-                    detectedSocketFile=1
-                    break
-                fi
-
-                sleep 1
-                ((numOfTries++))
-            done
-
-            if [ "$detectedSocketFile" != "1" ]
-            then
-                echo "Could not detect MySQL socket file within $timeout seconds! Failing..." >&2
-                exit 1
-            fi
+            waitForSocket "$mysqlSocket" "$timeout"
         fi
 
         # Initalize the given schema if the database does not exists

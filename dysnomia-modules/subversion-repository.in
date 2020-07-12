@@ -31,13 +31,13 @@ case "$1" in
         if [ ! -e $svnBaseDir/$componentName ]
         then
             mkdir -p $svnBaseDir
-            
+
             @svnadmin@ create $svnBaseDir/$componentName
             if [ -d $2/subversion-repositories ]
             then
                 cat $2/subversion-repositories/* | @svnadmin@ load $svnBaseDir/$componentName
             fi
-            
+
             chgrp -R $svnGroup $svnBaseDir/$componentName
             chmod -R g+w $svnBaseDir/$componentName
             chmod g+s $svnBaseDir/$componentName/db
@@ -49,9 +49,9 @@ case "$1" in
         ;;
     snapshot)
         rev=$(cat $svnBaseDir/$componentName/db/current)
-        
+
         snapshotsPath=$(composeSnapshotsPath)
-        
+
         if [ ! -d $snapshotsPath/$rev ]
         then
             mkdir -p $snapshotsPath/$rev
@@ -62,7 +62,7 @@ case "$1" in
     restore)
         rev=$(cat $svnBaseDir/$componentName/db/current)
         lastSnapshot=$(determineLastSnapshot)
-        
+
         if [ "$lastSnapshot" != "" ] && [ "$rev" != "$lastSnapshot" ]
         then
             rm -Rf $svnBaseDir/$componentName

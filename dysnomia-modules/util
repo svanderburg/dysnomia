@@ -367,3 +367,109 @@ componentMarkedAsGarbage()
     local garbagePath=$(composeGarbagePath)
     [ -f $garbagePath ]
 }
+
+# Waits for a file to become available until a certain timeout period has
+# ellapsed.
+#
+# Parameters:
+# $1: file to wait for
+# S2: timeout period in seconds
+# $3: file type (f = regular file, d = directory, S = UNIX domain socket)
+#
+# Exit status:
+# 0 if the file appears and is of the right type, else 0
+
+waitForAnyFileType()
+{
+    local file="$1"
+    local timeout="$2"
+    local fileType="$3"
+    local numOfTries=1
+    local fileFound=0
+
+    while [ $numOfTries -lt $timeout ]
+    do
+        if [ -e "$file" ]
+        then
+            fileFound=1
+            break
+        fi
+
+        echo "Waiting for the file: $file to become available..." >&2
+
+        sleep 1
+        ((numOfTries++))
+    done
+
+    if [ "$fileFound" = "1" ]
+    then
+        case "$fileType" in
+            f)
+                if [ ! -f "$file" ]
+                then
+                    echo "Expecting $file to be a file, but it is not!" >&2
+                fi
+                ;;
+            d)
+                if [ ! -d "$file" ]
+                then
+                    echo "Expecting $file to be a directory, but it is not!" >&2
+                fi
+                ;;
+            S)
+                if [ ! -S "$file" ]
+                then
+                    echp "Expecting $file to be a UNIX domain socket, but it is not!" >&2
+                fi
+                ;;
+        esac
+    else
+        echo "The file: $file does not appear within $timeout seconds!" >&2
+        exit 1
+    fi
+}
+
+# Waits for a regular file to become available until a certain timeout period has
+# ellapsed.
+#
+# Parameters:
+# $1: file to wait for
+# S2: timeout period in seconds
+#
+# Exit status:
+# 0 if the file appears and is of the right type, else 0
+
+waitForFile()
+{
+    waitForAnyFileType "$1" "$2" "f"
+}
+
+# Waits for a directory to become available until a certain timeout period has
+# ellapsed.
+#
+# Parameters:
+# $1: file to wait for
+# S2: timeout period in seconds
+#
+# Exit status:
+# 0 if the file appears and is of the right type, else 0
+
+waitForDirectory()
+{
+    waitForAnyFileType "$1" "$2" "d"
+}
+
+# Waits for a UNIX domain socket to become available until a certain timeout
+# period has ellapsed.
+#
+# Parameters:
+# $1: file to wait for
+# S2: timeout period in seconds
+#
+# Exit status:
+# 0 if the file appears and is of the right type, else 0
+
+waitForSocket()
+{
+    waitForAnyFileType "$1" "$2" "S"
+}

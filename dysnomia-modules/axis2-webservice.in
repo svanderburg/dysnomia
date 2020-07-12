@@ -34,28 +34,7 @@ timeout=${timeout:-10}
 case "$1" in
     activate)
         # Wait for the Axis2 deployment directory to become available
-        numOfTries=1
-        detectedAxis2BaseDir=0
-
-        while [ $numOfTries -lt $timeout ]
-        do
-            echo "Waiting for the Axis2 base directory to become available..." >&2
-
-            if [ -d "$axis2BaseDir" ]
-            then
-                detectedAxis2BaseDir=1
-                break
-            fi
-
-            sleep 1
-            ((numOfTries++))
-        done
-
-        if [ "$detectedAxis2BaseDir" = "0" ]
-        then
-            echo "The Axis2 base directory did not appear within $timeout seconds! Failing..." >&2
-            exit 1
-        fi
+        waitForDirectory "$axis2BaseDir" "$timeout"
 
         # Link all AAR files in the deployment directory, so that they will be activated with hot-deployment
         find $(@readlink@ -f $2/webapps/axis2/WEB-INF/services) -name \*.aar | while read i

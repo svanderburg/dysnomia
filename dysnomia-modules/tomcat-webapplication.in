@@ -30,28 +30,7 @@ timeout=${timeout:-10}
 case "$1" in
     activate)
         # Wait for the webapps deployment directory to become available
-        numOfTries=1
-        detectedWebappsBaseDir=0
-
-        while [ $numOfTries -lt $timeout ]
-        do
-            echo "Waiting for the webapps base directory to become available..." >&2
-
-            if [ -d "$catalinaBaseDir/webapps" ]
-            then
-                detectedWebappsBaseDir=1
-                break
-            fi
-
-            sleep 1
-            ((numOfTries++))
-        done
-
-        if [ "$detectedWebappsBaseDir" = "0" ]
-        then
-            echo "The webapps base directory did not appear within $timeout seconds! Failing..." >&2
-            exit 1
-        fi
+        waitForDirectory "$catalinaBaseDir/webapps" "$timeout"
 
         # Link all WAR files in the deployment directory, so that they will be activated with hot-deployment
         find $(@readlink@ -f $2/webapps) -name \*.war | while read i

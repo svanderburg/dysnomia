@@ -36,7 +36,7 @@ rollback()
     exit 1
 }
 
-if [ "$enableAtBoot" = "" ]
+if [ "$enableAtBoot" != "1" ]
 then
     activityPrefix="one"
 fi
