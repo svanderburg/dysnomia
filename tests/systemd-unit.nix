@@ -142,9 +142,9 @@ makeTest {
 
       $machine->mustSucceed("dysnomia --type systemd-unit --operation activate --component ${systemd-unit-timeractivation} --environment");
 
-      $machine->mustSucceed("sleep 5");
+      $machine->mustSucceed("sleep 10");
       $machine->mustSucceed("systemctl status hello.timer | grep -q \"Active: active\"");
-      $machine->mustSucceed("systemctl status hello.service | grep \"Finished Hello.\"");
+      $machine->mustSucceed("systemctl status hello.service | grep \"Started Hello.\"");
       $machine->mustSucceed("systemctl status hello.service | grep -v \"Failed\"");
 
       $machine->mustSucceed("dysnomia --type systemd-unit --operation deactivate --component ${systemd-unit-timeractivation} --environment");

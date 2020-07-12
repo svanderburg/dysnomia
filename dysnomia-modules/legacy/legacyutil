@@ -213,32 +213,3 @@ activateSystemdService()
     systemctl --system daemon-reload
     systemctl start $startUnit || (removeSystemdService $jobsDir/$jobName.service $2; removeUnprivilegedUserAndGroup; false)
 }
-
-# Attempts to execute a command and retries it a given number of times if it
-# fails.
-#
-# Parameters:
-# $1: Command to execute
-# $2: The amount of times to retry if the command fails
-
-attemptSeveralTimes()
-{
-    local num=0
-    while [ $num -lt $2 ]
-    do
-        if $1
-        then
-            break
-        fi
-
-        echo "Commmand failed, trying again in a second..." >&2
-        sleep 1
-        num=$((num + 1))
-    done
-
-    if [ $num -eq $2 ]
-    then
-        echo "Still does not work after $num attempts!" >&2
-        false
-    fi
-}

@@ -83,8 +83,13 @@ cleanupResources()
 
     @systemctl@ --system daemon-reload
 
-    dysnomia-delusers "$storePath"
-    dysnomia-delgroups "$storePath"
+    # In some rare cases, in which a machine is under high load, a process
+    # might still be in the process of being terminate, depite the fact that
+    # the stop instruction has already been given.
+    #
+    # To make the removal of the accounts work, we try doing it several times.
+    attemptSeveralTimes "dysnomia-delusers "$storePath"" 10
+    attemptSeveralTimes "dysnomia-delgroups "$storePath"" 10
 }
 
 rollback()
