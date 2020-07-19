@@ -16,6 +16,7 @@ shopt -s nullglob
 # Component properties (environment variables):
 # systemdTargetDir: Directory where the systemd unit files should be installed
 # systemdRootTarget: Root target that can be used to start all Dysnomia managed services
+# systemdUserServices: If set to 1, the plugin deploys and manages user services
 
 # Autoconf settings
 export prefix=@prefix@
@@ -28,7 +29,14 @@ composeUtilityVariables $0 $2 $3
 
 export PATH=$prefix/bin:$PATH
 
-systemdTargetDir=${systemdTargetDir:-/etc/systemd-mutable/system}
+if [ "$systemdUserServices" = "1" ]
+then
+    systemdTargetDir=${systemdTargetDir:-~/.config/systemd/user}
+    systemdUserArg="--user"
+else
+    systemdTargetDir=${systemdTargetDir:-/etc/systemd-mutable/system}
+fi
+
 systemdRootTargetDir=${systemdRootTarget:-dysnomia.target.wants}
 
 cleanupResources()
@@ -42,7 +50,7 @@ cleanupResources()
         socketName="$(basename $i)"
         if [ -f "$systemdTargetDir/$socketName" ]
         then
-            @systemctl@ stop "$socketName"
+            @systemctl@ $systemdUserArg stop "$socketName"
             rm -f $systemdTargetDir/$systemdRootTargetDir/$socketName
             rm -f $systemdTargetDir/$socketName
         fi
@@ -55,7 +63,7 @@ cleanupResources()
         timerName="$(basename $i)"
         if [ -f "$systemdTargetDir/$timerName" ]
         then
-            @systemctl@ stop "$timerName"
+            @systemctl@ $systemdUserArg stop "$timerName"
             rm -f $systemdTargetDir/$systemdRootTargetDir/$timerName
             rm -f $systemdTargetDir/$timerName
         fi
@@ -68,7 +76,7 @@ cleanupResources()
         serviceName="$(basename $i)"
         if [ -f "$systemdTargetDir/$serviceName" ]
         then
-            @systemctl@ stop "$serviceName"
+            @systemctl@ $systemdUserArg stop "$serviceName"
             rm -f $systemdTargetDir/$systemdRootTargetDir/$serviceName
             rm -f $systemdTargetDir/$serviceName
         fi
@@ -81,7 +89,7 @@ cleanupResources()
         rm -f $systemdTargetDir/$i
     done
 
-    @systemctl@ --system daemon-reload
+    @systemctl@ $systemdUserArg --system daemon-reload
 
     # In some rare cases, in which a machine is under high load, a process
     # might still be in the process of being terminate, depite the fact that
@@ -133,7 +141,7 @@ case "$1" in
         done
 
         # Reload systemd so that it can use all unit files
-        @systemctl@ --system daemon-reload
+        @systemctl@ $systemdUserArg daemon-reload
 
         # Start all services, unless a socket or timer unit exists -> then start the socket or timer unit instead
         for service in $2/etc/systemd/system/*.service
@@ -144,12 +152,12 @@ case "$1" in
 
             if [ -f "$systemdTargetDir/$socketName" ]
             then
-                @systemctl@ start "$socketName"
+                @systemctl@ $systemdUserArg start "$socketName"
             elif [ -f "$systemdTargetDir/$timerName" ]
             then
-                @systemctl@ start "$timerName"
+                @systemctl@ $systemdUserArg start "$timerName"
             else
-                @systemctl@ start "$serviceName"
+                @systemctl@ $systemdUserArg start "$serviceName"
             fi
         done
         ) || rollback "$2"
@@ -173,8 +181,8 @@ EOF
         do
             if [ -f "$2/etc/systemd/system/$i" ]
             then
-                echo "systemctl start $i  # Start the process" >&2
-                echo "systemctl stop $i   # Stop the process" >&2
+                echo "systemctl $systemdUserArg start $i  # Start the process" >&2
+                echo "systemctl $systemdUserArg stop $i   # Stop the process" >&2
                 echo "journalctl -u $i    # Display log" >&2
             fi
         done
