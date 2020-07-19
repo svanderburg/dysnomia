@@ -13,4 +13,4 @@ man1_MANS = dysnomia.1 dysnomia-snapshots.1 dysnomia-containers.1
 EXTRA_DIST = dysnomia.in dysnomia-snapshots.in dysnomia-containers.in \
   $(man1_MANS)
 
-SUBDIRS = $(OSDIR)
+SUBDIRS = default darwin freebsd

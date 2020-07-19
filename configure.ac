@@ -148,34 +148,15 @@ AS_IF([test "x$with_docker" != "xno"],
 # Check for which host we want to build and provide the corresponding scripts
 AC_CANONICAL_HOST
 
-AS_CASE([$host_os],
- [darwin*], [
- OSDIR=darwin
- AC_CONFIG_FILES([
- scripts/darwin/dysnomia-addusers
- scripts/darwin/Makefile
- ])
- ],
- [freebsd*], [
- OSDIR=freebsd
- AC_CONFIG_FILES([
- scripts/freebsd/dysnomia-addusers
- scripts/freebsd/Makefile
- ])
- ],
- [
- OSDIR=default
- AC_CONFIG_FILES([scripts/default/Makefile])
- ]
-)
-AC_SUBST(OSDIR)
-
 case "${host_os}" in
     linux*)
         build_linux=yes
         ;;
     *bsd*)
         build_bsd=yes
+        ;;
+    darwin*)
+        build_darwin=yes
         ;;
 esac
 
@@ -205,6 +186,7 @@ AM_CONDITIONAL(have_docker, [test x$docker != "x"])
 AM_CONDITIONAL(enable_legacy, [test x$enable_legacy = "xyes"])
 AM_CONDITIONAL(LINUX, [test x$build_linux = "xyes"])
 AM_CONDITIONAL(BSD, [test x$build_bsd = "xyes"])
+AM_CONDITIONAL(DARWIN, [test x$build_darwin = "xyes"])
 
 # CATALINA_BASE setting
 
@@ -267,7 +249,11 @@ scripts/dysnomia
 scripts/dysnomia-containers
 scripts/dysnomia-snapshots
 scripts/Makefile
-$osspecificscripts
+scripts/darwin/dysnomia-addusers
+scripts/darwin/Makefile
+scripts/default/Makefile
+scripts/freebsd/dysnomia-addusers
+scripts/freebsd/Makefile
 dysnomia-modules/apache-webapplication
 dysnomia-modules/nixos-configuration
 dysnomia-modules/fileset
