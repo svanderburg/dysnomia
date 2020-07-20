@@ -53,7 +53,7 @@ makeTest {
       }
 
       # Activate the database again. It should proceed without doing anything.
-      $machine->mustSucceed("mysqlUsername=root mysqlSocket=/run/mysqld/mysqld.pid mysqlPassword=verysecret dysnomia --type mysql-database --operation activate --component ${mysql_database} --environment");
+      $machine->mustSucceed("mysqlUsername=root mysqlPassword=verysecret dysnomia --type mysql-database --operation activate --component ${mysql_database} --environment");
 
       # Take a snapshot of the MySQL database.
       # This test should succeed.
