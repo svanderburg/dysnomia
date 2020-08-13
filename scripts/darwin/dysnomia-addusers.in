@@ -3,6 +3,28 @@ set -e
 set -o pipefail
 shopt -s nullglob
 
+# Copyright (c) 2009-2020 Sander van der Burg
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+# THE SOFTWARE.
+
+# Shows the usage of this command to the user
+
 createUser()
 {
     export userfile="$1"
@@ -51,11 +73,60 @@ createUser()
     )
 }
 
-target="$1/dysnomia-support/users"
+# Autoconf settings
 
-if [ -f "$1" ]
+export prefix=@prefix@
+export exec_prefix=@exec_prefix@
+
+# Parse valid argument options
+
+PARAMS=`@getopt@ -n $0 -o hv -l help,version -- "$@"`
+
+if [ $? != 0 ]
 then
-    createUser "$1"
+    showUsage
+    exit 1
+fi
+
+# Evaluate valid options
+
+eval set -- "$PARAMS"
+
+while [ "$1" != "--" ]
+do
+    case "$1" in
+        -h|--help)
+            showUsage
+            exit 0
+            ;;
+        -v|--version)
+            showVersion
+            exit 0
+            ;;
+    esac
+
+    shift
+done
+
+shift
+
+# Validate parameters
+
+path="$1"
+
+if [ ! -e "$path" ]
+then
+    echo "ERROR: The path: $path is not valid!" >&2
+    exit 1
+fi
+
+# Execute operation
+
+target="$path/dysnomia-support/users"
+
+if [ -f "$path" ]
+then
+    createUser "$path"
 elif [ -d "$target" ]
 then
     ls $target/* | while read userfile

@@ -31,7 +31,7 @@ showUsage()
 Usage: $0 userfile
   or: $0 userdir
 
-The command `dysnomia-addusers' automatically creates users from a configuration
+The command `dysnomia-delusers' automatically deletes users from configuration
 files consisting of key=value pairs.
 
 Options:
@@ -49,67 +49,53 @@ Copyright (C) 2009-2020 Sander van der Burg
 EOF
 }
 
-createUser()
+deleteUser()
 {
-    export userfile="$1"
+    local userfile="$1"
+    username="$(basename "$userfile")"
 
-    (
-        source "$userfile"
-
-        username="$(basename "$userfile")"
-
-        if pw user show "$username" > /dev/null
-        then
-            echo "User: $username already exists!" >&2
-        else
-            (
-                echo "user"
-                echo "add"
-
-                echo "-n"
-                echo "$username"
-
-                if [ -n "$uid" ]
-                then
-                    echo "-u"
-                    echo "$uid"
-                fi
-
-                if [ -n "$group" ]
-                then
-                    echo "-g"
-                    echo "$group"
-                fi
-
-                echo "-d"
-
-                if [ -n "$homeDir" ]
-                then
-                    echo "$homeDir"
-                else
-                    echo "/dev/null"
-                fi
-
-                if [ -n "$description" ]
-                then
-                    echo "-c"
-                    echo "$description"
-                fi
-
-                if [ -n "$shell" ]
-                then
-                    echo "-s"
-                    echo "$shell"
-                fi
-
-                if [ "$createHomeDir" = "1" ]
-                then
-                    echo "-m"
-                fi
-            ) | @xargs@ -d '\n' pw
-        fi
-     )
+    if id -u "$username"
+    then
+        userdel "$username"
+    fi
 }
+
+# Autoconf settings
+
+export prefix=@prefix@
+export exec_prefix=@exec_prefix@
+
+# Parse valid argument options
+
+PARAMS=`@getopt@ -n $0 -o hv -l help,version -- "$@"`
+
+if [ $? != 0 ]
+then
+    showUsage
+    exit 1
+fi
+
+# Evaluate valid options
+
+eval set -- "$PARAMS"
+
+while [ "$1" != "--" ]
+do
+    case "$1" in
+        -h|--help)
+            showUsage
+            exit 0
+            ;;
+        -v|--version)
+            showVersion
+            exit 0
+            ;;
+    esac
+
+    shift
+done
+
+shift
 
 # Validate parameters
 
@@ -127,11 +113,11 @@ target="$path/dysnomia-support/users"
 
 if [ -f "$path" ]
 then
-    createUser "$path"
+    deleteUser "$path"
 elif [ -d "$target" ]
 then
     ls $target/* | while read userfile
     do
-        createUser "$userfile"
+        deleteUser "$userfile"
     done
 fi

@@ -28,10 +28,10 @@ shopt -s nullglob
 showUsage()
 {
     cat <<EOF
-Usage: $0 userfile
-  or: $0 userdir
+Usage: $0 groupfile
+  or: $0 groupdir
 
-The command `dysnomia-addusers' automatically creates users from a configuration
+The command `dysnomia-addgroups' automatically creates groups from configuration
 files consisting of key=value pairs.
 
 Options:
@@ -49,66 +49,27 @@ Copyright (C) 2009-2020 Sander van der Burg
 EOF
 }
 
-createUser()
+createGroup()
 {
-    export userfile="$1"
+    export groupfile="$1"
 
     (
-        source "$userfile"
+        source "$groupfile"
 
-        username="$(basename "$userfile")"
+        group="$(basename "$groupfile")"
 
-        if pw user show "$username" > /dev/null
+        if pw group show $group > /dev/null
         then
-            echo "User: $username already exists!" >&2
+            echo "Group: $group already exists!" >&2
         else
-            (
-                echo "user"
-                echo "add"
+            if [ -n "$gid" ]
+            then
+                gidArg="-g $gid"
+            fi
 
-                echo "-n"
-                echo "$username"
-
-                if [ -n "$uid" ]
-                then
-                    echo "-u"
-                    echo "$uid"
-                fi
-
-                if [ -n "$group" ]
-                then
-                    echo "-g"
-                    echo "$group"
-                fi
-
-                echo "-d"
-
-                if [ -n "$homeDir" ]
-                then
-                    echo "$homeDir"
-                else
-                    echo "/dev/null"
-                fi
-
-                if [ -n "$description" ]
-                then
-                    echo "-c"
-                    echo "$description"
-                fi
-
-                if [ -n "$shell" ]
-                then
-                    echo "-s"
-                    echo "$shell"
-                fi
-
-                if [ "$createHomeDir" = "1" ]
-                then
-                    echo "-m"
-                fi
-            ) | @xargs@ -d '\n' pw
+            pw group add $gidArg $group
         fi
-     )
+    )
 }
 
 # Validate parameters
@@ -123,15 +84,15 @@ fi
 
 # Execute operation
 
-target="$path/dysnomia-support/users"
+target="$path/dysnomia-support/groups"
 
-if [ -f "$path" ]
+if [ -f "$target" ]
 then
-    createUser "$path"
+    createGroup "$path"
 elif [ -d "$target" ]
 then
-    ls $target/* | while read userfile
+    ls $target/* | while read groupfile
     do
-        createUser "$userfile"
+        createGroup "$groupfile"
     done
 fi

@@ -58,58 +58,103 @@ createUser()
 
         username="$(basename "$userfile")"
 
-        if pw user show "$username" > /dev/null
+        if id -u "$username"
         then
             echo "User: $username already exists!" >&2
+
+            actualUid="$(id -u $username)"
+            if [ -n "$uid" ] && [ "$actualUid" != "$uid" ]
+            then
+                echo "$username already has uid: $actualUid, while: $uid was requested! Old uid will be retained!" >&2
+            fi
         else
             (
-                echo "user"
-                echo "add"
+            if [ -n "$uid" ]
+            then
+                echo "-u"
+                echo "$uid"
+            fi
 
-                echo "-n"
-                echo "$username"
+            if [ -n "$password" ]
+            then
+                echo "-p"
+                echo "$password"
+            fi
 
-                if [ -n "$uid" ]
-                then
-                    echo "-u"
-                    echo "$uid"
-                fi
+            if [ -n "$group" ]
+            then
+                echo "-g"
+                echo "$group"
+            fi
 
-                if [ -n "$group" ]
-                then
-                    echo "-g"
-                    echo "$group"
-                fi
+            if [ -n "$description" ]
+            then
+                echo "-c"
+                echo "$description"
+            fi
 
-                echo "-d"
+            echo "-d"
 
-                if [ -n "$homeDir" ]
-                then
-                    echo "$homeDir"
-                else
-                    echo "/dev/null"
-                fi
+            if [ -n "$homeDir" ]
+            then
+                echo "$homeDir"
+            else
+                echo "/dev/null"
+            fi
 
-                if [ -n "$description" ]
-                then
-                    echo "-c"
-                    echo "$description"
-                fi
+            if [ -n "$shell" ]
+            then
+                echo "-s"
+                echo "$shell"
+            fi
 
-                if [ -n "$shell" ]
-                then
-                    echo "-s"
-                    echo "$shell"
-                fi
+            if [ "$createHomeDir" = "1" ]
+            then
+                echo "-m"
+            fi
 
-                if [ "$createHomeDir" = "1" ]
-                then
-                    echo "-m"
-                fi
-            ) | @xargs@ -d '\n' pw
+            echo "$username"
+            ) | xargs -d '\n' useradd
         fi
-     )
+    )
 }
+
+# Autoconf settings
+
+export prefix=@prefix@
+export exec_prefix=@exec_prefix@
+
+# Parse valid argument options
+
+PARAMS=`@getopt@ -n $0 -o hv -l help,version -- "$@"`
+
+if [ $? != 0 ]
+then
+    showUsage
+    exit 1
+fi
+
+# Evaluate valid options
+
+eval set -- "$PARAMS"
+
+while [ "$1" != "--" ]
+do
+    case "$1" in
+        -h|--help)
+            showUsage
+            exit 0
+            ;;
+        -v|--version)
+            showVersion
+            exit 0
+            ;;
+    esac
+
+    shift
+done
+
+shift
 
 # Validate parameters
 

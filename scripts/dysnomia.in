@@ -143,7 +143,7 @@ do
             exit 0
             ;;
     esac
-    
+
     shift
 done
 
@@ -164,7 +164,7 @@ fi
 if [ "$useEnvironment" = "1" ]
 then
     envFlags=""
-    
+
     if [ "$container" = "" ]
     then
         container="$type"
@@ -206,7 +206,7 @@ then
         echo "ERROR: No type specified in the container configuration!" >&2
         exit 1
     fi
-    
+
     envFlags="-i"
 else
     echo "No container file or environment specified!" >&2
@@ -224,7 +224,7 @@ else
         componentFile="$(@readlink@ -f $component)"
     else
         DYSNOMIA_COMPONENTS_PATHS=$(echo $DYSNOMIA_COMPONENTS_PATH | tr ':' ' ')
-        
+
         for i in $DYSNOMIA_COMPONENTS_PATHS
         do
             if [ -e $i/$container/$component ]
@@ -233,7 +233,7 @@ else
                 break
             fi
         done
-        
+
         if [ "$componentFile" = "" ]
         then
             echo "No component configuration found for: $component" >&2
