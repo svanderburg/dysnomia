@@ -49,10 +49,25 @@ Copyright (C) 2009-2020 Sander van der Burg
 EOF
 }
 
+deleteGroupFreeBSD()
+{
+    local groupfile="$1"
+
+    groupname="$(basename "$groupfile")"
+
+    if pw group show "$groupname" > /dev/null
+    then
+        pw group del "$groupname"
+    fi
+}
+
 # Autoconf settings
 
 export prefix=@prefix@
 export exec_prefix=@exec_prefix@
+
+# Import common functions
+source @datadir@/@PACKAGE@/usermgmt-commons
 
 # Parse valid argument options
 
@@ -87,28 +102,7 @@ done
 shift
 
 # Validate parameters
-
-path="$1"
-
-if [ ! -e "$path" ]
-then
-    echo "ERROR: The path: $path is not valid!" >&2
-    exit 1
-fi
+checkPath "$1"
 
 # Execute operation
-
-target="$path/dysnomia-support/groups"
-
-if [ -d "$target" ]
-then
-    ls $target/* | while read groupfile
-    do
-        group="$(basename "$groupfile")"
-
-        if pw group show $group > /dev/null
-        then
-            pw group del $group
-        fi
-    done
-fi
+executeUserMgmtOperation groups deleteGroupFreeBSD

@@ -1,0 +1,31 @@
+#!/bin/bash -e
+
+checkPath()
+{
+    path="$1"
+
+    if [ ! -e "$path" ]
+    then
+        echo "ERROR: The path: $path is not valid!" >&2
+        exit 1
+    fi
+}
+
+executeUserMgmtOperation()
+{
+    local dataType="$1"
+    local operation="$2"
+
+    target="$path/dysnomia-support/$dataType"
+
+    if [ -f "$path" ]
+    then
+        $operation "$path"
+    elif [ -d "$target" ]
+    then
+        ls $target/* | while read userfile
+        do
+            $operation "$userfile"
+        done
+    fi
+}

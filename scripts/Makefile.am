@@ -8,9 +8,11 @@ dysnomia-containers.1: dysnomia-containers.in
 	$(HELP2MAN) --output=$@ --no-info --name 'Manage the contents of a set of Dysnomia containers' "$(SHELL) dysnomia-containers"
 
 bin_SCRIPTS = dysnomia dysnomia-snapshots dysnomia-containers
+pkgdata_SCRIPTS = usermgmt-commons
+
 man1_MANS = dysnomia.1 dysnomia-snapshots.1 dysnomia-containers.1
 
-EXTRA_DIST = dysnomia.in dysnomia-snapshots.in dysnomia-containers.in \
+EXTRA_DIST = usermgmt-commons.in dysnomia.in dysnomia-snapshots.in dysnomia-containers.in \
   $(man1_MANS)
 
 SUBDIRS = default darwin freebsd

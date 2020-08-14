@@ -248,6 +248,7 @@ Makefile
 scripts/dysnomia
 scripts/dysnomia-containers
 scripts/dysnomia-snapshots
+scripts/usermgmt-commons
 scripts/Makefile
 scripts/darwin/dysnomia-addgroups
 scripts/darwin/dysnomia-addusers

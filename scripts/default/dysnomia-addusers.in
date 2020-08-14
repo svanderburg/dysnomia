@@ -49,7 +49,7 @@ Copyright (C) 2009-2020 Sander van der Burg
 EOF
 }
 
-createUser()
+createUserDefault()
 {
     export userfile="$1"
 
@@ -124,6 +124,9 @@ createUser()
 export prefix=@prefix@
 export exec_prefix=@exec_prefix@
 
+# Import common functions
+source @datadir@/@PACKAGE@/usermgmt-commons
+
 # Parse valid argument options
 
 PARAMS=`@getopt@ -n $0 -o hv -l help,version -- "$@"`
@@ -157,26 +160,7 @@ done
 shift
 
 # Validate parameters
-
-path="$1"
-
-if [ ! -e "$path" ]
-then
-    echo "ERROR: The path: $path is not valid!" >&2
-    exit 1
-fi
+checkPath "$1"
 
 # Execute operation
-
-target="$path/dysnomia-support/users"
-
-if [ -f "$path" ]
-then
-    createUser "$path"
-elif [ -d "$target" ]
-then
-    ls $target/* | while read userfile
-    do
-        createUser "$userfile"
-    done
-fi
+executeUserMgmtOperation users createUserDefault

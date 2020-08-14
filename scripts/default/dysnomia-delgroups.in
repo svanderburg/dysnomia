@@ -49,7 +49,7 @@ Copyright (C) 2009-2020 Sander van der Burg
 EOF
 }
 
-deleteGroup()
+deleteGroupDefault()
 {
     local groupfile="$1"
     group="$(basename "$groupfile")"
@@ -64,6 +64,9 @@ deleteGroup()
 
 export prefix=@prefix@
 export exec_prefix=@exec_prefix@
+
+# Import common functions
+source @datadir@/@PACKAGE@/usermgmt-commons
 
 # Parse valid argument options
 
@@ -98,26 +101,7 @@ done
 shift
 
 # Validate parameters
-
-path="$1"
-
-if [ ! -e "$path" ]
-then
-    echo "ERROR: The path: $path is not valid!" >&2
-    exit 1
-fi
+checkPath "$1"
 
 # Execute operation
-
-target="$path/dysnomia-support/groups"
-
-if [ -f "$path" ]
-then
-    deleteGroup "$path"
-elif [ -d "$target" ]
-then
-    ls $target/* | while read groupfile
-    do
-        deleteGroup "$groupfile"
-    done
-fi
+executeUserMgmtOperation groups deleteGroupDefault

@@ -49,7 +49,7 @@ Copyright (C) 2009-2020 Sander van der Burg
 EOF
 }
 
-createGroup()
+createGroupFreeBSD()
 {
     export groupfile="$1"
 
@@ -72,27 +72,48 @@ createGroup()
     )
 }
 
-# Validate parameters
+# Autoconf settings
 
-path="$1"
+export prefix=@prefix@
+export exec_prefix=@exec_prefix@
 
-if [ ! -e "$path" ]
+# Import common functions
+source @datadir@/@PACKAGE@/usermgmt-commons
+
+# Parse valid argument options
+
+PARAMS=`@getopt@ -n $0 -o hv -l help,version -- "$@"`
+
+if [ $? != 0 ]
 then
-    echo "ERROR: The path: $path is not valid!" >&2
+    showUsage
     exit 1
 fi
 
+# Evaluate valid options
+
+eval set -- "$PARAMS"
+
+while [ "$1" != "--" ]
+do
+    case "$1" in
+        -h|--help)
+            showUsage
+            exit 0
+            ;;
+        -v|--version)
+            showVersion
+            exit 0
+            ;;
+    esac
+
+    shift
+done
+
+shift
+
+# Validate parameters
+checkPath "$1"
+
 # Execute operation
-
-target="$path/dysnomia-support/groups"
-
-if [ -f "$target" ]
-then
-    createGroup "$path"
-elif [ -d "$target" ]
-then
-    ls $target/* | while read groupfile
-    do
-        createGroup "$groupfile"
-    done
-fi
+executeUserMgmtOperation groups createGroupFreeBSD
