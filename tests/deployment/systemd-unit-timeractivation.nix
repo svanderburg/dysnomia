@@ -1,12 +1,14 @@
 {stdenv, coreutils, hello}:
 
 stdenv.mkDerivation {
-  name = "hello";
-  src = ../services/process;
-  installPhase = ''
+  name = "hello-timer";
+  buildCommand = ''
     mkdir -p $out/bin
-    cp $src/* $out/bin
-    chmod +x $out/bin/*
+    cat > $out/bin/hello <<EOF
+    #! ${stdenv.shell} -e
+    echo "Hello!"
+    EOF
+    chmod +x $out/bin/hello
 
     mkdir -p $out/etc/systemd/system
     cat > $out/etc/systemd/system/hello.service <<EOF
@@ -14,7 +16,7 @@ stdenv.mkDerivation {
     Description=Hello
 
     [Service]
-    ExecStart=${hello}/bin/hello
+    ExecStart=$out/bin/hello
     Type=oneshot
     EOF
 
@@ -24,7 +26,7 @@ stdenv.mkDerivation {
     Requires=hello.service
 
     [Timer]
-    OnUnitActiveSec=1s
+    OnActiveSec=1s
     AccuracySec=1s
     EOF
   '';

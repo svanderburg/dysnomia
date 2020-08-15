@@ -123,6 +123,10 @@ makeTest {
       $machine->mustSucceed("sleep 5");
       $machine->mustFail("systemctl status process-unprivileged.service");
 
+      # Check if the user and group were deleted as well
+      $machine->mustFail("id -u unprivileged");
+      $machine->mustFail("getent unprivileged");
+
       # Socket activation test. We activate the process, but it should
       # only run if we attempt to connect to its corresponding socket. After we
       # have deactivated the service, it should both be terminated and the
@@ -138,18 +142,21 @@ makeTest {
       $machine->mustFail("ps aux | grep ${systemd-unit-socketactivation} | grep -v grep");
       $machine->mustFail("nc -z -n -v 127.0.0.1 5123");
 
+      $machine->mustFail("systemctl status hello.service");
+      $machine->mustFail("systemctl status hello.socket");
+
       # Timer activation test.
 
       $machine->mustSucceed("dysnomia --type systemd-unit --operation activate --component ${systemd-unit-timeractivation} --environment");
 
       $machine->mustSucceed("sleep 10");
       $machine->mustSucceed("systemctl status hello.timer | grep -q \"Active: active\"");
-      $machine->mustSucceed("systemctl status hello.service | grep \"Finished Hello.\"");
-      $machine->mustSucceed("systemctl status hello.service | grep -v \"Failed\"");
+      $machine->mustSucceed("systemctl status hello.service | grep \"Started Hello.\"");
 
       $machine->mustSucceed("dysnomia --type systemd-unit --operation deactivate --component ${systemd-unit-timeractivation} --environment");
       $machine->mustSucceed("sleep 5");
+
       $machine->mustFail("systemctl status hello.service");
-      $machine->mustFail("systemctl status hello.socket");
+      $machine->mustFail("systemctl status hello.timer");
     '';
 }
