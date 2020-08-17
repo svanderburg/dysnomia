@@ -25,6 +25,30 @@ shopt -s nullglob
 
 # Shows the usage of this command to the user
 
+showUsage()
+{
+    cat <<EOF
+Usage: $0 userfile
+  or: $0 userdir
+
+The command \`dysnomia-addusers' automatically creates users from a configuration
+files consisting of key=value pairs.
+
+Options:
+  -h, --help                 Shows the usage of this command
+  -v, --version              Shows the version of this command
+EOF
+}
+
+showVersion()
+{
+    cat <<EOF
+$0 (@PACKAGE_NAME@ @PACKAGE_VERSION@)
+
+Copyright (C) 2009-2020 Sander van der Burg
+EOF
+}
+
 createUserDarwin()
 {
     export userfile="$1"

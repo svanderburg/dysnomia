@@ -31,7 +31,7 @@ showUsage()
 Usage: $0 userfile
   or: $0 userdir
 
-The command `dysnomia-delusers' automatically deletes users from configuration
+The command \`dysnomia-delusers' automatically deletes users from configuration
 files consisting of key=value pairs.
 
 Options:

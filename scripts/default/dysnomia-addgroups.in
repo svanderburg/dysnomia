@@ -31,7 +31,7 @@ showUsage()
 Usage: $0 groupfile
   or: $0 groupdir
 
-The command `dysnomia-addgroups' automatically creates groups from configuration
+The command \`dysnomia-addgroups' automatically creates groups from configuration
 files consisting of key=value pairs.
 
 Options:
