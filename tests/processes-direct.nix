@@ -9,7 +9,7 @@ let
   };
 in
 with import nixpkgs {};
-with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem; };
+with import "${nixpkgs}/nixos/lib/testing-python.nix" { system = builtins.currentSystem; };
 
 let
   # Test services
@@ -44,47 +44,103 @@ makeTest {
 
   testScript =
     ''
-      startAll;
+      def check_wrapper_running():
+          machine.succeed('sleep 5; [ "$(cat /tmp/wrapper.state)" = "wrapper active" ]')
+          machine.succeed('[ "$(stat -c %U /tmp/wrapper.state)" = "root" ]')
+
+
+      def check_wrapper_not_running():
+          machine.succeed("sleep 5; [ ! -f /tmp/wrapper.state ]")
+
+
+      def check_unprivileged_wrapper_running():
+          machine.succeed('sleep 5; [ "$(cat /tmp/wrapper.state)" = "wrapper active" ]')
+          machine.succeed('[ "$(stat -c %U /tmp/wrapper.state)" = "unprivileged" ]')
+
+
+      def check_unprivileged_wrapper_not_running():
+          machine.succeed("sleep 5; [ ! -f /tmp/wrapper.state ]")
+
+
+      def check_process_running():
+          machine.succeed("sleep 5")
+          machine.succeed(
+              '[ "$(ps aux | grep ${process}/bin/loop | grep -v grep | grep root)" != "" ]'
+          )
+
+
+      def check_process_not_running():
+          machine.succeed("sleep 5")
+          machine.succeed(
+              '[ "$(ps aux | grep ${process}/bin/loop | grep -v grep | grep root)" = "" ]'
+          )
+
+
+      def check_unprivileged_process_running():
+          machine.succeed("sleep 5")
+          machine.succeed(
+              '[ "$(ps aux | grep ${process_unprivileged}/bin/loop | grep -v grep | grep unprivileged)" != "" ]'
+          )
+
+
+      def check_unprivileged_process_not_running():
+          machine.succeed("sleep 5")
+          machine.succeed(
+              '[ "$(ps aux | grep ${process_unprivileged}/bin/loop | grep -v grep | grep unprivileged)" = "" ]'
+          )
+
+
+      start_all()
 
       # Test wrapper module. Here we invoke the wrapper
       # of a certain service. On activation it writes a state file in
       # the temp folder.
       # This test should succeed.
 
-      $machine->mustSucceed("dysnomia --type wrapper --operation activate --component ${wrapper} --environment");
-      $machine->mustSucceed("sleep 5; [ \"\$(cat /tmp/wrapper.state)\" = \"wrapper active\" ]");
-      $machine->mustSucceed("[ \"\$(stat -c %U /tmp/wrapper.state)\" = \"root\" ]");
+      machine.succeed(
+          "dysnomia --type wrapper --operation activate --component ${wrapper} --environment"
+      )
+      check_wrapper_running()
 
       # Activate again. This operation should succeed as it is idempotent.
-      $machine->mustSucceed("dysnomia --type wrapper --operation activate --component ${wrapper} --environment");
-      $machine->mustSucceed("sleep 5; [ \"\$(cat /tmp/wrapper.state)\" = \"wrapper active\" ]");
-      $machine->mustSucceed("[ \"\$(stat -c %U /tmp/wrapper.state)\" = \"root\" ]");
+      machine.succeed(
+          "dysnomia --type wrapper --operation activate --component ${wrapper} --environment"
+      )
+      check_wrapper_running()
 
       # Test wrapper module. Here we invoke the lock
       # operation of a certain service. It should write a lock file
       # into the temp dir and it should be owned by root.
       # This test should succeed.
 
-      $machine->mustSucceed("dysnomia --type wrapper --operation lock --component ${wrapper} --environment");
-      $machine->mustSucceed("[ \"\$(stat -c %U /tmp/wrapper.lock)\" = \"root\" ]");
+      machine.succeed(
+          "dysnomia --type wrapper --operation lock --component ${wrapper} --environment"
+      )
+      machine.succeed('[ "$(stat -c %U /tmp/wrapper.lock)" = "root" ]')
 
       # Test wrapper module. Here we invoke the unlock
       # operation of a certain service. The lock file should be removed.
       # This test should succeed.
 
-      $machine->mustSucceed("dysnomia --type wrapper --operation unlock --component ${wrapper} --environment");
-      $machine->mustSucceed("[ ! -f /tmp/wrapper.lock ]");
+      machine.succeed(
+          "dysnomia --type wrapper --operation unlock --component ${wrapper} --environment"
+      )
+      machine.succeed("[ ! -f /tmp/wrapper.lock ]")
 
       # Deactivate the wrapper script. We also check whether the file created
       # on activation is owned by root.
       # This test should succeed.
 
-      $machine->mustSucceed("dysnomia --type wrapper --operation deactivate --component ${wrapper} --environment");
-      $machine->mustSucceed("sleep 5; [ ! -f /tmp/wrapper.state ]");
+      machine.succeed(
+          "dysnomia --type wrapper --operation deactivate --component ${wrapper} --environment"
+      )
+      check_wrapper_not_running()
 
       # Deactivate again. This operation should succeed as it is idempotent.
-      $machine->mustSucceed("dysnomia --type wrapper --operation deactivate --component ${wrapper} --environment");
-      $machine->mustSucceed("sleep 5; [ ! -f /tmp/wrapper.state ]");
+      machine.succeed(
+          "dysnomia --type wrapper --operation deactivate --component ${wrapper} --environment"
+      )
+      check_wrapper_not_running()
 
       # Test wrapper module. Here we invoke the wrapper
       # of a certain service. On activation it writes a state file in
@@ -93,31 +149,38 @@ makeTest {
       # by an unprivileged user.
       # This test should succeed.
 
-      $machine->mustSucceed("dysnomia --type wrapper --operation activate --component ${wrapper_unprivileged} --environment");
-      $machine->mustSucceed("sleep 5; [ \"\$(cat /tmp/wrapper.state)\" = \"wrapper active\" ]");
-      $machine->mustSucceed("[ \"\$(stat -c %U /tmp/wrapper.state)\" = \"unprivileged\" ]");
+      machine.succeed(
+          "dysnomia --type wrapper --operation activate --component ${wrapper_unprivileged} --environment"
+      )
+      check_unprivileged_wrapper_running()
 
       # Test wrapper module. Here we invoke the lock
       # operation of a certain service. It should write a lock file
       # into the temp dir and it should be owned by an unprivileged user.
       # This test should succeed.
 
-      $machine->mustSucceed("dysnomia --type wrapper --operation lock --component ${wrapper_unprivileged} --environment");
-      $machine->mustSucceed("[ \"\$(stat -c %U /tmp/wrapper.lock)\" = \"unprivileged\" ]");
+      machine.succeed(
+          "dysnomia --type wrapper --operation lock --component ${wrapper_unprivileged} --environment"
+      )
+      machine.succeed('[ "$(stat -c %U /tmp/wrapper.lock)" = "unprivileged" ]')
 
       # Test wrapper module. Here we invoke the unlock
       # operation of a certain service. The lock file should be removed.
       # This test should succeed.
 
-      $machine->mustSucceed("dysnomia --type wrapper --operation unlock --component ${wrapper_unprivileged} --environment");
-      $machine->mustSucceed("[ ! -f /tmp/wrapper.lock ]");
+      machine.succeed(
+          "dysnomia --type wrapper --operation unlock --component ${wrapper_unprivileged} --environment"
+      )
+      machine.succeed("[ ! -f /tmp/wrapper.lock ]")
 
       # Deactivate the wrapper script. We also check whether the file created
       # on activation is owned by the unprivileged user.
       # This test should succeed.
 
-      $machine->mustSucceed("dysnomia --type wrapper --operation deactivate --component ${wrapper_unprivileged} --environment");
-      $machine->mustSucceed("sleep 5; [ ! -f /tmp/wrapper.state ]");
+      machine.succeed(
+          "dysnomia --type wrapper --operation deactivate --component ${wrapper_unprivileged} --environment"
+      )
+      check_unprivileged_wrapper_not_running()
 
       # Test process module. Here we start a process which
       # loops forever. We check whether it has been started and
@@ -125,24 +188,28 @@ makeTest {
       # stopped. We also check if the process runs as root.
       # This test should succeed.
 
-      $machine->mustSucceed("dysnomia --type process --operation activate --component ${process} --environment");
-      $machine->mustSucceed("sleep 5");
-      $machine->mustSucceed("[ \"\$(ps aux | grep ${process}/bin/loop | grep -v grep | grep root)\" != \"\" ]");
+      machine.succeed(
+          "dysnomia --type process --operation activate --component ${process} --environment"
+      )
+      check_process_running()
 
       # Activate again. This operation should succeed as it is idempotent.
-      $machine->mustSucceed("dysnomia --type process --operation activate --component ${process} --environment");
-      $machine->mustSucceed("sleep 5");
-      $machine->mustSucceed("[ \"\$(ps aux | grep ${process}/bin/loop | grep -v grep | grep root)\" != \"\" ]");
+      machine.succeed(
+          "dysnomia --type process --operation activate --component ${process} --environment"
+      )
+      check_process_running()
 
       # Deactivate the process.
-      $machine->mustSucceed("dysnomia --type process --operation deactivate --component ${process} --environment");
-      $machine->mustSucceed("sleep 5");
-      $machine->mustSucceed("[ \"\$(ps aux | grep ${process}/bin/loop | grep -v grep | grep root)\" = \"\" ]");
+      machine.succeed(
+          "dysnomia --type process --operation deactivate --component ${process} --environment"
+      )
+      check_process_not_running()
 
       # Deactivate again. This operation should succeed as it is idempotent.
-      $machine->mustSucceed("dysnomia --type process --operation deactivate --component ${process} --environment");
-      $machine->mustSucceed("sleep 5");
-      $machine->mustSucceed("[ \"\$(ps aux | grep ${process}/bin/loop | grep -v grep | grep root)\" = \"\" ]");
+      machine.succeed(
+          "dysnomia --type process --operation deactivate --component ${process} --environment"
+      )
+      check_process_not_running()
 
       # Test process module. Here we start a process which
       # loops forever. We check whether it has been started and
@@ -150,23 +217,27 @@ makeTest {
       # stopped. We also check if the process runs as an uprivileged user.
       # This test should succeed.
 
-      $machine->mustSucceed("dysnomia --type process --operation activate --component ${process_unprivileged} --environment");
-      $machine->mustSucceed("sleep 5");
-      $machine->mustSucceed("[ \"\$(ps aux | grep ${process_unprivileged}/bin/loop | grep -v grep | grep unprivileged)\" != \"\" ]");
+      machine.succeed(
+          "dysnomia --type process --operation activate --component ${process_unprivileged} --environment"
+      )
+      check_unprivileged_process_running()
 
       # Activate again. This operation should succeed as it is idempotent.
-      $machine->mustSucceed("dysnomia --type process --operation activate --component ${process_unprivileged} --environment");
-      $machine->mustSucceed("sleep 5");
-      $machine->mustSucceed("[ \"\$(ps aux | grep ${process_unprivileged}/bin/loop | grep -v grep | grep unprivileged)\" != \"\" ]");
+      machine.succeed(
+          "dysnomia --type process --operation activate --component ${process_unprivileged} --environment"
+      )
+      check_unprivileged_process_running()
 
       # Deactivate the process.
-      $machine->mustSucceed("dysnomia --type process --operation deactivate --component ${process_unprivileged} --environment");
-      $machine->mustSucceed("sleep 5");
-      $machine->mustSucceed("[ \"\$(ps aux | grep ${process_unprivileged}/bin/loop | grep -v grep | grep unprivileged)\" = \"\" ]");
+      machine.succeed(
+          "dysnomia --type process --operation deactivate --component ${process_unprivileged} --environment"
+      )
+      check_unprivileged_process_not_running()
 
       # Deactivate again. This operation should succeed as it is idempotent.
-      $machine->mustSucceed("dysnomia --type process --operation deactivate --component ${process_unprivileged} --environment");
-      $machine->mustSucceed("sleep 5");
-      $machine->mustSucceed("[ \"\$(ps aux | grep ${process_unprivileged}/bin/loop | grep -v grep | grep unprivileged)\" = \"\" ]");
+      machine.succeed(
+          "dysnomia --type process --operation deactivate --component ${process_unprivileged} --environment"
+      )
+      check_unprivileged_process_not_running()
     '';
 }

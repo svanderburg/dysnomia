@@ -1,30 +1,30 @@
 { nixpkgs, tarball, buildFun }:
 
 with import nixpkgs {};
-with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem; };
+with import "${nixpkgs}/nixos/lib/testing-python.nix" { system = builtins.currentSystem; };
 
 makeTest {
   nodes = {
     machine = {config, pkgs, ...}:
-    
+
     {
       imports = [ ../dysnomia-module.nix ];
-      
+
       dysnomiaTest = {
         enable = true;
         enableAuthentication = true;
-        
+
         properties = {
           mem = "$(grep 'MemTotal:' /proc/meminfo | sed -e 's/kB//' -e 's/MemTotal://' -e 's/ //g')";
         };
-        
+
         components = {
           mysql-database = {
             testdb = import ./deployment/mysql-database.nix {
               inherit (pkgs) stdenv;
             };
           };
-          
+
           postgresql-database = {
             testdb = import ./deployment/postgresql-database.nix {
               inherit (pkgs) stdenv;
@@ -32,177 +32,182 @@ makeTest {
           };
         };
       };
-      
-      services.mysql = {
-        enable = true;
-        package = pkgs.mysql;
-        rootPassword = pkgs.writeTextFile { name = "mysqlpw"; text = "verysecret"; };
+
+      services = {
+        mysql = {
+          enable = true;
+          package = pkgs.mysql;
+        };
+
+        postgresql = {
+          enable = true;
+          package = pkgs.postgresql;
+        };
       };
-      
-      services.postgresql = {
-        enable = true;
-        package = pkgs.postgresql;
-      };
+
+      environment.systemPackages = [ pkgs.graphviz ];
     };
   };
-  
+
   testScript =
     ''
-      startAll;
-      
-      $machine->waitForJob("mysql");
-      $machine->waitForJob("postgresql");
-      
+      start_all()
+
+      machine.wait_for_unit("mysql")
+      machine.wait_for_unit("postgresql")
+
       # Query the available containers. It should return a MySQL and a
       # PostgreSQL entry.
-      
-      my $result = $machine->mustSucceed("dysnomia-containers --query-containers");
-      my @containers = split('\n', $result);
-      
-      if(scalar(grep(/mysql-database/, @containers)) == 1) {
-          print "mysql-database is in the containers query!\n";
-      } else {
-          die "mysql-database should be in the containers query!";
-      }
-      
-      if(scalar(grep(/postgresql-database/, @containers)) == 1) {
-          print "postgresql-database is in the containers query!\n";
-      } else {
-          die "postgresql-database should be in the containers query!";
-      }
-      
+
+      result = machine.succeed("dysnomia-containers --query-containers")
+      containers = result.split("\n")
+
+      if "mysql-database" in containers:
+          print("mysql-database is in the containers query!")
+      else:
+          raise Exception("mysql-database should be in the containers query!")
+
+      if "postgresql-database" in containers:
+          print("postgresql-database is in the containers query!")
+      else:
+          raise Exception("postgresql-database should be in the containers query!")
+
       # Query the available components. It should return a MySQL and a
       # PostgreSQL database.
-      
-      $result = $machine->mustSucceed("dysnomia-containers --query-available-components");
-      my @components = split('\n', $result);
-      
-      if(scalar(grep(/mysql-database\/testdb/, @components)) == 1) {
-          print "mysql-database/testdb is in the available components query!\n";
-      } else {
-          die "mysql-database/testdb should be in the available components query!";
-      }
-      
-      if(scalar(grep(/postgresql-database\/testdb/, @components)) == 1) {
-          print "postgresql-database/testdb is in the available components query!\n";
-      } else {
-          die "postgresql-database/testdb should be in the available components query!";
-      }
-      
+
+      result = machine.succeed("dysnomia-containers --query-available-components")
+      components = result.split("\n")
+
+      if "mysql-database/testdb" in components:
+          print("mysql-database/testdb is in the available components query!")
+      else:
+          raise Exception(
+              "mysql-database/testdb should be in the available components query!"
+          )
+
+      if "postgresql-database/testdb" in components:
+          print("postgresql-database/testdb is in the available components query!")
+      else:
+          raise Exception(
+              "postgresql-database/testdb should be in the available components query!"
+          )
+
       # Query the activated components. It should return nothing, as we have not
       # activated anything yet.
-      
-      $result = $machine->mustSucceed("dysnomia-containers --query-activated-components");
-      @components = split('\n', $result);
-      
-      if(scalar(grep(/mysql-database\/testdb/, @components)) == 0) {
-          print "We have no activated components!\n";
-      } else {
-          die "We should have no activated components!\n";
-      }
-      
-      if(scalar(grep(/postgresql-database\/testdb/, @components)) == 0) {
-          print "We have no activated components!\n";
-      } else {
-          die "We should have no activated components!\n";
-      }
-      
+
+      result = machine.succeed("dysnomia-containers --query-activated-components")
+      components = result.split("\n")
+
+      if "mysql-database/testdb" not in components:
+          print("We have no activated components!")
+      else:
+          raise Exception("We should have no activated components!")
+
+      if "postgresql-database/testdb" not in components:
+          print("We have no activated components!")
+      else:
+          raise Exception("We should have no activated components!")
+
       # Deploy the available components.
-      $machine->mustSucceed("dysnomia-containers --deploy");
-      
+      machine.succeed("dysnomia-containers --deploy")
+
       # Query the activated components. It should return the MySQL and
       # PostgreSQL database.
-      
-      $result = $machine->mustSucceed("dysnomia-containers --query-activated-components");
-      @containers = split('\n', $result);
-      
-      if(scalar(grep(/mysql-database\/testdb/, @containers)) == 1) {
-          print "mysql-database/testdb is in the activated components query!\n";
-      } else {
-          die "mysql-database/testdb should be in the activated components query!";
-      }
-      
-      if(scalar(grep(/postgresql-database\/testdb/, @containers)) == 1) {
-          print "postgresql-database/testdb is in the activated components query!\n";
-      } else {
-          die "postgresql-database/testdb should be in the activated components query!";
-      }
-      
+
+      result = machine.succeed("dysnomia-containers --query-activated-components")
+      containers = result.split("\n")
+
+      if "mysql-database/testdb" in containers:
+          print("mysql-database/testdb is in the activated components query!")
+      else:
+          raise Exception(
+              "mysql-database/testdb should be in the activated components query!"
+          )
+
+      if "postgresql-database/testdb" in containers:
+          print("postgresql-database/testdb is in the activated components query!")
+      else:
+          raise Exception(
+              "postgresql-database/testdb should be in the activated components query!"
+          )
+
       # Check whether the MySQL database has been created.
-      $result = $machine->mustSucceed("echo 'select * from test' | mysql --user=root --password=verysecret -N testdb");
-    
-      if($result =~ /Hello world/) {
-          print "MySQL query returns: Hello world!\n";
-      } else {
-          die "MySQL table should contain: Hello world, instead we have: $result!\n";
-      }
-      
+      result = machine.succeed("echo 'select * from test' | mysql -N testdb")
+
+      if "Hello world" in result:
+          print("MySQL query returns: Hello world!")
+      else:
+          raise Exception(
+              "MySQL table should contain: Hello world, instead we have: $result!"
+          )
+
       # Check whether the PostgreSQL database has been created.
-      $result = $machine->mustSucceed("echo 'select * from test' | su postgres -s /bin/sh -c 'psql --file - testdb'");
-      
-      if($result =~ /Hello world/) {
-          print "PostgreSQL query returns: Hello world!\n";
-      } else {
-          die "PostgreSQL table should contain: Hello world!\n";
-      }
-      
+      result = machine.succeed(
+          "echo 'select * from test' | su postgres -s /bin/sh -c 'psql --file - testdb'"
+      )
+
+      if "Hello world" in result:
+          print("PostgreSQL query returns: Hello world!")
+      else:
+          raise Exception("PostgreSQL table should contain: Hello world!")
+
       # Snapshot the state of all deployed mutable components and check if they
       # have actually been taken.
-      $machine->mustSucceed("dysnomia-containers --snapshot");
-      
-      $result = $machine->mustSucceed("dysnomia-snapshots --query-all");
-      my @snapshots = split('\n', $result);
-      
-      if(scalar(grep(/mysql-database\/testdb/, @snapshots)) == 1) {
-          print "mysql-database/testdb is in the snapshots query!\n";
-      } else {
-          die "mysql-database/testdb is in the snapshots query!";
-      }
-      
-      if(scalar(grep(/postgresql-database\/testdb/, @snapshots)) == 1) {
-          print "postgresql-database/testdb is in the snapshots query!\n";
-      } else {
-          die "postgresql-database/testdb is in the snapshots query!";
-      }
-      
+      machine.succeed("dysnomia-containers --snapshot")
+
+      result = machine.succeed("dysnomia-snapshots --query-all")
+      snapshots = result.split("\n")
+
+      if any("mysql-database/testdb" in s for s in snapshots):
+          print("mysql-database/testdb is in the snapshots query!")
+      else:
+          raise Exception("mysql-database/testdb is not in the snapshots query!")
+
+      if any("postgresql-database/testdb" in s for s in snapshots):
+          print("postgresql-database/testdb is in the snapshots query!")
+      else:
+          raise Exception("postgresql-database/testdb is not in the snapshots query!")
+
       # Modify the state of the databases
-      
-      $machine->mustSucceed("echo \"insert into test values ('Bye world');\" | mysql --user=root --password=verysecret -N testdb");
-      $machine->mustSucceed("echo \"insert into test values ('Bye world');\" | su postgres -s /bin/sh -c 'psql --file - testdb'");
-      
+
+      machine.succeed("echo \"insert into test values ('Bye world');\" | mysql -N testdb")
+      machine.succeed(
+          "echo \"insert into test values ('Bye world');\" | su postgres -s /bin/sh -c 'psql --file - testdb'"
+      )
+
       # Restore the state of the databases and check whether the modifications
       # are gone.
-      
-      $machine->mustSucceed("dysnomia-containers --restore -y");
-      
-      $result = $machine->mustSucceed("echo 'select * from test' | mysql --user=root --password=verysecret -N testdb");
-      
-      if($result =~ /Bye world/) {
-          die "MySQL table should not contain: Bye world!\n";
-      } else {
-          print "MySQL does not contain: Bye world!\n";
-      }
-      
-      $result = $machine->mustSucceed("echo 'select * from test' | su postgres -s /bin/sh -c 'psql --file - testdb'");
-      
-      if($result =~ /Bye world/) {
-          die "PostgreSQL table should not contain: Bye world!\n";
-      } else {
-          print "PostgreSQL does not contain: Bye world!\n";
-      }
-      
+
+      machine.succeed("dysnomia-containers --restore -y")
+
+      result = machine.succeed("echo 'select * from test' | mysql -N testdb")
+
+      if "Bye world" in result:
+          raise Exception("MySQL table should not contain: Bye world!")
+      else:
+          print("MySQL does not contain: Bye world!")
+
+      result = machine.succeed(
+          "echo 'select * from test' | su postgres -s /bin/sh -c 'psql --file - testdb'"
+      )
+
+      if "Bye world" in result:
+          raise Exception("PostgreSQL table should not contain: Bye world!")
+      else:
+          print("PostgreSQL does not contain: Bye world!")
+
       # Properties test. Check if the hostname property is there, whether the mem
       # property remains a shell substitution, and whether the supportedTypes
       # property is an array.
-      
-      $machine->mustSucceed("grep \"^hostname=\\\"machine\\\"\$\" /etc/dysnomia/properties");
-      $machine->mustSucceed("grep \"MemTotal\" /etc/dysnomia/properties");
-      $machine->mustSucceed("grep \"supportedTypes=(\" /etc/dysnomia/properties");
+
+      machine.succeed('grep "^hostname=\\"machine\\"\$" /etc/dysnomia/properties')
+      machine.succeed('grep "MemTotal" /etc/dysnomia/properties')
+      machine.succeed('grep "supportedTypes=(" /etc/dysnomia/properties')
 
       # Visualize the current containers configuration. The output is produced
       # as a Hydra report.
 
-      $machine->mustSucceed("dysnomia-containers --generate-dot > visualize.dot");
-      $machine->mustSucceed("${pkgs.graphviz}/bin/dot -Tpng visualize.dot > /tmp/xchg/visualize.png");
+      machine.succeed("dysnomia-containers --generate-dot > visualize.dot")
+      machine.succeed("dot -Tpng visualize.dot > /tmp/xchg/visualize.png")
   '';
 }

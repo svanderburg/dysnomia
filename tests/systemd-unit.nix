@@ -9,7 +9,7 @@ let
 
   pkgs = import nixpkgs {};
 in
-with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem; };
+with import "${nixpkgs}/nixos/lib/testing-python.nix" { system = builtins.currentSystem; };
 with pkgs;
 
 let
@@ -54,109 +54,161 @@ makeTest {
 
   testScript =
     ''
-      startAll;
+      def check_process_activated():
+          machine.succeed("sleep 5")
+          machine.succeed(
+              '[ "$(systemctl status process.service | grep "Active: active")" != "" ]'
+          )
+          machine.succeed(
+              '[ "$(ps aux | grep ${systemd-unit}/bin/loop | grep -v grep | grep root)" != "" ]'
+          )
+
+
+      def check_process_deactivated():
+          machine.succeed("sleep 5")
+          machine.fail("systemctl status process.service")
+
+
+      def check_unprivileged_process_activated():
+          machine.succeed("sleep 5")
+          machine.succeed(
+              '[ "$(systemctl status process-unprivileged.service | grep "Active: active")" != "" ]'
+          )
+          machine.succeed(
+              '[ "$(ps aux | grep ${systemd-unit-unprivileged}/bin/loop | grep -v grep | grep unprivi)" != "" ]'
+          )
+
+
+      def check_unprivileged_process_deactivated():
+          machine.succeed("sleep 5")
+          machine.fail("systemctl status process-unprivileged.service")
+
+
+      start_all()
 
       # Check if Dysnomia systemd target exists. It should exist, or the
       # remaining tests will not work reliably.
-      $machine->mustSucceed("[ -f /etc/systemd-mutable/system/dysnomia.target ]");
+      machine.succeed("[ -f /etc/systemd-mutable/system/dysnomia.target ]")
 
       # Test the systemd-unit module. Here we start a process which
       # loops forever. We check whether it has been started and
       # then we deactivate it again and verify whether it has been
       # stopped. We also check if the process runs as root.
 
-      $machine->mustSucceed("dysnomia --type systemd-unit --operation activate --component ${systemd-unit} --environment");
-      $machine->mustSucceed("sleep 5");
-      $machine->mustSucceed("[ \"\$(systemctl status process.service | grep \"Active: active\")\" != \"\" ]");
-      $machine->mustSucceed("[ \"\$(ps aux | grep ${systemd-unit}/bin/loop | grep -v grep | grep root)\" != \"\" ]");
+      machine.succeed(
+          "dysnomia --type systemd-unit --operation activate --component ${systemd-unit} --environment"
+      )
+      check_process_activated()
 
       # Activate again. This operation should succeed as it is idempotent.
-      $machine->mustSucceed("dysnomia --type systemd-unit --operation activate --component ${systemd-unit} --environment");
-      $machine->mustSucceed("sleep 5");
-      $machine->mustSucceed("[ \"\$(systemctl status process.service | grep \"Active: active\")\" != \"\" ]");
-      $machine->mustSucceed("[ \"\$(ps aux | grep ${systemd-unit}/bin/loop | grep -v grep | grep root)\" != \"\" ]");
+      machine.succeed(
+          "dysnomia --type systemd-unit --operation activate --component ${systemd-unit} --environment"
+      )
+      check_process_activated()
 
       # Deactivate the process
-      $machine->mustSucceed("dysnomia --type systemd-unit --operation deactivate --component ${systemd-unit} --environment");
-      $machine->mustSucceed("sleep 5");
-      $machine->mustFail("systemctl status process.service");
+      machine.succeed(
+          "dysnomia --type systemd-unit --operation deactivate --component ${systemd-unit} --environment"
+      )
+      check_process_deactivated()
 
       # Deactivate again. This operation should succeed as it is idempotent.
-      $machine->mustSucceed("dysnomia --type systemd-unit --operation deactivate --component ${systemd-unit} --environment");
-      $machine->mustSucceed("sleep 5");
-      $machine->mustFail("systemctl status process.service");
+      machine.succeed(
+          "dysnomia --type systemd-unit --operation deactivate --component ${systemd-unit} --environment"
+      )
+      check_process_deactivated()
 
       # Here we start a process which
       # loops forever. We check whether it has been started and
       # then we deactivate it again and verify whether it has been
       # stopped. We also check if the process runs as an uprivileged user.
 
-      $machine->mustSucceed("dysnomia --type systemd-unit --operation activate --component ${systemd-unit-unprivileged} --environment");
-      $machine->mustSucceed("sleep 5");
-      $machine->mustSucceed("[ \"\$(systemctl status process-unprivileged.service | grep \"Active: active\")\" != \"\" ]");
-      $machine->mustSucceed("[ \"\$(ps aux | grep ${systemd-unit-unprivileged}/bin/loop | grep -v grep | grep unprivi)\" != \"\" ]");
+      machine.succeed(
+          "dysnomia --type systemd-unit --operation activate --component ${systemd-unit-unprivileged} --environment"
+      )
+      check_unprivileged_process_activated()
 
       # Activate again. This test should succeed as the operation is idempotent.
-      $machine->mustSucceed("dysnomia --type systemd-unit --operation activate --component ${systemd-unit-unprivileged} --environment");
-      $machine->mustSucceed("sleep 5");
-      $machine->mustSucceed("[ \"\$(systemctl status process-unprivileged.service | grep \"Active: active\")\" != \"\" ]");
-      $machine->mustSucceed("[ \"\$(ps aux | grep ${systemd-unit-unprivileged}/bin/loop | grep -v grep | grep unprivi)\" != \"\" ]");
+      machine.succeed(
+          "dysnomia --type systemd-unit --operation activate --component ${systemd-unit-unprivileged} --environment"
+      )
+      check_unprivileged_process_activated()
 
       # Wreck the service and activate again. This test should succeed as the operation is idempotent.
-      my $serviceName = "process-unprivileged.service";
+      serviceName = "process-unprivileged.service"
 
-      $machine->mustSucceed("systemctl stop $serviceName"); # We deliberately stop the service manually
-      $machine->mustSucceed("rm /etc/systemd-mutable/system/dysnomia.target.wants/$serviceName"); # We, by accident, remove the unit from the wants/ directory
+      machine.succeed(
+          "systemctl stop {}".format(serviceName)
+      )  # We deliberately stop the service manually
+      machine.succeed(
+          "rm /etc/systemd-mutable/system/dysnomia.target.wants/{}".format(serviceName)
+      )  # We, by accident, remove the unit from the wants/ directory
 
-      $machine->mustSucceed("dysnomia --type systemd-unit --operation activate --component ${systemd-unit-unprivileged} --environment");
-      $machine->mustSucceed("sleep 5");
-      $machine->mustSucceed("[ \"\$(systemctl status process-unprivileged.service | grep \"Active: active\")\" != \"\" ]");
-      $machine->mustSucceed("[ \"\$(ps aux | grep ${systemd-unit-unprivileged}/bin/loop | grep -v grep | grep unprivi)\" != \"\" ]");
+      machine.succeed(
+          "dysnomia --type systemd-unit --operation activate --component ${systemd-unit-unprivileged} --environment"
+      )
+      check_unprivileged_process_activated()
 
       # Deactivate the process
-      $machine->mustSucceed("dysnomia --type systemd-unit --operation deactivate --component ${systemd-unit-unprivileged} --environment");
-      $machine->mustSucceed("sleep 5");
-      $machine->mustFail("systemctl status process-unprivileged.service");
+      machine.succeed(
+          "dysnomia --type systemd-unit --operation deactivate --component ${systemd-unit-unprivileged} --environment"
+      )
+      check_unprivileged_process_deactivated()
 
       # Deactivate again. This test should succeed as the operation is idempotent.
-      $machine->mustSucceed("dysnomia --type systemd-unit --operation deactivate --component ${systemd-unit-unprivileged} --environment");
-      $machine->mustSucceed("sleep 5");
-      $machine->mustFail("systemctl status process-unprivileged.service");
+      machine.succeed(
+          "dysnomia --type systemd-unit --operation deactivate --component ${systemd-unit-unprivileged} --environment"
+      )
+      check_unprivileged_process_deactivated()
 
       # Check if the user and group were deleted as well
-      $machine->mustFail("id -u unprivileged");
-      $machine->mustFail("getent unprivileged");
+      machine.fail("id -u unprivileged")
+      machine.fail("getent unprivileged")
 
       # Socket activation test. We activate the process, but it should
       # only run if we attempt to connect to its corresponding socket. After we
       # have deactivated the service, it should both be terminated and the
       # socket should have disappeared.
 
-      $machine->mustSucceed("dysnomia --type systemd-unit --operation activate --component ${systemd-unit-socketactivation} --environment");
-      $machine->mustSucceed("sleep 5");
-      $machine->mustFail("ps aux | grep ${systemd-unit-socketactivation} | grep -v grep");
-      $machine->mustSucceed("nc -z -n -v 127.0.0.1 5123");
-      $machine->mustSucceed("ps aux | grep ${systemd-unit-socketactivation} | grep -v grep");
-      $machine->mustSucceed("dysnomia --type systemd-unit --operation deactivate --component ${systemd-unit-socketactivation} --environment");
-      $machine->mustSucceed("sleep 5");
-      $machine->mustFail("ps aux | grep ${systemd-unit-socketactivation} | grep -v grep");
-      $machine->mustFail("nc -z -n -v 127.0.0.1 5123");
+      machine.succeed(
+          "dysnomia --type systemd-unit --operation activate --component ${systemd-unit-socketactivation} --environment"
+      )
+      machine.succeed("sleep 5")
+      machine.fail(
+          "ps aux | grep ${systemd-unit-socketactivation} | grep -v grep"
+      )
+      machine.succeed("nc -z -n -v 127.0.0.1 5123")
+      machine.succeed(
+          "ps aux | grep ${systemd-unit-socketactivation} | grep -v grep"
+      )
 
-      $machine->mustFail("systemctl status hello.service");
-      $machine->mustFail("systemctl status hello.socket");
+      machine.succeed(
+          "dysnomia --type systemd-unit --operation deactivate --component ${systemd-unit-socketactivation} --environment"
+      )
+      machine.succeed("sleep 5")
+      machine.fail(
+          "ps aux | grep ${systemd-unit-socketactivation} | grep -v grep"
+      )
+      machine.fail("nc -z -n -v 127.0.0.1 5123")
+
+      machine.fail("systemctl status hello.service")
+      machine.fail("systemctl status hello.socket")
 
       # Timer activation test.
 
-      $machine->mustSucceed("dysnomia --type systemd-unit --operation activate --component ${systemd-unit-timeractivation} --environment");
+      machine.succeed(
+          "dysnomia --type systemd-unit --operation activate --component ${systemd-unit-timeractivation} --environment"
+      )
+      machine.succeed("sleep 10")
+      machine.succeed('systemctl status hello.timer | grep -q "Active: active"')
+      machine.succeed('systemctl status hello.service | grep "Started Hello."')
 
-      $machine->mustSucceed("sleep 10");
-      $machine->mustSucceed("systemctl status hello.timer | grep -q \"Active: active\"");
-      $machine->mustSucceed("systemctl status hello.service | grep \"Started Hello.\"");
+      machine.succeed(
+          "dysnomia --type systemd-unit --operation deactivate --component ${systemd-unit-timeractivation} --environment"
+      )
+      machine.succeed("sleep 5")
 
-      $machine->mustSucceed("dysnomia --type systemd-unit --operation deactivate --component ${systemd-unit-timeractivation} --environment");
-      $machine->mustSucceed("sleep 5");
-
-      $machine->mustFail("systemctl status hello.service");
-      $machine->mustFail("systemctl status hello.timer");
+      machine.fail("systemctl status hello.service")
+      machine.fail("systemctl status hello.timer")
     '';
 }

@@ -13,6 +13,7 @@
 }; }
 // lib.optionalAttrs (config.services.mysql.enable) { mysql-database = {
     mysqlPort = config.services.mysql.port;
+    mysqlSocket = "/run/mysqld/mysqld.sock";
   };
 }
 // lib.optionalAttrs (config.services.postgresql.enable) { postgresql-database = {

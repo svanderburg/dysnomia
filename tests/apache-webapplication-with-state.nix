@@ -8,7 +8,7 @@ let
   };
 in
 with import nixpkgs {};
-with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem; };
+with import "${nixpkgs}/nixos/lib/testing-python.nix" { system = builtins.currentSystem; };
 
 let
   # Test services
@@ -29,7 +29,7 @@ makeTest {
       services.httpd = {
         enable = true;
         adminAddr = "foo@bar.com";
-        documentRoot = "/var/www";
+        virtualHosts.localhost.documentRoot = "/var/www";
       };
 
       systemd.services.httpd.preStart = ''
@@ -42,7 +42,17 @@ makeTest {
 
   testScript =
     ''
-      startAll;
+      def check_connection():
+          machine.succeed("curl --fail http://localhost/test")
+
+
+      def check_no_connection():
+          machine.fail("curl --fail http://localhost/test")
+
+
+      apacheSettings = "documentRoot=/var/www"
+
+      start_all()
 
       # Test Apache web application script. Here, we activate a small
       # static HTML website in the document root of Apache, then we
@@ -50,21 +60,33 @@ makeTest {
       # and see whether is has become unavailable.
       # This test should succeed.
 
-      $machine->waitForJob("httpd");
-      $machine->mustSucceed("documentRoot=/var/www dysnomia --type apache-webapplication --operation activate --component ${apache_webapplication} --environment");
-      $machine->mustSucceed("ls /var/www/test -l >&2");
-      $machine->mustSucceed("curl --fail http://localhost/test");
+      machine.wait_for_unit("httpd")
+      machine.succeed(
+          apacheSettings
+          + " dysnomia --type apache-webapplication --operation activate --component ${apache_webapplication} --environment"
+      )
+      machine.succeed("ls /var/www/test -l >&2")
+      check_connection()
 
       # Activate again. This should succeed as the operation is idempotent
-      $machine->mustSucceed("documentRoot=/var/www dysnomia --type apache-webapplication --operation activate --component ${apache_webapplication} --environment");
-      $machine->mustSucceed("curl --fail http://localhost/test");
+      machine.succeed(
+          apacheSettings
+          + " dysnomia --type apache-webapplication --operation activate --component ${apache_webapplication} --environment"
+      )
+      check_connection()
 
       # Deactivate the web application
-      $machine->mustSucceed("documentRoot=/var/www dysnomia --type apache-webapplication --operation deactivate --component ${apache_webapplication} --environment");
-      $machine->mustFail("curl --fail http://localhost/test");
+      machine.succeed(
+          apacheSettings
+          + " dysnomia --type apache-webapplication --operation deactivate --component ${apache_webapplication} --environment"
+      )
+      check_no_connection()
 
       # Deactivate again. This should succeed as the operation is idempotent
-      $machine->mustSucceed("documentRoot=/var/www dysnomia --type apache-webapplication --operation deactivate --component ${apache_webapplication} --environment");
-      $machine->mustFail("curl --fail http://localhost/test");
+      machine.succeed(
+          apacheSettings
+          + " dysnomia --type apache-webapplication --operation deactivate --component ${apache_webapplication} --environment"
+      )
+      check_no_connection()
     '';
 }

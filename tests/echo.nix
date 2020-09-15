@@ -8,7 +8,7 @@ let
   };
 in
 with import nixpkgs {};
-with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem; };
+with import "${nixpkgs}/nixos/lib/testing-python.nix" { system = builtins.currentSystem; };
 
 let
   # Test services
@@ -35,16 +35,22 @@ makeTest {
 
   testScript =
     ''
-      startAll;
+      start_all()
 
       # Test echo module. Here we just invoke the activate
       # and deactivation steps. This test should succeed.
-      $machine->mustSucceed("dysnomia --type echo --operation activate --component ${wrapper} --environment");
-      $machine->mustSucceed("dysnomia --type echo --operation deactivate --component ${wrapper} --environment");
+      machine.succeed(
+          "dysnomia --type echo --operation activate --component ${wrapper} --environment"
+      )
+      machine.succeed(
+          "dysnomia --type echo --operation deactivate --component ${wrapper} --environment"
+      )
 
       # Test shell feature. We execute a command that creates a temp file and we
       # check whether it exists.
-      $machine->mustSucceed("foo=foo dysnomia --type echo --shell --component ${wrapper} --environment --command 'echo \$foo > /tmp/tmpfile'");
-      $machine->mustSucceed("grep 'foo' /tmp/tmpfile");
+      machine.succeed(
+          "foo=foo dysnomia --type echo --shell --component ${wrapper} --environment --command 'echo \$foo > /tmp/tmpfile'"
+      )
+      machine.succeed("grep 'foo' /tmp/tmpfile")
     '';
 }

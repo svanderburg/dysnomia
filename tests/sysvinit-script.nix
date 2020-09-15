@@ -9,7 +9,7 @@ let
 
   pkgs = import nixpkgs {};
 in
-with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem; };
+with import "${nixpkgs}/nixos/lib/testing-python.nix" { system = builtins.currentSystem; };
 with pkgs;
 
 let
@@ -35,54 +35,90 @@ makeTest {
 
   testScript =
     ''
-      startAll;
+      def check_process_running():
+          machine.succeed("sleep 5")
+          machine.succeed(
+              '[ "$(ps aux | grep ${sysvinit-script}/bin/loop | grep -v grep | grep root)" != "" ]'
+          )
+
+
+      def check_process_not_running():
+          machine.succeed("sleep 5")
+          machine.succeed(
+              '[ "$(ps aux | grep ${sysvinit-script}/bin/loop | grep -v grep | grep root)" = "" ]'
+          )
+
+
+      def check_unprivileged_process_running():
+          machine.succeed("sleep 5")
+          machine.succeed(
+              '[ "$(ps aux | grep ${sysvinit-script-unprivileged}/bin/loop | grep -v grep | grep unprivi)" != "" ]'
+          )
+
+
+      def check_unprivileged_process_not_running():
+          machine.succeed("sleep 5")
+          machine.succeed(
+              '[ "$(ps aux | grep ${sysvinit-script-unprivileged}/bin/loop | grep -v grep | grep unprivi)" = "" ]'
+          )
+
+
+      start_all()
 
       # Test sysvinit-script module. Here we start a process which
       # loops forever. We check whether it has been started and
       # then we deactivate it again and verify whether it has been
       # stopped. We also check if root owns the process.
 
-      $machine->mustSucceed("dysnomia --type sysvinit-script --operation activate --component ${sysvinit-script} --environment");
-      $machine->mustSucceed("sleep 5");
-      $machine->mustSucceed("[ \"\$(ps aux | grep ${sysvinit-script}/bin/loop | grep -v grep | grep root)\" != \"\" ]");
+      machine.succeed(
+          "dysnomia --type sysvinit-script --operation activate --component ${sysvinit-script} --environment"
+      )
+      check_process_running()
 
       # Activate again. This operation should succeed as it is idempotent.
-      $machine->mustSucceed("dysnomia --type sysvinit-script --operation activate --component ${sysvinit-script} --environment");
-      $machine->mustSucceed("sleep 5");
-      $machine->mustSucceed("[ \"\$(ps aux | grep ${sysvinit-script}/bin/loop | grep -v grep | grep root)\" != \"\" ]");
+      machine.succeed(
+          "dysnomia --type sysvinit-script --operation activate --component ${sysvinit-script} --environment"
+      )
+      check_process_running()
 
       # Deactivate the process.
-      $machine->mustSucceed("dysnomia --type sysvinit-script --operation deactivate --component ${sysvinit-script} --environment");
-      $machine->mustSucceed("sleep 5");
-      $machine->mustSucceed("[ \"\$(ps aux | grep ${sysvinit-script}/bin/loop | grep -v grep | grep root)\" = \"\" ]");
+      machine.succeed(
+          "dysnomia --type sysvinit-script --operation deactivate --component ${sysvinit-script} --environment"
+      )
+      check_process_not_running()
 
       # Deactivate again. This operation should succeed as it is idempotent.
-      $machine->mustSucceed("dysnomia --type sysvinit-script --operation deactivate --component ${sysvinit-script} --environment");
-      $machine->mustSucceed("sleep 5");
-      $machine->mustSucceed("[ \"\$(ps aux | grep ${sysvinit-script}/bin/loop | grep -v grep | grep root)\" = \"\" ]");
+      machine.succeed(
+          "dysnomia --type sysvinit-script --operation deactivate --component ${sysvinit-script} --environment"
+      )
+      check_process_not_running()
 
       # Test sysvinit-script module. Here we start a process which
       # loops forever. We check whether it has been started and
       # then we deactivate it again and verify whether it has been
       # stopped. We also check if an uprivileged user owns the process.
 
-      $machine->mustSucceed("dysnomia --type sysvinit-script --operation activate --component ${sysvinit-script-unprivileged} --environment");
-      $machine->mustSucceed("sleep 5");
-      $machine->mustSucceed("[ \"\$(ps aux | grep ${sysvinit-script-unprivileged}/bin/loop | grep -v grep | grep unprivi)\" != \"\" ]");
+      machine.succeed(
+          "dysnomia --type sysvinit-script --operation activate --component ${sysvinit-script-unprivileged} --environment"
+      )
+      check_unprivileged_process_running()
 
       # Activate again. This operation should succeed as it is idempotent.
-      $machine->mustSucceed("dysnomia --type sysvinit-script --operation activate --component ${sysvinit-script-unprivileged} --environment");
-      $machine->mustSucceed("sleep 5");
-      $machine->mustSucceed("[ \"\$(ps aux | grep ${sysvinit-script-unprivileged}/bin/loop | grep -v grep | grep unprivi)\" != \"\" ]");
+      machine.succeed(
+          "dysnomia --type sysvinit-script --operation activate --component ${sysvinit-script-unprivileged} --environment"
+      )
+      check_unprivileged_process_running()
 
       # Deactivate the process.
-      $machine->mustSucceed("dysnomia --type sysvinit-script --operation deactivate --component ${sysvinit-script-unprivileged} --environment");
-      $machine->mustSucceed("sleep 5");
-      $machine->mustSucceed("[ \"\$(ps aux | grep ${sysvinit-script-unprivileged}/bin/loop | grep -v grep | grep unprivi)\" = \"\" ]");
+      machine.succeed(
+          "dysnomia --type sysvinit-script --operation deactivate --component ${sysvinit-script-unprivileged} --environment"
+      )
+      check_unprivileged_process_not_running()
 
       # Deactivate again. This operation should succeed as it is idempotent.
-      $machine->mustSucceed("dysnomia --type sysvinit-script --operation deactivate --component ${sysvinit-script-unprivileged} --environment");
-      $machine->mustSucceed("sleep 5");
-      $machine->mustSucceed("[ \"\$(ps aux | grep ${sysvinit-script-unprivileged}/bin/loop | grep -v grep | grep unprivi)\" = \"\" ]");
+      machine.succeed(
+          "dysnomia --type sysvinit-script --operation deactivate --component ${sysvinit-script-unprivileged} --environment"
+      )
+      check_unprivileged_process_not_running()
     '';
 }

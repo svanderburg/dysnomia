@@ -9,7 +9,7 @@ let
 
   pkgs = import nixpkgs {};
 in
-with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem; };
+with import "${nixpkgs}/nixos/lib/testing-python.nix" { system = builtins.currentSystem; };
 with pkgs;
 
 let
@@ -61,31 +61,50 @@ makeTest {
 
   testScript =
     ''
-      startAll;
-      $machine->waitForJob("supervisord");
+      def check_process_running():
+          machine.succeed("sleep 5")
+          machine.succeed(
+              '[ "$(ps aux | grep ${supervisord-program}/bin/loop | grep -v grep)" != "" ]'
+          )
+
+
+      def check_process_not_running():
+          machine.succeed("sleep 5")
+          machine.succeed(
+              '[ "$(ps aux | grep ${supervisord-program}/bin/loop | grep -v grep)" = "" ]'
+          )
+
+
+      start_all()
+
+      machine.wait_for_job("supervisord")
 
       # Test supervisord-program module. Here we start a process which
       # loops forever. We check whether it has been started and
       # then we deactivate it again and verify whether it has been
       # stopped.
 
-      $machine->mustSucceed("dysnomia --type supervisord-program --operation activate --component ${supervisord-program} --environment");
-      $machine->mustSucceed("sleep 5");
-      $machine->mustSucceed("[ \"\$(ps aux | grep ${supervisord-program}/bin/loop | grep -v grep)\" != \"\" ]");
+      machine.succeed(
+          "dysnomia --type supervisord-program --operation activate --component ${supervisord-program} --environment"
+      )
+      check_process_running()
 
       # Activate again. This operation should succeed as it is idempotent.
-      $machine->mustSucceed("dysnomia --type supervisord-program --operation activate --component ${supervisord-program} --environment");
-      $machine->mustSucceed("sleep 5");
-      $machine->mustSucceed("[ \"\$(ps aux | grep ${supervisord-program}/bin/loop | grep -v grep)\" != \"\" ]");
+      machine.succeed(
+          "dysnomia --type supervisord-program --operation activate --component ${supervisord-program} --environment"
+      )
+      check_process_running()
 
       # Deactivate the process.
-      $machine->mustSucceed("dysnomia --type supervisord-program --operation deactivate --component ${supervisord-program} --environment");
-      $machine->mustSucceed("sleep 5");
-      $machine->mustSucceed("[ \"\$(ps aux | grep ${supervisord-program}/bin/loop | grep -v grep)\" = \"\" ]");
+      machine.succeed(
+          "dysnomia --type supervisord-program --operation deactivate --component ${supervisord-program} --environment"
+      )
+      check_process_not_running()
 
       # Deactivate again. This operation should succeed as it is idempotent.
-      $machine->mustSucceed("dysnomia --type supervisord-program --operation deactivate --component ${supervisord-program} --environment");
-      $machine->mustSucceed("sleep 5");
-      $machine->mustSucceed("[ \"\$(ps aux | grep ${supervisord-program}/bin/loop | grep -v grep)\" = \"\" ]");
+      machine.succeed(
+          "dysnomia --type supervisord-program --operation deactivate --component ${supervisord-program} --environment"
+      )
+      check_process_not_running()
     '';
 }

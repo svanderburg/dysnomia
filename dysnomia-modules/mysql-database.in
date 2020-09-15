@@ -32,6 +32,16 @@ then
     socketArg="--socket=$mysqlSocket"
 fi
 
+if [ "$mysqlUsername" != "" ]
+then
+    userArg="--user=$mysqlUsername"
+fi
+
+if [ "$mysqlPassword" != "" ]
+then
+    passwordArg="--password=$mysqlPassword"
+fi
+
 timeout=${timeout:-10}
 
 case "$1" in
@@ -42,7 +52,7 @@ case "$1" in
         fi
 
         # Initalize the given schema if the database does not exists
-        if [ "$(echo "show databases" | @mysql@ $socketArg --user=$mysqlUsername --password=$mysqlPassword -N | grep -x $componentName)" = "" ]
+        if [ "$(echo "show databases" | @mysql@ $socketArg $userArg $passwordArg -N | grep -x $componentName)" = "" ]
         then
             ( echo "create database $componentName;"
               echo "use $componentName;"
@@ -51,7 +61,7 @@ case "$1" in
               then
                   cat $2/mysql-databases/*.sql
               fi
-            ) | @mysql@ $socketArg --user=$mysqlUsername --password=$mysqlPassword -N
+            ) | @mysql@ $socketArg $userArg $passwordArg -N
         fi
         markComponentAsActive
         ;;
@@ -64,7 +74,7 @@ case "$1" in
         # Dump the MySQL database in a single transaction. Chop off the last
         # line because that contains a comment with a timestamp Without it we
         # can compare output hashes to see whether dumps are identical
-        @mysqldump@ $socketArg --single-transaction --quick --user=$mysqlUsername --password=$mysqlPassword $componentName | head -n-1 | xz > dump.sql.xz
+        @mysqldump@ $socketArg --single-transaction --quick $userArg $passwordArg $componentName | head -n-1 | xz > dump.sql.xz
 
         hash=$(cat dump.sql.xz | sha256sum)
         hash=${hash:0:64}
@@ -88,13 +98,13 @@ case "$1" in
         then
             ( echo "use $componentName;"
               xzcat $lastSnapshot/dump.sql.xz
-            ) | @mysql@ $socketArg --user=$mysqlUsername --password=$mysqlPassword -N
+            ) | @mysql@ $socketArg $userArg $passwordArg -N
         fi
         ;;
     collect-garbage)
         if componentMarkedAsGarbage
         then
-            echo "drop database $componentName;" | @mysql@ $socketArg --user=$mysqlUsername --password=$mysqlPassword -N
+            echo "drop database $componentName;" | @mysql@ $socketArg $userArg $passwordArg -N
             unmarkComponentAsGarbage
         fi
         ;;
@@ -111,7 +121,7 @@ mysqlSocket    Path to the UNIX domain socket that is used to connect to the
                server (optional)
 
 Some useful commands:
-@mysql@ $socketArg --user=\$mysqlUsername --password=\$mysqlPassword $componentName  # Start a MySQL interactive terminal
+@mysql@ $socketArg $userArg $passwordArg $componentName  # Start a MySQL interactive terminal
 EOF
         ;;
 esac
