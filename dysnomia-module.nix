@@ -13,7 +13,7 @@ let
       if isList property then "${propertyName}=(${lib.concatMapStrings (elem: "\"${toString elem}\" ") (properties."${propertyName}")})\n"
       else "${propertyName}=\"${toString property}\"\n"
     ) (builtins.attrNames properties);
-  
+
   properties = pkgs.stdenv.mkDerivation {
     name = "dysnomia-properties";
     buildCommand = ''
@@ -22,7 +22,7 @@ let
       EOF
     '';
   };
-  
+
   containersDir = pkgs.stdenv.mkDerivation {
     name = "dysnomia-containers";
     buildCommand = ''
@@ -68,6 +68,19 @@ let
         linkMutableComponents { inherit containerName; }
       ) (builtins.attrNames cfg.components)}
     '';
+  };
+
+  dysnomiaFlags = {
+    enableApacheWebApplication = config.services.httpd.enable;
+    enableAxis2WebService = config.services.tomcat.axis2.enable;
+    enableDockerContainer = config.virtualisation.docker.enable;
+    enableEjabberdDump = config.services.ejabberd.enable;
+    enableMySQLDatabase = config.services.mysql.enable;
+    enablePostgreSQLDatabase = config.services.postgresql.enable;
+    enableTomcatWebApplication = config.services.tomcat.enable;
+    enableMongoDatabase = config.services.mongodb.enable;
+    enableSubversionRepository = config.services.svnserve.enable;
+    enableInfluxDatabase = config.services.influxdb.enable;
   };
 in
 {
@@ -145,20 +158,11 @@ in
 
     environment.systemPackages = [ cfg.package ];
 
-    dysnomiaTest.package = mkDefault (import ./build.nix {
-      enableApacheWebApplication = config.services.httpd.enable;
-      enableAxis2WebService = config.services.tomcat.axis2.enable;
-      enableEjabberdDump = config.services.ejabberd.enable;
-      enableMySQLDatabase = config.services.mysql.enable;
-      enablePostgreSQLDatabase = config.services.postgresql.enable;
-      enableTomcatWebApplication = config.services.tomcat.enable;
-      enableMongoDatabase = config.services.mongodb.enable;
-      enableSubversionRepository = config.services.svnserve.enable;
-      enableInfluxDatabase = config.services.influxdb.enable;
+    dysnomiaTest.package = mkDefault (import ./build.nix ({
       jobTemplate = "systemd";
       inherit pkgs;
       tarball = (import ./release.nix {}).tarball;
-    });
+    } // dysnomiaFlags));
 
     dysnomiaTest.properties = {
       hostname = config.networking.hostName;
@@ -166,18 +170,26 @@ in
         else if config.nixpkgs.system != "" then config.nixpkgs.system
         else builtins.currentSystem;
 
-      supportedTypes = (import "${pkgs.stdenv.mkDerivation {
-        name = "supportedtypes";
-        buildCommand = ''
-          ( echo -n "[ "
-            cd ${cfg.package}/libexec/dysnomia
-            for i in *
-            do
-                echo -n "\"$i\" "
-            done
-            echo -n " ]") > $out
-        '';
-      }}");
+      supportedTypes = [
+        "echo"
+        "fileset"
+        "process"
+        "wrapper"
+
+        # These are not base modules, but they are still enabled because they work with technology that are always enabled in NixOS
+        "systemd-unit"
+        "nixos-configuration"
+      ]
+      ++ optional (dysnomiaFlags.enableApacheWebApplication) "apache-webapplication"
+      ++ optional (dysnomiaFlags.enableAxis2WebService) "axis2-webservice"
+      ++ optional (dysnomiaFlags.enableDockerContainer) "docker-container"
+      ++ optional (dysnomiaFlags.enableEjabberdDump) "ejabberd-dump"
+      ++ optional (dysnomiaFlags.enableInfluxDatabase) "influx-database"
+      ++ optional (dysnomiaFlags.enableMySQLDatabase) "mysql-database"
+      ++ optional (dysnomiaFlags.enablePostgreSQLDatabase) "postgresql-database"
+      ++ optional (dysnomiaFlags.enableTomcatWebApplication) "tomcat-webapplication"
+      ++ optional (dysnomiaFlags.enableMongoDatabase) "mongo-database"
+      ++ optional (dysnomiaFlags.enableSubversionRepository) "subversion-repository";
     };
 
     dysnomiaTest.containers = lib.recursiveUpdate (import ./nix/generate-containers.nix {
