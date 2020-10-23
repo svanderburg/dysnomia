@@ -47,11 +47,8 @@ removeContainerAndImage()
 
 case "$1" in
     activate)
-        # Load the Docker image if it does not exists
-        if [ "$(@docker@ images -f "reference=$dockerImageTag" | wc -l)" = "1" ]
-        then
-            @docker@ load -i $dockerImage
-        fi
+        # Load the Docker image (operation is already idempotent)
+        @docker@ load -i $dockerImage
 
         # Create the container if it does not exists yet
         if [ "$(@docker@ ps -a -f "name=$dockerContainerName\$" | wc -l)" = "1" ]
