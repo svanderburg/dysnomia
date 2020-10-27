@@ -1,7 +1,7 @@
 {stdenv, daemon}:
 
 stdenv.mkDerivation {
-  name = "process";
+  name = "daemon";
   src = ../services/process;
   installPhase = ''
     mkdir -p $out/bin

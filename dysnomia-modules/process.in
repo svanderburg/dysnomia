@@ -46,7 +46,8 @@ determineProcess()
 {
     if [ "$process" = "" ]
     then
-        processes=( $1/bin/* )
+        local processPackage="$1"
+        processes=( $processPackage/bin/* )
         local length="${#processes[@]}"
 
         if [ "$length" = "0" ]
@@ -55,7 +56,7 @@ determineProcess()
             exit 1
         elif [ "$length" = "1" ]
         then
-            echo "${process[0]}"
+            echo "${processes[0]}"
         else
             echo "More than one process found. Specify which executable to start in a process config file" >&2
             exit 1
@@ -86,7 +87,7 @@ case "$1" in
         dysnomia-addgroups "$2"
         dysnomia-addusers "$2"
 
-        if [ -f $2/etc/dysnomia/process/* ]
+        if [ -d $2/etc/dysnomia/process ]
         then
             source $2/etc/dysnomia/process/*
         fi
@@ -109,7 +110,7 @@ EOF
         ;;
 
     deactivate)
-        if [ -f $2/etc/dysnomia/process/* ]
+        if [ -d $2/etc/dysnomia/process ]
         then
             source $2/etc/dysnomia/process/*
         fi
