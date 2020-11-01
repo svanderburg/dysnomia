@@ -201,7 +201,7 @@ makeTest {
       )
       machine.succeed("sleep 10")
       machine.succeed('systemctl status hello.timer | grep -q "Active: active"')
-      machine.succeed('systemctl status hello.service | grep "Started Hello."')
+      machine.succeed('systemctl status hello.service | grep "Finished Hello."')
 
       machine.succeed(
           "dysnomia --type systemd-unit --operation deactivate --component ${systemd-unit-timeractivation} --environment"

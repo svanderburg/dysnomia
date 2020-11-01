@@ -83,15 +83,6 @@ makeTest {
       )
       check_num_of_snapshot_generations(1)
 
-      # Take another snapshot of the InfluxDB database. Because nothing
-      # changed, no new snapshot is supposed to be taken. This test should
-      # succeed.
-      machine.succeed(
-          influxdbCredentials
-          + " dysnomia --type influx-database --operation snapshot --component ${influx_database} --environment"
-      )
-      check_num_of_snapshot_generations(1)
-
       # Make a modification and take another snapshot. Because something
       # changed, a new snapshot is supposed to be taken. This test should
       # succeed.
@@ -141,8 +132,8 @@ makeTest {
       # Restore the last snapshot and check whether it contains the recently
       # added record. This test should succeed.
       machine.succeed(
-          infludbCredentials
-          + "influxdbUsername=influxdb dysnomia --type influx-database --operation restore --component ${influx_database} --environment"
+          influxdbCredentials
+          + " dysnomia --type influx-database --operation restore --component ${influx_database} --environment"
       )
       result = machine.succeed(
           "sleep 10; influx -database testdb -execute 'select * from cpu'"

@@ -31,10 +31,6 @@ makeTest {
         virtualHosts.localhost.documentRoot = "/var/www";
       };
 
-      systemd.services.httpd.preStart = ''
-        mkdir -p /var/www
-      '';
-
       environment.systemPackages = [ dysnomia ];
     };
   };
