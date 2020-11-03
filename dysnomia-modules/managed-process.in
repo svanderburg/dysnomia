@@ -41,6 +41,11 @@ then
     logDirArg="--log-dir $logDir"
 fi
 
+if [ -n "$cacheDir" ]
+then
+    cacheDirArg="--log-dir $cacheDir"
+fi
+
 if [ -n "$tmpDir" ]
 then
     tmpDirArg="--tmp-dir $tmpDir"
@@ -55,7 +60,7 @@ then
 fi
 
 # Create a process manager specific configuration
-targetSpecificConfig=$(nixproc-generate-config --process-manager $processManager $stateDirArg $runtimeDirArg $logDirArg $tmpDirArg --no-out-link $2/*.json)
+targetSpecificConfig=$(nixproc-generate-config --process-manager $processManager $stateDirArg $runtimeDirArg $logDirArg $cacheDirArg $tmpDirArg --no-out-link $2/*.json)
 
 # Invoke the corresponding Dysnomia module for the desired process manager
 case "$processManager" in
@@ -67,6 +72,9 @@ case "$processManager" in
         ;;
     disnix)
         dysnomiaModule=process
+        ;;
+    docker)
+        dysnomiaModule=docker-container
         ;;
     launchd)
         dysnomiaModule=launchd-daemon
