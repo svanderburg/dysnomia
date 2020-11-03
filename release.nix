@@ -121,6 +121,10 @@ let
         containers = import ./tests/containers.nix {
           inherit nixpkgs tarball buildFun;
         };
+
+        users = import ./tests/users.nix {
+          inherit nixpkgs tarball buildFun;
+        };
       };
 
     release = pkgs.releaseTools.aggregate {

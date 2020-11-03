@@ -7,7 +7,7 @@ stdenv.mkDerivation {
     mkdir -p $out/bin
     cp $src/* $out/bin
     chmod +x $out/bin/*
-    
+
     mkdir -p $out/etc
     cat > $out/etc/process_config <<EOF
     container_username=unprivileged
