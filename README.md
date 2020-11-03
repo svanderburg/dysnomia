@@ -43,9 +43,11 @@ Installation
 Installation of Dysnomia is very straight forward by running the standard
 Autotools build procedure:
 
-    $ ./configure
-    $ make
-    $ make install
+```bash
+$ ./configure
+$ make
+$ make install
+```
 
 The Dysnomia package contains a collection of Dysnomia modules capable of
 executing the deployment steps for certain types of mutable components. The
@@ -56,7 +58,9 @@ files.
 It is also possible to disable certain Dysnomia modules or to tune the
 configuration parameters. More information on this can be found by running:
 
-    $ ./configure --help
+```bash
+$ ./configure --help
+```
 
 Dysnomia modules
 ================
@@ -212,7 +216,9 @@ Executing a deployment activity
 With those two files, we can perform a deployment activity, such as activating a
 MySQL database inside a MySQL DBMS instance:
 
-    $ dysnomia --operation activate --component ~/testdb --container ~/mysql-production
+```bash
+$ dysnomia --operation activate --component ~/testdb --container ~/mysql-production
+```
 
 Every component has its own way of representing its logical state and each of
 them require different container settings. For databases, these are typically SQL
@@ -227,11 +233,15 @@ Managing snapshots
 Dysnomia can also be used to manage snapshots of mutable components. Running the
 following operation captures the state of a deployed MySQL database:
 
-    $ dysnomia --operation snapshot --component ~/testdb --container ~/mysql-production
+```bash
+$ dysnomia --operation snapshot --component ~/testdb --container ~/mysql-production
+```
 
 Restoring the last taken snapshot can be done by running:
 
-    $ dysnomia --operation restore --component ~/testdb --container ~/mysql-production
+```bash
+$ dysnomia --operation restore --component ~/testdb --container ~/mysql-production
+```
 
 Snapshots taken by Dysnomia are stored in a so-called Dysnomia snapshot store
 (stored by default in `/var/state/dysnomia`, but can be changed by setting the
@@ -242,23 +252,29 @@ that uniquely identifies each snapshot.
 The following command can be used to query all snapshots taken for the component
 `testdb` deployed to the MySQL container.
 
-    $ dysnomia-snapshots --query-all --container mysql-database --component testdb
-    mysql-production/testdb/9b0c3562b57dafd00e480c6b3a67d29146179775b67dfff5aa7a138b2699b241
-    mysql-production/testdb/1df326254d596dd31d9d9db30ea178d05eb220ae51d093a2cbffeaa13f45b21c
-    mysql-production/testdb/330232eda02b77c3629a4623b498855c168986e0a214ec44f38e7e0447a3f7ef
+```bash
+$ dysnomia-snapshots --query-all --container mysql-database --component testdb
+mysql-production/testdb/9b0c3562b57dafd00e480c6b3a67d29146179775b67dfff5aa7a138b2699b241
+mysql-production/testdb/1df326254d596dd31d9d9db30ea178d05eb220ae51d093a2cbffeaa13f45b21c
+mysql-production/testdb/330232eda02b77c3629a4623b498855c168986e0a214ec44f38e7e0447a3f7ef
+```
 
 In most cases, only the latest snapshot is useful. The following query only
 shows the last generation snapshot:
 
-    $ dysnomia-snapshots --query-latest --container mysql-production --component testdb
-    mysql-production/testdb/330232eda02b77c3629a4623b498855c168986e0a214ec44f38e7e0447a3f7ef
+```bash
+$ dysnomia-snapshots --query-latest --container mysql-production --component testdb
+mysql-production/testdb/330232eda02b77c3629a4623b498855c168986e0a214ec44f38e7e0447a3f7ef
+```
 
 The query operations show the relative paths of the snapshot directories so that
 their names are consistent among multiple machines. Their absolute paths can be
 resolved by running:
 
-    $ dysnomia-snapshots --resolve mysql-database/testdb/330232eda02b77c3629a4623b498855c168986e0a214ec44f38e7e0447a3f7ef
-    /var/state/dysnomia/snapshots/mysql-production/testdb/330232eda02b77c3629a4623b498855c168986e0a214ec44f38e7e0447a3f7ef
+```bash
+$ dysnomia-snapshots --resolve mysql-database/testdb/330232eda02b77c3629a4623b498855c168986e0a214ec44f38e7e0447a3f7ef
+/var/state/dysnomia/snapshots/mysql-production/testdb/330232eda02b77c3629a4623b498855c168986e0a214ec44f38e7e0447a3f7ef
+```
 
 Every container type follows its own naming convention that uniquely identifies a
 snapshot. For example, for MySQL databases a snapshot is identified by its
@@ -285,7 +301,9 @@ By running a query operation and adding the `--check` parameter, the integrity
 of the corresponding snapshots can be checked. For example, the following
 command checks the integrity of all MySQL database snapshots in the store:
 
-    $ dysnomia-snapshots --query-all --check --container mysql-database
+```bash
+$ dysnomia-snapshots --query-all --check --container mysql-database
+```
 
 Deleting the state of components
 --------------------------------
@@ -294,13 +312,17 @@ also be desirable to delete state, such as removing a database.
 
 To remove state, first a component must be deactivated:
 
-    $ dysnomia --operation deactivate --component ~/testdb --container ~/mysql-production
+```bash
+$ dysnomia --operation deactivate --component ~/testdb --container ~/mysql-production
+```
 
 The above operation does not delete the database. Instead, it simply marks it as
 garbage, but otherwise keeps it. Actually deleting the database can be done by
 invoking the garbage collect operation:
 
-    $ dysnomia --operation collect-garbage --component ~/testdb --container ~/mysql-production
+```bash
+$ dysnomia --operation collect-garbage --component ~/testdb --container ~/mysql-production
+```
 
 The above command first checks whether the database has been marked as garbage.
 If this is the case (because it has been deactivated) it is dropped. Otherwise,
@@ -317,12 +339,16 @@ Clearing up older generation of snapshots can be done by invoking the garbage
 collect operation. The following command deletes all but the latest snapshot
 generation from the Dysnomia snapshots store:
 
-    $ dysnomia-snapshots --gc
+```bash
+$ dysnomia-snapshots --gc
+```
 
 The amount of snapshots that must be kept can be adjusted by providing the
 `--keep` parameter:
 
-    $ dysnomia-snapshots --gc --keep 3
+```bash
+$ dysnomia-snapshots --gc --keep 3
+```
 
 The above command states that the last 3 generations of snapshots should be
 kept.
@@ -336,7 +362,9 @@ we connect to a component deployed to a container.
 The Dysnomia shell can be used to spawn a session in which the environment
 variables are configured to contain the container's configuration properties:
 
-    $ dysnomia --shell --component ~/testdb --container ~/mysql-production
+```bash
+$ dysnomia --shell --component ~/testdb --container ~/mysql-production
+```
 
 In addition to a shell session that contains a container configuration
 properties, a Dysnomia module also typically displays command-line tool
@@ -352,9 +380,11 @@ Executing operations on collections of containers
 -------------------------------------------------
 The following command shows all the available containers to deploy to:
 
-    $ dysnomia-containers --query-containers
-    mysql-database
-    postgresql-database
+```bash
+$ dysnomia-containers --query-containers
+mysql-database
+postgresql-database
+```
 
 The above command searches for container configuration files in the directories
 provided by the `DYSNOMIA_CONTAINERS_PATH` environment variable (which defaults
@@ -362,9 +392,11 @@ to: `/etc/dysnomia/containers`).
 
 We can also display all the available mutable components:
 
-    $ dysnomia-containers --query-available-components
-    mysql-database/testdb
-    postgresql-database/testdb
+```bash
+$ dysnomia-containers --query-available-components
+mysql-database/testdb
+postgresql-database/testdb
+```
 
 The above command searches for component configuration files in the directories
 provided by the `DYSNOMIA_COMPONENTS_PATH` environment variable (which defaults
@@ -374,11 +406,15 @@ container by providing the `--container` parameter.
 The following command shows all components that have been activated in a
 container:
 
-    $ dysnomia-containers --query-activated-components
+```bash
+$ dysnomia-containers --query-activated-components
+```
 
 The most useful operation is probably the deploy function:
 
-    $ dysnomia-containers --deploy
+```bash
+$ dysnomia-containers --deploy
+```
 
 The above command will automatically deploy all available mutable components
 that have not been activated yet, and will undeploy all activated components
@@ -387,27 +423,37 @@ activation steps of collections of components.
 
 We can also snapshot the state of all activated components:
 
-    $ dysnomia-containers --snapshot
+```bash
+$ dysnomia-containers --snapshot
+```
 
 and restore the state of them:
 
-    $ dysnomia-containers --restore
+```bash
+$ dysnomia-containers --restore
+```
 
 The following command removes the state of all components that have been marked
 as garbage:
 
-    $ dysnomia-containers --collect-garbage
+```bash
+$ dysnomia-containers --collect-garbage
+```
 
 We can also directly execute any Dysnomia operation on all activated components:
 
-    $ dysnomia-containers --operation snapshot
+```bash
+$ dysnomia-containers --operation snapshot
+```
 
 Generating a Nix configuration file of the container configurations
 -------------------------------------------------------------------
 It is also possible to generate a Nix expression capturing the properties of all
 the container configurations, by running:
 
-    $ dysnomia-containers --generate-expr
+```bash
+$ dysnomia-containers --generate-expr
+```
 
 The above command shows a generated Nix expression that may look as follows:
 
@@ -471,11 +517,11 @@ automatically manage mutable components belonging to a system configuration:
 {
   # Import the Dysnomia NixOS module to make its functionality available
   imports = [ ./dysnomia-module.nix ];
-  
+
   services = {
     # Enabling MySQL in the NixOS configuration implies creating a Dysnomia
     # container configuration file for it
-    
+
     mysql = {
       enable = true;
       package = pkgs.mysql;
@@ -484,18 +530,18 @@ automatically manage mutable components belonging to a system configuration:
         text = "verysecret";
       };
     };
-    
+
     # Enabling PostgreSQL in the NixOS configuration implies creating a
     # Dysnomia container configuration file for it
-    
+
     postgresql = {
       enable = true;
       package = pkgs.postgresql;
     };
-    
+
     dysnomia = {
       enable = true;
-      
+
       # Here, we deploy databases to the corresponding DBMSes with Dysnomia
       components = {
         mysql-database = {
@@ -511,7 +557,7 @@ automatically manage mutable components belonging to a system configuration:
             '';
           };
         };
-        
+
         postgresql-database = {
           testdb = pkgs.writeTextFile {
             name = "testdb";
@@ -527,7 +573,7 @@ automatically manage mutable components belonging to a system configuration:
         };
       };
     };
-    
+
     ...
 }
 ```
@@ -549,15 +595,21 @@ following:
 After deploying the NixOS configuration with the following command-line
 instruction:
 
-    $ nixos-rebuild switch
+```bash
+$ nixos-rebuild switch
+```
 
 We can deploy the mutable components as follows:
 
-    $ dysnomia-containers --deploy
+```bash
+$ dysnomia-containers --deploy
+```
 
 And (for example) snapshot the state of the mutable components as follows:
 
-    $ dysnomia-containers --snapshot
+```bash
+$ dysnomia-containers --snapshot
+```
 
 To prevent the state of the mutable components to conflict with those deployed
 by Disnix, the Dysnomia module sets `DYSNOMIA_STATEDIR` to
@@ -587,38 +639,38 @@ case "$1" in
     activate)
         echo "Echo module: Activate service: $2"
         ;;
-        
+
     # Executes all steps necessary to deactivate a service. It returns a zero
     # exit status in case of success.
     deactivate)
         echo "Echo module: Deactivate service: $2"
         ;;
-        
+
     # Notifies a service that an upgrade is performed. A service can use this to
     # take precautions or to reach quiescence. It can also reject the upgrade by
     # returning a non-zero exit status.
     lock)
         echo "Echo module: Lock service: $2"
         ;;
-        
+
     # Notifies a service that an upgrade has finished. A service can use this
     # to resume its normal operations.
     unlock)
         echo "Echo module: Unlock service: $2"
         ;;
-    
+
     # Snapshots the corresponding state of the service in a preferably consistent
     # and portable manner in a special purpose folder with a naming strategy.
     snapshot)
         echo "Echo module: Snapshot state of service: $2"
         ;;
-    
+
     # Restores the state of the service from the special purpose folder with a
     # naming strategy.
     restore)
         echo "Echo module: Restore state of service: $2"
         ;;
-    
+
     # Collects the garbage of the service by permanently removing it
     collect-garbage)
         echo "Echo module: Collect garbage of service: $2"
