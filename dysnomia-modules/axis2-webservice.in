@@ -29,7 +29,7 @@ then
     axis2BaseDir=@CATALINA_BASE@/webapps/axis2/WEB-INF/services
 fi
 
-timeout=${timeout:-10}
+timeout=${timeout:-30}
 
 case "$1" in
     activate)

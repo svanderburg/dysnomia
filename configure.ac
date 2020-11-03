@@ -62,6 +62,7 @@ if test "$sed" = na; then
     AC_MSG_ERROR([We need a GNU compatible gsed command, i.e. gsed or sed needed])
 fi
 
+AC_PATH_PROG(nc, nc, false)
 AC_PATH_PROG(HELP2MAN, help2man, false)
 
 AS_IF([test "x$with_apache" != "x" && test "x$with_apache" != "xno"],
@@ -273,6 +274,7 @@ dysnomia-modules/wrapper
 dysnomia-modules/sysvinit-script
 dysnomia-modules/bsdrc-script
 dysnomia-modules/managed-process
+dysnomia-modules/util
 dysnomia-modules/Makefile
 dysnomia-modules/legacy/process
 dysnomia-modules/legacy/wrapper

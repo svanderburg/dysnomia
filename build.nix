@@ -39,7 +39,7 @@ pkgs.releaseTools.nixBuild {
     "--with-job-template=${jobTemplate}"
   ] ++ pkgs.lib.optional enableLegacy "--enable-legacy";
 
-  buildInputs = [ pkgs.getopt ]
+  buildInputs = [ pkgs.getopt pkgs.netcat ]
     ++ pkgs.stdenv.lib.optional enableEjabberdDump pkgs.ejabberd
     ++ pkgs.stdenv.lib.optional enableMySQLDatabase pkgs.mysql
     ++ pkgs.stdenv.lib.optional enablePostgreSQLDatabase pkgs.postgresql

@@ -105,7 +105,7 @@ EXTRA_DIST = apache-webapplication.in \
 	systemd-unit.in \
 	sysvinit-script.in \
 	tomcat-webapplication.in \
-	util \
+	util.in \
 	wrapper.in
 
 SUBDIRS = legacy

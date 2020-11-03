@@ -377,7 +377,7 @@ componentMarkedAsGarbage()
 # $3: file type (f = regular file, d = directory, S = UNIX domain socket)
 #
 # Exit status:
-# 0 if the file appears and is of the right type, else 0
+# 0 if the file appears and is of the right type, else 1
 
 waitForAnyFileType()
 {
@@ -419,7 +419,7 @@ waitForAnyFileType()
             S)
                 if [ ! -S "$file" ]
                 then
-                    echp "Expecting $file to be a UNIX domain socket, but it is not!" >&2
+                    echo "Expecting $file to be a UNIX domain socket, but it is not!" >&2
                 fi
                 ;;
         esac
@@ -437,7 +437,7 @@ waitForAnyFileType()
 # S2: timeout period in seconds
 #
 # Exit status:
-# 0 if the file appears and is of the right type, else 0
+# 0 if the file appears and is of the right type, else 1
 
 waitForFile()
 {
@@ -452,11 +452,45 @@ waitForFile()
 # S2: timeout period in seconds
 #
 # Exit status:
-# 0 if the file appears and is of the right type, else 0
+# 0 if the file appears and is of the right type, else 1
 
 waitForDirectory()
 {
     waitForAnyFileType "$1" "$2" "d"
+}
+
+# Waits for a TCP port to become available until a certain timeout period has
+# ellapsed.
+#
+# Parameters:
+# $1: TCP port number
+#
+# Exit status:
+# 0 if the TCP port is available, else 1
+
+waitForPort()
+{
+    local numOfTries=1
+    local portAvailable=0
+
+    while [ $numOfTries -lt $timeout ]
+    do
+        if @nc@ -z localhost "$1"
+        then
+            portAvailable=1
+            break
+        fi
+
+        echo "Waiting for port: $1 to become available..." >&2
+        sleep 1
+        ((numOfTries++))
+    done
+
+    if [ "$portAvailable" = "0" ]
+    then
+        echo "The port: $1 did not become available within $timeout seconds!" >&2
+        exit 1
+    fi
 }
 
 # Waits for a UNIX domain socket to become available until a certain timeout

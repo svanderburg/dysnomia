@@ -12,6 +12,7 @@ shopt -s nullglob
 # This module also supports snapshotting. It uses the output hash of the dump to
 # uniquely identify each snapshot.
 #
+# mongoPort: Port number where MongoDB listens to
 # mongoDumpArgs: Optional arguments passed to the mongodump command-line invocation
 # mongoRestoreArgs: Optional arguments passed to the monogorestore command-line invocation
 
@@ -24,10 +25,17 @@ source @datadir@/@PACKAGE@/util
 # Sets a number of common utility environment variables
 composeUtilityVariables $0 $2 $3
 
+timeout=${timeout:-10}
+
 case "$1" in
     activate)
         # Nothing needs to be done to create a mongo database. It gets created
         # automatically once an object is saved.
+
+        if [ "$mongoPort" != "" ]
+        then
+            waitForPort "$mongoPort"
+        fi
 
         if [ -d $2/mongo-databases ] && [ "$((echo "use $componentName;"; echo "db.getCollectionNames();") | @mongo@ | grep -x '\[ \]')" != "" ]
         then
