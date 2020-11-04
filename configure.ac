@@ -94,6 +94,7 @@ AS_IF([test "x$with_postgresql" != "xno"],
       [AC_PATH_PROG(psql, psql)])
 
 AC_PATH_PROG(pg_dump, pg_dump)
+AC_PATH_PROG(dropdb, dropdb)
 
 AS_IF([test "x$with_mongo" != "xno"],
       [AC_PATH_PROG(mongo, mongo)])

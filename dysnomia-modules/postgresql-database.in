@@ -15,6 +15,8 @@ shopt -s nullglob
 # Container properties (environment variables):
 # postgresqlUsername: Username of the account that has the privileges to
 #    administer the database (defaults to: postgres)
+# postgresqlPort: Port number to which the PostgreSQL service listens to (optional)
+# postgresqlRuntimeDir: Directory in which the socket file is stored (optional)
 
 # Autoconf settings
 export prefix=@prefix@
@@ -25,16 +27,24 @@ source @datadir@/@PACKAGE@/util
 # Sets a number of common utility environment variables
 composeUtilityVariables $0 $2 $3
 
+timeout=${timeout:-10}
+postgresqlRuntimeDir="${postgresqlRuntimeDir:-/var/run/postgresql}"
+
 case "$1" in
     activate)
+        if [ "$postgresqlPort" != "" ]
+        then
+            waitForSocket "$postgresqlRuntimeDir/.s.PGSQL.$postgresqlPort" "$timeout"
+        fi
+
         # Initalize the given schema if the database does not exists
-        if [ "$(su $postgresqlUsername -s /bin/sh -c "psql -lqt | cut -d \| -f 1 | grep -w "$componentName" | wc -l")" = "0" ]
+        if [ "$(su $postgresqlUsername -s /bin/sh -c "@psql@ -lqt | cut -d \| -f 1 | grep -w "$componentName" | wc -l")" = "0" ]
         then
             su $postgresqlUsername -s /bin/sh -c "@createdb@ -O $postgresqlUsername $componentName"
 
             if [ -d $2/postgresql-databases ]
             then
-                su $postgresqlUsername -s /bin/sh -c "psql --file $2/postgresql-databases/*.sql $componentName"
+                su $postgresqlUsername -s /bin/sh -c "@psql@ --file $2/postgresql-databases/*.sql $componentName"
             fi
         fi
         markComponentAsActive
@@ -69,15 +79,15 @@ case "$1" in
 
         if [ "$lastSnapshot" != "" ]
         then
-            su $postgresqlUsername -s /bin/sh -c "dropdb $componentName"
+            su $postgresqlUsername -s /bin/sh -c "@dropdb@ $componentName"
             su $postgresqlUsername -s /bin/sh -c "@createdb@ -O $postgresqlUsername $componentName"
-            su $postgresqlUsername -s /bin/sh -c "xzcat $lastSnapshot/dump.pgsql.xz | psql --file - $componentName"
+            su $postgresqlUsername -s /bin/sh -c "xzcat $lastSnapshot/dump.pgsql.xz | @psql@ --file - $componentName"
         fi
         ;;
     collect-garbage)
         if componentMarkedAsGarbage
         then
-            su $postgresqlUsername -s /bin/sh -c "dropdb $componentName"
+            su $postgresqlUsername -s /bin/sh -c "@dropdb@ $componentName"
             unmarkComponentAsGarbage
         fi
         ;;
@@ -92,7 +102,7 @@ postgresqlUsername  Username of the account that has the privileges to administe
 
 Some useful commands:
 su \$postgresqlUsername -s /bin/sh  # Open a shell session having administration privileges to PostgreSQL
-psql $componentName  # Open a PostgreSQL interactive terminal
+@psql@ $componentName  # Open a PostgreSQL interactive terminal
 EOF
         ;;
 esac
