@@ -15,6 +15,7 @@ shopt -s nullglob
 # Container properties (environment variables):
 # influxdbUsername: Username of the account that has the privileges to
 #    administer the database (defaults to: influxdb)
+# influxdbHttpPort: Port to which InfluxDB listens for HTTP traffic (optional)
 
 # Autoconf settings
 export prefix=@prefix@
@@ -25,8 +26,15 @@ source @datadir@/@PACKAGE@/util
 # Sets a number of common utility environment variables
 composeUtilityVariables $0 $2 $3
 
+timeout=${timeout:-10}
+
 case "$1" in
     activate)
+        if [ "$influxdbPort" != "" ]
+        then
+            waitForPort "$influxdbHttpPort" "$timeout"
+        fi
+
         # Initalize the given schema if the database does not exists
         if [ "$(su $influxdbUsername -s /bin/sh -c "@influx@ -execute 'show databases' | grep -x "$componentName" | wc -l")" = "0" ]
         then

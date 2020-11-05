@@ -464,7 +464,8 @@ waitForDirectory()
 #
 # Parameters:
 # $1: TCP port number
-#
+# $2: timeout period in seconds
+
 # Exit status:
 # 0 if the TCP port is available, else 1
 
@@ -473,7 +474,7 @@ waitForPort()
     local numOfTries=1
     local portAvailable=0
 
-    while [ $numOfTries -lt $timeout ]
+    while [ $numOfTries -lt $2 ]
     do
         if @nc@ -z localhost "$1"
         then
@@ -488,7 +489,7 @@ waitForPort()
 
     if [ "$portAvailable" = "0" ]
     then
-        echo "The port: $1 did not become available within $timeout seconds!" >&2
+        echo "The port: $1 did not become available within $2 seconds!" >&2
         exit 1
     fi
 }

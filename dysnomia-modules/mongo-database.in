@@ -34,7 +34,7 @@ case "$1" in
 
         if [ "$mongoPort" != "" ]
         then
-            waitForPort "$mongoPort"
+            waitForPort "$mongoPort" "$timeout"
         fi
 
         if [ -d $2/mongo-databases ] && [ "$((echo "use $componentName;"; echo "db.getCollectionNames();") | @mongo@ | grep -x '\[ \]')" != "" ]
