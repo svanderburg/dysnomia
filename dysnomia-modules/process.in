@@ -30,6 +30,8 @@ composeUtilityVariables $0 $2 $3
 
 export PATH=$prefix/bin:$PATH
 
+timeout=${timeout:-1}
+
 removeUsersAndGroups()
 {
     dysnomia-delusers "$1"
@@ -103,6 +105,26 @@ already! If not, you should remove it, and try starting the process again
 EOF
         else
             $process
+
+            # If a PID file does not exist, wait a bit, double check, and raise a warning if it does not appear
+            if [ ! -e "$pidFile" ]
+            then
+                sleep "$timeout"
+
+                if [ ! -e "$pidFile" ]
+                then
+                    cat >&2 <<EOF
+WARNING: Could not detect PID file: $pidFile after starting the process!
+
+This could mean that the initialization process is unreliable and it appears
+at a later point in time. Alternatively, it may not appear all.
+
+If the PID file does not appear, then the daemon cannot be terminated by the
+deployment system! Please double check the configuration, the process' status
+and increase the timeout setting, if needed.
+EOF
+                fi
+            fi
         fi
         ) || rollback "$2"
 
