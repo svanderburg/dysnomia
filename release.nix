@@ -137,6 +137,7 @@ let
       ++ [
         tests.snapshots
         tests.containers
+        tests.users
       ];
       meta.description = "Release-critical builds";
     };

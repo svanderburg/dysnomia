@@ -28,8 +28,8 @@ shopt -s nullglob
 showUsage()
 {
     cat <<EOF
-Usage: $0 userfile
-  or: $0 userdir
+Usage: $0 [OPTION] userfile
+  or: $0 [OPTION] userdir
 
 The command \`dysnomia-delusers' automatically deletes users from configuration
 files consisting of key=value pairs.
@@ -53,17 +53,24 @@ deleteUserDarwin()
 {
     local userfile="$1"
 
-    username="$(basename "$userfile")"
+    (
+        source "$userfile"
 
-    if dscl . -read /Users/$username
-    then
-        if [ -n "$group" ]
+        if [ "$createHomeDirOnly" != "1" ]
         then
-            dseditgroup -o edit -d "$username" -t user "$group"
-        fi
+            username="$(basename "$userfile")"
 
-        dscl . -delete /Users/$username
-    fi
+            if dscl . -read /Users/$username
+            then
+                if [ -n "$group" ]
+                then
+                    dseditgroup -o edit -d "$username" -t user "$group"
+                fi
+
+                dscl . -delete /Users/$username
+           fi
+        fi
+    )
 }
 
 # Autoconf settings

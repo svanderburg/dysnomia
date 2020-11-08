@@ -28,8 +28,8 @@ shopt -s nullglob
 showUsage()
 {
     cat <<EOF
-Usage: $0 userfile
-  or: $0 userdir
+Usage: $0 [OPTION] userfile
+  or: $0 [OPTION] userdir
 
 The command \`dysnomia-addusers' automatically creates users from a configuration
 files consisting of key=value pairs.
@@ -56,42 +56,47 @@ createUserDarwin()
     (
         source "$userfile"
 
-        username="$(basename "$userfile")"
-
-        if dscl . -read /Users/$username
+        if [ "$createHomeDirOnly" = "1" ]
         then
-            echo "User: $username already exists!" >&2
+            createConfiguredHomeDir
         else
-            (
-                echo "-addUser"
-                echo "$username"
+            username="$(basename "$userfile")"
 
-                if [ -n "$description" ]
+            if dscl . -read /Users/$username
+            then
+                echo "User: $username already exists!" >&2
+            else
+                (
+                    echo "-addUser"
+                    echo "$username"
+
+                    if [ -n "$description" ]
+                    then
+                        echo "-fullName"
+                        echo "$description"
+                    fi
+
+                    if [ -n "$password" ]
+                    then
+                        echo "-password"
+                        echo "$password"
+                    fi
+                ) | @xargs@ -d '\n' sysadminctl
+
+                if [ -n "$uid" ]
                 then
-                    echo "-fullName"
-                    echo "$description"
+                    dscl . create /Users/$username UniqueID "$uid"
                 fi
 
-                if [ -n "$password" ]
+                if [ -n "$shell" ]
                 then
-                    echo "-password"
-                    echo "$password"
+                    dscl . create /Users/$username UserShell "$shell"
                 fi
-            ) | @xargs@ -d '\n' sysadminctl
 
-            if [ -n "$uid" ]
-            then
-                dscl . create /Users/$username UniqueID "$uid"
-            fi
-
-            if [ -n "$shell" ]
-            then
-                dscl . create /Users/$username UserShell "$shell"
-            fi
-
-            if [ -n "$group" ]
-            then
-                dseditgroup -o edit -a $username -t user $group
+                if [ -n "$group" ]
+                then
+                    dseditgroup -o edit -a $username -t user $group
+                fi
             fi
         fi
     )

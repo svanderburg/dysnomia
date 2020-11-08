@@ -29,3 +29,11 @@ executeUserMgmtOperation()
         done
     fi
 }
+
+createConfiguredHomeDir()
+{
+    if [ "$homeDir" != "" ] && [ "$createHomeDir" = "1" ]
+    then
+        mkdir -p "$homeDir"
+    fi
+}

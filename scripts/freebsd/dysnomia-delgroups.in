@@ -28,8 +28,8 @@ shopt -s nullglob
 showUsage()
 {
     cat <<EOF
-Usage: $0 groupfile
-  or: $0 groupdir
+Usage: $0 [OPTION] groupfile
+  or: $0 [OPTION] groupdir
 
 The command `dysnomia-delgroups' automatically deletes groups from configuration
 files consisting of key=value pairs.

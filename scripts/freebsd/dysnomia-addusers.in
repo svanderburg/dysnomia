@@ -28,8 +28,8 @@ shopt -s nullglob
 showUsage()
 {
     cat <<EOF
-Usage: $0 userfile
-  or: $0 userdir
+Usage: $0 [OPTION] userfile
+  or: $0 [OPTION] userdir
 
 The command `dysnomia-addusers' automatically creates users from a configuration
 files consisting of key=value pairs.
@@ -56,57 +56,62 @@ createUserFreeBSD()
     (
         source "$userfile"
 
-        username="$(basename "$userfile")"
-
-        if pw user show "$username" > /dev/null
+        if [ "$createHomeDirOnly" = "1" ]
         then
-            echo "User: $username already exists!" >&2
+            createConfiguredHomeDir
         else
-            (
-                echo "user"
-                echo "add"
+            username="$(basename "$userfile")"
 
-                echo "-n"
-                echo "$username"
+            if pw user show "$username" > /dev/null
+            then
+                echo "User: $username already exists!" >&2
+            else
+                (
+                    echo "user"
+                    echo "add"
 
-                if [ -n "$uid" ]
-                then
-                    echo "-u"
-                    echo "$uid"
-                fi
+                    echo "-n"
+                    echo "$username"
 
-                if [ -n "$group" ]
-                then
-                    echo "-g"
-                    echo "$group"
-                fi
+                    if [ -n "$uid" ]
+                    then
+                        echo "-u"
+                        echo "$uid"
+                    fi
 
-                echo "-d"
+                    if [ -n "$group" ]
+                    then
+                        echo "-g"
+                        echo "$group"
+                    fi
 
-                if [ -n "$homeDir" ]
-                then
-                    echo "$homeDir"
-                else
-                    echo "/dev/null"
-                fi
+                    echo "-d"
 
-                if [ -n "$description" ]
-                then
-                    echo "-c"
-                    echo "$description"
-                fi
+                    if [ -n "$homeDir" ]
+                    then
+                        echo "$homeDir"
+                    else
+                        echo "/dev/null"
+                    fi
 
-                if [ -n "$shell" ]
-                then
-                    echo "-s"
-                    echo "$shell"
-                fi
+                    if [ -n "$description" ]
+                    then
+                        echo "-c"
+                        echo "$description"
+                    fi
 
-                if [ "$createHomeDir" = "1" ]
-                then
-                    echo "-m"
-                fi
-            ) | @xargs@ -d '\n' pw
+                    if [ -n "$shell" ]
+                    then
+                        echo "-s"
+                        echo "$shell"
+                    fi
+
+                    if [ "$createHomeDir" = "1" ]
+                    then
+                        echo "-m"
+                    fi
+                ) | @xargs@ -d '\n' pw
+            fi
         fi
      )
 }

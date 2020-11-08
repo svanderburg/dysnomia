@@ -529,7 +529,7 @@ attemptSeveralTimes()
 
         echo "Commmand failed, trying again in a second..." >&2
         sleep 1
-        ((num + 1))
+        ((num++))
     done
 
     if [ $num -eq $2 ]

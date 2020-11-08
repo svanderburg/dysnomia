@@ -506,6 +506,112 @@ makes it convenient to integrate Dysnomia with various Nix-driven utilities,
 such as `disnix-capture-infra` (part of Disnix) and the
 [Dynamic Disnix Avahi publisher](https://github.com/svanderburg/dydisnix-avahi).
 
+User and group management
+-------------------------
+The Dysnomia toolset also contains utilities to declaratively create users and
+groups on a variety of operating systems from the same declarative
+specification.
+
+The following configuration file can be added to a Dysnomia component
+configuration, to specify that a group needs to be created:
+
+```bash
+$ mkdir -p mycomponent/dysnomia-support/groups
+$ cat > mycomponent/dysnomia-support/mygroup <<EOF
+gid=2000
+EOF
+```
+
+The above specification states that we should create a group named: `mygroup`
+with GID: `2000`. The `gid` property is optional.
+
+With the following command the group gets created:
+
+```bash
+$ dysnomia-addgroups mycomponent
+```
+
+we can delete the group with:
+
+```bash
+$ dysnomia-delgroups mycomponent
+```
+
+Similarly, we can create users with a user configuration file, such as:
+
+```bash
+$ mkdir -p mycomponent/dysnomia-support/users
+$ cat > mycomponent/dysnomia-support/myuser <<EOF
+uid=2000
+password="secret"
+group="mygroup"
+description="My user"
+homeDir="/home/myuser"
+createHomeDir=1
+shell="/bin/sh"
+EOF
+```
+
+The above configuration specifies the following properties:
+* The name of the user is: `myuser`
+* The UID of the user is: `2000` (optional)
+* The password of the user is: `secret` (optional). Passwords only need to be
+  configured for interactive users. It is also possible to use command
+  substitution (e.g. `$(cat /etc/mysecret)`) to separate the secrets from the
+  configuration file.
+* The description of the user (optional)
+* The home directory of the user (optional). Default value is `/dev/null`.
+* Whether the home directory should be created or not (`createHomeDir`)
+* The shell that the user should use (`/bin/sh`), optional.
+
+With the following command, we can create the user:
+
+```bash
+$ dysnomia-addusers mycomponent
+```
+
+and remove it as follows:
+
+```bash
+$ dysnomia-delusers mycomponent
+```
+
+In some deployment scenarios, you may want to flexibly switch to a deployment
+in which user accounts get created (for production deployments) and a deployment
+in which everything runs as an unprivileged user (for testing).
+
+For services that use home directories as state directories, this means that
+extra work needs to be done, because these are only created when a user is
+created.
+
+It is also possible to only create a home directory from a user specification:
+
+```bash
+$ mkdir -p mycomponent/dysnomia-support/users
+$ cat > mycomponent/dysnomia-support/myuser <<EOF
+homeDir="/home/myuser"
+createHomeDir=1
+createHomeDirOnly=1
+EOF
+```
+
+and running:
+
+```bash
+$ dysnomia-addusers mycomponent
+```
+
+In the above example configuration file, the `createHomeDirOnly` property
+specifies that only the home directory should be created, but not the user
+itself.
+
+In most usage scenarios, you never directly use the Dysnomia user management
+or group management tools -- they are typically indirectly used by a variety
+of Dysnomia modules. Most notably, the process management modules, e.g.
+`process`, `managed-process`, `sysvinit-script`, `systemd-unit` etc.
+automatically invoke these utilities when the above configurations are included
+so that any managed executable can conveniently run as an unprivileged user.
+
 NixOS integration
 =================
 In addition to Disnix, it is also possible to use Dysnomia on NixOS-level to

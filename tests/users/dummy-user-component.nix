@@ -1,7 +1,7 @@
 {stdenv}:
 
 stdenv.mkDerivation {
-  name = "dummy-component";
+  name = "dummy-user-component";
   buildCommand = ''
     mkdir -p $out/dysnomia-support/groups
     cat > $out/dysnomia-support/groups/unprivileged <<EOF
@@ -11,6 +11,8 @@ stdenv.mkDerivation {
     cat > $out/dysnomia-support/users/unprivileged <<EOF
     group=unprivileged
     description=Unprivileged
+    homeDir=/home/unprivileged
+    createHomeDir=1
     shell=/bin/sh
     EOF
   '';

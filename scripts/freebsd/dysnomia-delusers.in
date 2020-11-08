@@ -28,8 +28,8 @@ shopt -s nullglob
 showUsage()
 {
     cat <<EOF
-Usage: $0 userfile
-  or: $0 userdir
+Usage: $0 [OPTION] userfile
+  or: $0 [OPTION] userdir
 
 The command `dysnomia-delusers' automatically deletes users from configuration
 files consisting of key=value pairs.
@@ -53,12 +53,19 @@ deleteUser()
 {
     local userfile="$1"
 
-    username="$(basename "$userfile")"
+    (
+        source "$userfile"
 
-    if pw user show "$username" > /dev/null
-    then
-        pw user del "$username"
-    fi
+        if [ "$createHomeDirOnly" != "1" ]
+        then
+            username="$(basename "$userfile")"
+
+            if pw user show "$username" > /dev/null
+            then
+                pw user del "$username"
+            fi
+        fi
+    )
 }
 
 # Autoconf settings
