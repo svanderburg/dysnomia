@@ -178,6 +178,7 @@ in
 
         # These are not base modules, but they are still enabled because they work with technology that are always enabled in NixOS
         "systemd-unit"
+        "sysvinit-script"
         "nixos-configuration"
       ]
       ++ optional (dysnomiaFlags.enableApacheWebApplication) "apache-webapplication"
