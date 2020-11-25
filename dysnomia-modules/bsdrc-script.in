@@ -96,8 +96,9 @@ Some useful commands:
 EOF
         for i in $(ls $2/etc/rc.d)
         do
-            echo "$2/etc/rc.d/$i ${activityPrefix}start # Start $i process" >&2
-            echo "$2/etc/rc.d/$i ${activityPrefix}stop  # Stop $i process" >&2
+            echo "$2/etc/rc.d/$i ${activityPrefix}start  # Start $i process" >&2
+            echo "$2/etc/rc.d/$i ${activityPrefix}stop   # Stop $i process" >&2
+            echo "$2/etc/rc.d/$i ${activityPrefix}status # Show status of $i process" >&2
             echo "$2/etc/rc.d/$i help  # Shows the usage of $i process" >&2
         done
         ;;

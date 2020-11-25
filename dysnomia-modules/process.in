@@ -81,6 +81,22 @@ determinePIDFile()
     fi
 }
 
+# Parses the configuration file (if it exists) and derives the proper value for
+# the process and pidFile variables
+
+parseProcessParameters()
+{
+    local componentPath="$1"
+
+    if [ -d $componentPath/etc/dysnomia/process ]
+    then
+        source $componentPath/etc/dysnomia/process/*
+    fi
+
+    process=$(determineProcess "$componentPath")
+    pidFile=$(determinePIDFile "$process" "$pidFile")
+}
+
 runtimeDir=${runtimeDir:-/var/run}
 
 case "$1" in
@@ -89,13 +105,7 @@ case "$1" in
         dysnomia-addgroups "$2"
         dysnomia-addusers "$2"
 
-        if [ -d $2/etc/dysnomia/process ]
-        then
-            source $2/etc/dysnomia/process/*
-        fi
-
-        process=$(determineProcess "$2")
-        pidFile=$(determinePIDFile "$process" "$pidFile")
+        parseProcessParameters "$2"
 
         if [ -e "$pidFile" ]
         then
@@ -132,19 +142,13 @@ EOF
         ;;
 
     deactivate)
-        if [ -d $2/etc/dysnomia/process ]
-        then
-            source $2/etc/dysnomia/process/*
-        fi
-
-        process=$(determineProcess "$2")
-        pidFile=$(determinePIDFile "$process" "$pidFile")
+        parseProcessParameters "$2"
 
         if [ -e "$pidFile" ]
         then
             kill "$(cat $pidFile)"
         else
-            echo "$pidFile does not exists! Assuming that it was stopped already!" >&2
+            echo "$pidFile does not exists! Assuming that the process was stopped already!" >&2
         fi
 
         removeUsersAndGroups "$2"
@@ -152,9 +156,17 @@ EOF
         ;;
 
     shell)
+        parseProcessParameters "$2"
+
         cat >&2 <<EOF
 This is a shell session that can be used to control the '$componentName'
 process.
+
+Some useful commands:
+cat $pidFile               # Show the PID of the running daemon process
+ps -p \$(cat $pidFile) -f   # Show the status of the daemon process
+$process  # Start the process (that spawns a daemon)
+kill \$(cat $pidFile)       # Stop the daemon process
 EOF
         ;;
 esac

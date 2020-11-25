@@ -87,6 +87,7 @@ EOF
         do
             echo "@supervisorctl@ start $i  # Start the process" >&2
             echo "@supervisorctl@ stop $i   # Stop the process" >&2
+            echo "@supervisorctl@ status $i # Show status of the process" >&2
         done
         ;;
 esac

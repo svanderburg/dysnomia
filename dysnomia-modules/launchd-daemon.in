@@ -80,8 +80,10 @@ Some useful commands:
 EOF
         for i in $(ls $2/Library/LaunchDaemons)
         do
-            echo "launchctl start $i  # Start the process" >&2
-            echo "launchctl stop $i   # Stop the process" >&2
+            label="$(basename "$i" .plist)"
+            echo "launchctl start $label  # Start the process" >&2
+            echo "launchctl stop $label   # Stop the process" >&2
+            echo "launchctl list $label   # List the process status" >&2
         done
         ;;
 esac

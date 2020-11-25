@@ -183,6 +183,7 @@ EOF
             then
                 echo "systemctl $systemdUserArg start $i  # Start the process" >&2
                 echo "systemctl $systemdUserArg stop $i   # Stop the process" >&2
+                echo "systemctl $systemdUserArg status $i # Show status of the process" >&2
                 echo "journalctl -u $i    # Display log" >&2
             fi
         done
