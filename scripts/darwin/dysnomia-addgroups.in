@@ -62,13 +62,13 @@ createGroupDarwin()
         then
             echo "Group: $group already exists!" >&2
         else
-            dscl . create /Groups/$group
-            dscl . create /Groups/$group passwd '*'
-            dscl . create /Groups/$group RealName "$group"
+            dscl . -create /Groups/$group
+            dscl . -create /Groups/$group passwd '*'
+            dscl . -create /Groups/$group RealName "$group"
 
             if [ -n "$gid" ]
             then
-                dscl . create /Groups/$group PrimaryGroupID $gid
+                dscl . -create /Groups/$group PrimaryGroupID $gid
             else
                 echo "WARNING: No gid assigned. A primary group id is required to make chown or chgrp operations work!" >&2
             fi

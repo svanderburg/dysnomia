@@ -70,6 +70,12 @@ createUserDarwin()
                     echo "-addUser"
                     echo "$username"
 
+                    if [ -n "$uid" ]
+                    then
+                        echo "-UID"
+                        echo "$uid"
+                    fi
+
                     if [ -n "$description" ]
                     then
                         echo "-fullName"
@@ -81,17 +87,22 @@ createUserDarwin()
                         echo "-password"
                         echo "$password"
                     fi
+
+                    if [ -n "$homeDir" ]
+                    then
+                        echo "-home"
+                        echo "$homeDir"
+                    else
+                        echo "-home"
+                        echo "/var/empty"
+                    fi
+
+                    if [ -n "$shell" ]
+                    then
+                        echo "-shell"
+                        echo "$shell"
+                    fi
                 ) | @xargs@ -d '\n' sysadminctl
-
-                if [ -n "$uid" ]
-                then
-                    dscl . create /Users/$username UniqueID "$uid"
-                fi
-
-                if [ -n "$shell" ]
-                then
-                    dscl . create /Users/$username UserShell "$shell"
-                fi
 
                 if [ -n "$group" ]
                 then

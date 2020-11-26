@@ -60,13 +60,13 @@ deleteGroupDarwin()
     fi
 }
 
-# Import common functions
-source @datadir@/@PACKAGE@/usermgmt-commons
-
 # Autoconf settings
 
 export prefix=@prefix@
 export exec_prefix=@exec_prefix@
+
+# Import common functions
+source @datadir@/@PACKAGE@/usermgmt-commons
 
 # Parse valid argument options
 
