@@ -91,7 +91,7 @@ createUserFreeBSD()
                     then
                         echo "$homeDir"
                     else
-                        echo "/dev/null"
+                        echo "/var/empty"
                     fi
 
                     if [ -n "$description" ]

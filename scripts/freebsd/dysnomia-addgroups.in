@@ -67,7 +67,7 @@ createGroupFreeBSD()
                 gidArg="-g $gid"
             fi
 
-            pw group add $gidArg $group
+            pw group add -n $group $gidArg
         fi
     )
 }
