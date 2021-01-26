@@ -77,26 +77,30 @@ dependencies:
   its corresponding PID file
 * `wrapper` delegates the execution of activities to the `bin/wrapper`
   executable that is bundled with a component
+* `fileset`. Deploys a directory on the filesystem that is populated with
+  static/immutable and dynamic/mutable files.
 
 To deploy running processes (e.g. system or application services, such
 microservices) you Dysnomia offers a number of plugins that use a variety
 of process managers to manage the lifecycle of a process:
 
-* `sysvinit-script` activates or deactivates a sysvinit script (also known as
-  [LSB Init](https://wiki.debian.org/LSBInitScripts) compliant scripts)
 * `bsdrc-script` activates or deactivates a
   [BSD rc](https://www.freebsd.org/doc/en_US.ISO8859-1/articles/rc-scripting/index.html)
   script.
-* `systemd-unit` activates or deactivates a
-  [systemd](https://www.freedesktop.org/wiki/Software/systemd) unit
-* `launchd-daemon` activates or deactivates a
-  [launchd](https://www.launchd.info) daemon
-* `supervisord-program` activates or deactivates a
-  [supervisord](http://supervisord.org) program configuration section.
 * `cygrunsrv-service` activates or deactivates a Windows service via
   [cygrunsrv](http://web.mit.edu/cygwin/cygwin_v1.3.2/usr/doc/Cygwin/cygrunsrv.README)
 * `docker-container` activates or deactivates a [Docker](https://www.docker.com)
   container.
+* `launchd-daemon` activates or deactivates a
+  [launchd](https://www.launchd.info) daemon
+* `s6-rc-service` activates or deactivates a
+  [s6-rc](https://skarnet.org/software/s6-rc) service.
+* `supervisord-program` activates or deactivates a
+  [supervisord](http://supervisord.org) program configuration section.
+* `systemd-unit` activates or deactivates a
+  [systemd](https://www.freedesktop.org/wiki/Software/systemd) unit
+* `sysvinit-script` activates or deactivates a sysvinit script (also known as
+  [LSB Init](https://wiki.debian.org/LSBInitScripts) compliant scripts)
 
 Dysnomia will try to autodetect which process managers are available and will
 automatically install the appropriate plugins.
@@ -118,8 +122,6 @@ can be optionally enabled/disabled:
   [Axis2](http://axis2.apache.org) container.
 * `ejabberd-dump`. Deploys an [Ejabberd](http://www.ejabberd.im) configuration
   database.
-* `fileset`. Deploys a directory on the filesystem that is populated with
-  static/immutable and dynamic/mutable files.
 * `iis-webapplication`. Deploys a web application in a document root folder of
   the [Internet Information Services](http://www.iis.net) (IIS) server.
 * `mongo-database`. Deploys a [MongoDB](http://www.mongodb.org) database inside

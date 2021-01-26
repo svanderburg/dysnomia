@@ -23,6 +23,7 @@ AC_ARG_WITH([job-template], AS_HELP_STRING([--with-job-template], [Specifies whi
 AC_ARG_WITH([systemd-rundir], AS_HELP_STRING([--with-systemd-rundir], [Specifies the state directory of systemd. Defaults to: '/etc/systemd-mutable']))
 AC_ARG_WITH([systemd-path], AS_HELP_STRING([--with-systemd-path], [Specifies the path of the composed systemd jobs. Defaults to: '/run/current-system/sw/bin']))
 AC_ARG_WITH([sysvinit-initd-dir], AS_HELP_STRING([--with-sysvinit-initd-dir], [Specifies the init.d directory in which sysvinit init scripts are stored. Defaults to: '/etc/init.d']))
+AC_ARG_WITH([s6-rc], AS_HELP_STRING([--without-s6-rc], [Ignore presence of s6-rc and disable it]))
 AC_ARG_WITH([supervisord], AS_HELP_STRING([--without-supervisord], [Ignore presence of supervisord and disable it]))
 AC_ARG_WITH([systemd], AS_HELP_STRING([--without-systemd], [Ignore presence of systemd and disable it]))
 AC_ARG_WITH([launchd], AS_HELP_STRING([--without-launchd], [Ignore presence of launchd and disable it]))
@@ -133,6 +134,13 @@ AS_IF([test "x$with_sysvinit_initd_dir" = "x"],
 AS_IF([test "x$with_systemd" != "xno"],
       [AC_PATH_PROG(systemctl, systemctl)])
 
+AS_IF([test "x$with_s6_rc" != "xno"],
+      [AC_PATH_PROG(s6_rc, s6-rc)])
+AC_PATH_PROG(s6_rc_init, s6-rc-init)
+AC_PATH_PROG(s6_rc_update, s6-rc-update)
+AC_PATH_PROG(s6_rc_compile, s6-rc-compile)
+
+
 AS_IF([test "x$with_supervisord" != "xno"],
       [AC_PATH_PROG(supervisorctl, supervisorctl)])
 
@@ -182,6 +190,7 @@ AM_CONDITIONAL(have_tomcat, [test x$have_tomcat != "xno"])
 AM_CONDITIONAL(have_subversion, [test x$svnadmin != "x"])
 AM_CONDITIONAL(have_systemd, [test x$systemctl != "x"])
 AM_CONDITIONAL(have_supervisord, [test x$supervisorctl != "x"])
+AM_CONDITIONAL(have_s6_rc, [test x$s6_rc != "x"])
 AM_CONDITIONAL(have_launchd, [test x$launchctl != "x"])
 AM_CONDITIONAL(have_cygrunsrv, [test x$cygrunsrv != "x"])
 AM_CONDITIONAL(have_docker, [test x$docker != "x"])
@@ -245,6 +254,9 @@ AS_IF([test "x$cygrunsrv" != "x"],
 AS_IF([test "x$docker" != "x"],
       [docker_container=dysnomia-modules/docker-container])
 
+AS_IF([test "x$s6_rc" != "x"],
+      [s6_rc_service=dysnomia-modules/s6-rc-service])
+
 AC_CONFIG_FILES([
 Makefile
 scripts/dysnomia
@@ -297,5 +309,6 @@ $systemd_unit
 $supervisord_program
 $launchd_daemon
 $cygrunsrv_service
+$s6_rc_service
 ])
 AC_OUTPUT

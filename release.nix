@@ -109,6 +109,10 @@ let
             inherit nixpkgs tarball buildFun;
           };
 
+          s6-rc-service = import ./tests/s6-rc-service.nix {
+            inherit nixpkgs tarball buildFun;
+          };
+
           docker-container = import ./tests/docker-container.nix {
             inherit nixpkgs tarball buildFun;
           };

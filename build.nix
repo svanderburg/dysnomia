@@ -10,6 +10,7 @@
 , enableSupervisordProgram ? false
 , enableSystemdUnit ? false
 , enableDockerContainer ? false
+, enableS6RCService ? false
 , catalinaBaseDir ? "/var/tomcat"
 , jobTemplate ? "systemd"
 , enableLegacy ? false
@@ -36,6 +37,7 @@ pkgs.releaseTools.nixBuild {
     (if enableSystemdUnit then "--with-systemd" else "--without-systemd")
     (if pkgs.stdenv.isDarwin then "--with-launchd" else "--without-launchd")
     (if enableDockerContainer then "--with-docker" else "--without-docker")
+    (if enableS6RCService then "--with-s6-rc" else "--without-s6-rc")
     "--with-job-template=${jobTemplate}"
   ] ++ pkgs.lib.optional enableLegacy "--enable-legacy";
 
@@ -49,5 +51,6 @@ pkgs.releaseTools.nixBuild {
     ++ pkgs.stdenv.lib.optional enableInfluxDatabase pkgs.influxdb
     ++ pkgs.stdenv.lib.optional enableSystemdUnit pkgs.systemd
     ++ pkgs.stdenv.lib.optional enableSupervisordProgram pkgs.pythonPackages.supervisor
-    ++ pkgs.stdenv.lib.optional enableDockerContainer pkgs.docker;
+    ++ pkgs.stdenv.lib.optional enableDockerContainer pkgs.docker
+    ++ pkgs.stdenv.lib.optional enableS6RCService pkgs.s6-rc;
 }

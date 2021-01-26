@@ -60,6 +60,10 @@ if have_influxdb
     libexec_SCRIPTS += influx-database
 endif
 
+if have_s6_rc
+    libexec_SCRIPTS += s6-rc-service
+endif
+
 if have_systemd
     libexec_SCRIPTS += systemd-unit
 endif
@@ -100,6 +104,7 @@ EXTRA_DIST = apache-webapplication.in \
 	nixos-configuration.in \
 	postgresql-database.in \
 	process.in \
+	s6-rc-service.in \
 	subversion-repository.in \
 	supervisord-program.in \
 	systemd-unit.in \

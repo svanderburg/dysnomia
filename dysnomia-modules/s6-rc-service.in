@@ -1,0 +1,145 @@
+#!/bin/bash
+set -e
+set -o pipefail
+shopt -s nullglob
+
+# Activate or deactivate a program managed by supervisord.
+#
+# Files:
+# dysnomia-support/groups/*: Groups to add on activation
+# dysnomia-support/users/*: Users to add on activation
+#
+# Component properties (environment variables):
+# scanDir: Directory in which s6-svscan scan for its configuration (defaults to: /var/run/service)
+# serviceDir: Directory in which all s6-rc service configuration files are stored (defaults to: /var/lib/s6/sv)
+# compileDir: Directory in which the compiled s6-rc databases are stored (defaults to: /var/etc/s6-rc)
+# liveDir: Directory in which the live configuration of s6-rc lives (defaults to: /var/run/s6-rc)
+# bundleName: Name of the bundle that contains all services to be activated (defaults to: default)
+
+# Autoconf settings
+export prefix=@prefix@
+
+# Import utility functions
+source @datadir@/@PACKAGE@/util
+
+# Sets a number of common utility environment variables
+composeUtilityVariables $0 $2 $3
+
+scanDir="${scanDir:-/var/run/service}"
+serviceDir="${serviceDir:-/var/lib/s6/sv}"
+compileDir="${compileDir:-/var/etc/s6/rc}"
+liveDir="${liveDir:-/var/run/s6-rc}"
+bundleName="${bundleName:-default}"
+
+compileAndRestartServices()
+{
+    local activity="$1"
+    local storePath="$2"
+
+    # Compile the entire service configuration directory
+    profileName="$(basename "$storePath")"
+    compiledDatabaseName="compiled-$activity-${profileName:0:32}"
+
+    mkdir -p "$compileDir"
+    if [ ! -e "$compileDir/$compiledDatabaseName" ]
+    then
+        @s6_rc_compile@ $compileDir/$compiledDatabaseName $serviceDir
+    fi
+
+    # Initialize or update the s6-rc configuration with the database
+    if [ -d "$liveDir" ]
+    then
+        # Only update when the database to be deployed is different
+        if [ ! -e "$compileDir/compiled" ] || [ "$(@readlink@ -f $compileDir/$compiledDatabaseName)" != "$(@readlink@ -f $compileDir/compiled)" ]
+        then
+            @s6_rc_update@ -l $liveDir $compileDir/$compiledDatabaseName
+            rm -rf $(@readlink@ -f $compileDir/compiled)
+        fi
+    else
+        @s6_rc_init@ -c $compileDir/$compiledDatabaseName -l $liveDir $scanDir
+    fi
+
+    # Start all services
+    @s6_rc@ -l $liveDir -u change $bundleName
+    ln -sfn $compileDir/$compiledDatabaseName $compileDir/compiled
+
+    # Delete obsolete users and groups
+    dysnomia-delusers "$storePath"
+    dysnomia-delgroups "$storePath"
+}
+
+cleanupResources()
+{
+    local activity="$1"
+    local storePath="$2"
+
+    for i in $(ls $storePath/etc/s6/sv)
+    do
+        sed -i -e "/^${i}$/d" $serviceDir/$bundleName/contents
+        rm -f "$serviceDir/$i"
+    done
+
+    compileAndRestartServices "$activity" "$storePath"
+}
+
+rollback()
+{
+    cleanupResources
+    exit 1
+}
+
+case "$1" in
+    activate)
+        (
+        # Create users and groups
+        dysnomia-addgroups "$2"
+        dysnomia-addusers "$2"
+
+        mkdir -p "$serviceDir"
+
+        # Create bundle directory if does not exists
+        if [ ! -d "$serviceDir/$bundleName" ]
+        then
+            mkdir -p "$serviceDir/$bundleName"
+            echo "bundle" > "$serviceDir/$bundleName/type"
+        fi
+
+        # Link the service configuration into the service configuration directory and add it to the bundle
+        for i in $(ls $2/etc/s6/sv)
+        do
+            ln -sfn $2/etc/s6/sv/$i $serviceDir
+            mkdir -p $serviceDir/$bundleName
+
+            if ! egrep "^${i}$" $serviceDir/$bundleName/contents 2> /dev/null
+            then
+                echo "$i" >> $serviceDir/$bundleName/contents
+            fi
+        done
+
+        # Recompile the database and update
+        compileAndRestartServices "$1" "$2"
+        ) || rollback "$2"
+
+        markComponentAsActive
+        ;;
+
+    deactivate)
+        cleanupResources "$1" "$2"
+        unmarkComponentAsActive
+        ;;
+
+    shell)
+        cat >&2 <<EOF
+This is a shell session that can be used to control the '$componentName'
+service managed by s6-rc.
+
+Some useful commands:
+EOF
+        for i in $(ls $2/etc/s6/sv)
+        do
+            echo "@s6_rc@ -l $liveDir -u change $i  # Start the process" >&2
+            echo "@s6_rc@ -l $liveDir -d change $i  # Stop the process" >&2
+            echo "@s6_rc@ -l $liveDir list $i       # Show status of the process" >&2
+        done
+        ;;
+esac
