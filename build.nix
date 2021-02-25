@@ -42,15 +42,15 @@ pkgs.releaseTools.nixBuild {
   ] ++ pkgs.lib.optional enableLegacy "--enable-legacy";
 
   buildInputs = [ pkgs.getopt pkgs.netcat ]
-    ++ pkgs.stdenv.lib.optional enableEjabberdDump pkgs.ejabberd
-    ++ pkgs.stdenv.lib.optional enableMySQLDatabase pkgs.mysql
-    ++ pkgs.stdenv.lib.optional enablePostgreSQLDatabase pkgs.postgresql
-    ++ pkgs.stdenv.lib.optional enableMongoDatabase pkgs.mongodb
-    ++ pkgs.stdenv.lib.optional enableMongoDatabase pkgs.mongodb-tools
-    ++ pkgs.stdenv.lib.optional enableSubversionRepository pkgs.subversion
-    ++ pkgs.stdenv.lib.optional enableInfluxDatabase pkgs.influxdb
-    ++ pkgs.stdenv.lib.optional enableSystemdUnit pkgs.systemd
-    ++ pkgs.stdenv.lib.optional enableSupervisordProgram pkgs.pythonPackages.supervisor
-    ++ pkgs.stdenv.lib.optional enableDockerContainer pkgs.docker
-    ++ pkgs.stdenv.lib.optional enableS6RCService pkgs.s6-rc;
+    ++ pkgs.lib.optional enableEjabberdDump pkgs.ejabberd
+    ++ pkgs.lib.optional enableMySQLDatabase pkgs.mysql
+    ++ pkgs.lib.optional enablePostgreSQLDatabase pkgs.postgresql
+    ++ pkgs.lib.optional enableMongoDatabase pkgs.mongodb
+    ++ pkgs.lib.optional enableMongoDatabase pkgs.mongodb-tools
+    ++ pkgs.lib.optional enableSubversionRepository pkgs.subversion
+    ++ pkgs.lib.optional enableInfluxDatabase pkgs.influxdb
+    ++ pkgs.lib.optional enableSystemdUnit pkgs.systemd
+    ++ pkgs.lib.optional enableSupervisordProgram pkgs.pythonPackages.supervisor
+    ++ pkgs.lib.optional enableDockerContainer pkgs.docker
+    ++ pkgs.lib.optional enableS6RCService pkgs.s6-rc;
 }

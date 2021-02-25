@@ -49,7 +49,7 @@ makeTest {
 
       start_all()
     ''
-    + stdenv.lib.concatMapStrings (pkg: ''
+    + lib.concatMapStrings (pkg: ''
       # Test process module. Here we start a process which
       # loops forever. We check whether it has been started and
       # then we deactivate it again and verify whether it has been

@@ -1,4 +1,4 @@
-{stdenv, enableState ? false}:
+{stdenv, lib, enableState ? false}:
 
 stdenv.mkDerivation {
   name = "apache-webapplication";
@@ -6,7 +6,7 @@ stdenv.mkDerivation {
   buildCommand = ''
     mkdir -p $out/webapps/test
     cp $src/* $out/webapps/test
-  '' + stdenv.lib.optionalString enableState ''
+  '' + lib.optionalString enableState ''
     find $out/webapps/test -type f | while read i
     do
         ( echo "symlink $i"

@@ -14,7 +14,7 @@ let
   # Test services
 
   apache_webapplication = import ./deployment/apache-webapplication.nix {
-    inherit stdenv;
+    inherit stdenv lib;
   };
 in
 makeTest {
