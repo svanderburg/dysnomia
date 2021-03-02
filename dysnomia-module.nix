@@ -14,13 +14,9 @@ let
       else "${propertyName}=\"${toString property}\"\n"
     ) (builtins.attrNames properties);
 
-  properties = pkgs.stdenv.mkDerivation {
+  properties = pkgs.writeTextFile {
     name = "dysnomia-properties";
-    buildCommand = ''
-      cat > $out << "EOF"
-      ${printProperties cfg.properties}
-      EOF
-    '';
+    text = printProperties cfg.properties;
   };
 
   containersDir = pkgs.stdenv.mkDerivation {
