@@ -2,7 +2,7 @@
 set -e
 set -o pipefail
 
-# Copyright (c) 2009-2020 Sander van der Burg
+# Copyright (c) 2009-2021 Sander van der Burg
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -90,7 +90,7 @@ showVersion()
     cat <<EOF
 $0 (@PACKAGE_NAME@ @PACKAGE_VERSION@)
 
-Copyright (C) 2009-2020 Sander van der Burg
+Copyright (C) 2009-2021 Sander van der Burg
 EOF
 }
 
@@ -158,7 +158,7 @@ do
             exit 0
             ;;
     esac
-    
+
     shift
 done
 
@@ -225,14 +225,14 @@ executeOperation()
         echo "No operation specified!" >&2
         exit 1
     fi
-    
+
     activatedComponents=$(queryActivatedComponents)
-    
+
     for i in $activatedComponents
     do
         container=$(dirname $i)
         component=$(basename $i)
-        
+
         dysnomia --operation $operation --container $container --component $DYSNOMIA_STATEDIR/activated/$container/$component
     done
 }
@@ -242,13 +242,13 @@ printProperties()
     local line="$1"
     local varName="$2"
     local indent="$3"
-  
+
     ( eval $line
-     
+
       if declare -p $varName 2> /dev/null | grep -q 'declare \-a'
       then
           varRef="$varName[@]"
-          
+
           echo -n "$indent\"$varName\" = [ "
           for i in "${!varRef}"
           do
@@ -276,25 +276,25 @@ case "$action" in
         ;;
     generate-expr)
         echo "{"
-        
+
         # Display machine level properties, if provided
         if [ -f "$DYSNOMIA_PROPERTIES" ]
         then
             echo "  properties = {"
-            
+
             cat "$DYSNOMIA_PROPERTIES" | while read i
             do
                 varName=$(echo ${i%%=*} | sed 's/"/\\"/g' )
-                
+
                 if [ "$varName" != "" ]
                 then
                     printProperties "$i" "$varName" "    "
                 fi
             done
-            
+
             echo "  };"
         fi
-        
+
         # Display container properties
         echo "  containers = {"
         for path in $(echo $DYSNOMIA_CONTAINERS_PATH | tr ':' ' ')
@@ -304,39 +304,39 @@ case "$action" in
                 for container in $(ls $path)
                 do
                     echo "    $container = {"
-                    
+
                     cat $path/$container | while read i
                     do
                         varName=$(echo ${i%%=*} | sed 's/"/\\"/g' )
-                        
+
                         if [ "$varName" != "" ] && [ "$varName" != "type" ]
                         then
                             printProperties "$i" "$varName" "      "
                         fi
                     done
-                
+
                     echo "    };"
                 done
             fi
         done
-        
+
         echo "  };"
-        
+
         # Display the system attribute in the properties as a seperately if provided as it has a special status
-        
+
         if [ -f "$DYSNOMIA_PROPERTIES" ]
         then
             cat "$DYSNOMIA_PROPERTIES" | while read i
             do
                 varName=$(echo ${i%%=*} | sed 's/"/\\"/g' )
-                
+
                 if [ "$varName" = "system" ]
                 then
                     printProperties "$i" "$varName" "  "
                 fi
             done
         fi
-        
+
         echo -n "}"
         ;;
     generate-dot)
@@ -374,7 +374,7 @@ case "$action" in
     deploy)
         availableComponents=$(queryAvailableComponents)
         activatedComponents=$(queryActivatedComponents)
-        
+
         # For each activated component that is not available: deactivate
         for i in $activatedComponents
         do
@@ -390,21 +390,21 @@ case "$action" in
                     break
                 fi
             done
-            
+
             if [ "$available" = "0" ]
             then
                 echo "Deactivating component: $component in container: $container" >&2
                 dysnomia --operation deactivate --container $container --component $DYSNOMIA_STATEDIR/activated/$container/$component
             fi
         done
-        
+
         # For each available component that has not been activated: activate
         for i in $availableComponents
         do
             container=$(dirname $i)
             component=$(basename $i)
             activated=0
-            
+
             for j in $activatedComponents
             do
                 if [ "$i" = "$j" ]
@@ -413,7 +413,7 @@ case "$action" in
                     break
                 fi
             done
-            
+
             if [ "$activated" = "0" ]
             then
                 echo "Activating component: $component in container: $container" >&2
@@ -438,13 +438,13 @@ EOF
 
             echo -n "Are you sure you want to proceed? [n] "
             read answer
-            
+
             if [ "$answer" = "y" ]
             then
                 yes=1
             fi
         fi
-        
+
         if [ "$yes" = "1" ]
         then
             operation=restore
