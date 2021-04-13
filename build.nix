@@ -5,6 +5,7 @@
 , enablePostgreSQLDatabase ? false
 , enableTomcatWebApplication ? false
 , enableMongoDatabase ? false
+, enableNginxWebApplication ? false
 , enableSubversionRepository ? false
 , enableInfluxDatabase ? false
 , enableSupervisordProgram ? false
@@ -30,6 +31,7 @@ pkgs.releaseTools.nixBuild {
     (if enableMySQLDatabase then "--with-mysql" else "--without-mysql")
     (if enablePostgreSQLDatabase then "--with-postgresql" else "--without-postgresql")
     (if enableMongoDatabase then "--with-mongodb" else "--without-mongodb")
+    (if enableNginxWebApplication then "--with-nginx" else "--without-nginx")
     (if enableTomcatWebApplication then "--with-tomcat=${catalinaBaseDir}" else "--without-tomcat")
     (if enableSubversionRepository then "--with-subversion" else "--without-subversion")
     (if enableInfluxDatabase then "--with-influxdb" else "--without-influxdb")
@@ -47,6 +49,7 @@ pkgs.releaseTools.nixBuild {
     ++ pkgs.lib.optional enablePostgreSQLDatabase pkgs.postgresql
     ++ pkgs.lib.optional enableMongoDatabase pkgs.mongodb
     ++ pkgs.lib.optional enableMongoDatabase pkgs.mongodb-tools
+    ++ pkgs.lib.optional enableNginxWebApplication pkgs.nginx
     ++ pkgs.lib.optional enableSubversionRepository pkgs.subversion
     ++ pkgs.lib.optional enableInfluxDatabase pkgs.influxdb
     ++ pkgs.lib.optional enableSystemdUnit pkgs.systemd

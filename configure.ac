@@ -16,6 +16,7 @@ AC_ARG_WITH([mssql], AS_HELP_STRING([--without-mssql], [Ignore presence of Micro
 AC_ARG_WITH([mysql], AS_HELP_STRING([--without-mysql], [Ignore presence of MySQL and disable it]))
 AC_ARG_WITH([postgresql], AS_HELP_STRING([--without-postgresql], [Ignore presence of PostgreSQL and disable it]))
 AC_ARG_WITH([mongodb], AS_HELP_STRING([--without-mongodb], [Ignore presence of MongoDB and disable it]))
+AC_ARG_WITH([nginx], AS_HELP_STRING([--without-nginx], [Ignore presence of Nginx and disable it]))
 AC_ARG_WITH([influxdb], AS_HELP_STRING([--without-influxdb], [Ignore presence of InfluxDB and disable it]))
 AC_ARG_WITH([tomcat], AS_HELP_STRING([--with-tomcat], [Enable Apache Tomcat module and specifies location of the Apache Tomcat base directory]))
 AC_ARG_WITH([subversion], AS_HELP_STRING([--with-subversion], [Enable subversion repository module]))
@@ -88,6 +89,10 @@ AS_IF([test "x$with_mysql" != "xno"],
 
 AC_PATH_PROG(mysqldump, mysqldump)
 
+AS_IF([test "x$with_nginx" != "x" && test "x$with_nginx" != "xno"],
+      [have_nginx=yes],
+      [have_nginx=no])
+
 AS_IF([test "x$with_postgresql" != "xno"],
       [AC_PATH_PROG(createdb, createdb)])
 
@@ -140,7 +145,6 @@ AC_PATH_PROG(s6_rc_init, s6-rc-init)
 AC_PATH_PROG(s6_rc_update, s6-rc-update)
 AC_PATH_PROG(s6_rc_compile, s6-rc-compile)
 
-
 AS_IF([test "x$with_supervisord" != "xno"],
       [AC_PATH_PROG(supervisorctl, supervisorctl)])
 
@@ -185,6 +189,7 @@ AM_CONDITIONAL(have_mssql, [test "x$osql" != "x"])
 AM_CONDITIONAL(have_mysql, [test x$mysql != "x"])
 AM_CONDITIONAL(have_postgresql, [test x$psql != "x"])
 AM_CONDITIONAL(have_mongodb, [test x$mongo != "x"])
+AM_CONDITIONAL(have_nginx, [test x$have_nginx != "xno"])
 AM_CONDITIONAL(have_influxdb, [test x$influx != "x"])
 AM_CONDITIONAL(have_tomcat, [test x$have_tomcat != "xno"])
 AM_CONDITIONAL(have_subversion, [test x$svnadmin != "x"])
@@ -226,6 +231,9 @@ AS_IF([test "x$psql" != "x"],
 
 AS_IF([test "x$mongo" != "x"],
       [mongo_database=dysnomia-modules/mongo-database])
+
+AS_IF([test "x$have_nginx" != "xno"],
+      [nginx_webapplication=dysnomia-modules/nginx-webapplication])
 
 AS_IF([test "x$influx" != "x"],
       [influx_database=dysnomia-modules/influx-database])
@@ -302,6 +310,7 @@ $mssql_database
 $mysql_database
 $postgresql_database
 $mongo_database
+$nginx_webapplication
 $influx_database
 $tomcat_webapplication
 $subversion_repository

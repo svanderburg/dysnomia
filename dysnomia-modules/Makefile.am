@@ -40,6 +40,10 @@ if have_mysql
     libexec_SCRIPTS += mysql-database
 endif
 
+if have_nginx
+    libexec_SCRIPTS += nginx-webapplication
+endif
+
 if have_postgresql
     libexec_SCRIPTS += postgresql-database
 endif
@@ -101,6 +105,7 @@ EXTRA_DIST = apache-webapplication.in \
 	mongo-database.in \
 	mssql-database.in \
 	mysql-database.in \
+	nginx-webapplication.in \
 	nixos-configuration.in \
 	postgresql-database.in \
 	process.in \

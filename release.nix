@@ -53,6 +53,10 @@ let
             inherit nixpkgs tarball buildFun;
           };
 
+          nginx-webapplication = import ./tests/nginx-webapplication.nix {
+            inherit nixpkgs tarball buildFun;
+          };
+
           influx-database = import ./tests/influx-database.nix {
             inherit nixpkgs tarball buildFun;
           };

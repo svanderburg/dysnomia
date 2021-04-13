@@ -131,6 +131,8 @@ can be optionally enabled/disabled:
   instance.
 * `mysql-database`. Deploys a database to a [MySQL](http://www.mysql.com) DBMS
   instance.
+* `nginx-webapplication`. Deploys a web application in a document root folder
+  of the [Nginx](https://www.nginx.com) web server.
 * `influx-database`. Deploys a timeseries database to a
   [InfluxDB](https://www.influxdata.com) server instance.
 * `nixos-configuration`. Deploys a specific [NixOS](http://nixos.org/nixos)
