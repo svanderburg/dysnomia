@@ -2,75 +2,12 @@
 set -e
 set -o pipefail
 
-# Activates or deactivates the web applications in the webapps/ subfolder by
-# symlinking them into the document root folder of the Apache HTTP server.
-#
-# When the component embeds a .dysnomia-fileset file in its root folder, then
-# it will also do state management. It will invoke operations of the fileset
-# module to accomplish this.
-#
-# Container properties (environment variables):
-# documentRoot: Path to the document root folder (defaults to: /var/www)
-# filesetOwner: Username and group that owns the state files (defaults to: wwwrun:wwwrun)
-
 # Autoconf settings
 export prefix=@prefix@
 
-# Import utility functions
-source @datadir@/@PACKAGE@/util
+# Provide generic web application module settings
+export moduleName="apache-webapplication"
+export description="Apache web application"
 
-# Sets a number of common utility environment variables
-composeUtilityVariables $0 $2 $3
-
-configureFilesetProperties()
-{
-    export targetDir="$documentRoot"
-}
-
-if [ "$documentRoot" = "" ]
-then
-    documentRoot=/var/www
-fi
-
-case "$1" in
-    activate)
-        mkdir -p "$documentRoot"
-
-        if [ -f "$2/.dysnomia-fileset" ]
-        then
-            configureFilesetProperties
-            @libexecdir@/fileset activate "$2" apache-webapplication
-        else
-            ls $(@readlink@ -f $2/webapps) | while read i
-            do
-                ln -sfn $2/webapps/$i $documentRoot
-                markComponentAsActive
-            done
-        fi
-        ;;
-    deactivate)
-        if [ -f "$2/.dysnomia-fileset" ]
-        then
-            configureFilesetProperties
-            @libexecdir@/fileset deactivate "$2" apache-webapplication
-        else
-            ls $(@readlink@ -f $2/webapps) | while read i
-            do
-                rm -f $documentRoot/$(basename $i)
-                unmarkComponentAsActive
-            done
-        fi
-        ;;
-    snapshot|restore|collect-garbage)
-        if [ -f "$2/.dysnomia-fileset" ]
-        then
-            configureFilesetProperties
-            @libexecdir@/fileset "$1" "$2" apache-webapplication
-        fi
-        ;;
-    shell)
-        cat >&2 <<EOF
-This is a shell session that can be used to control the '$componentName' Apache web application.
-EOF
-        ;;
-esac
+# Invoke generic web application module
+exec @libexecdir@/generic-webapplication "$@"

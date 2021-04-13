@@ -31,10 +31,12 @@ let
         modules = {
           apache-webapplication = import ./tests/apache-webapplication.nix {
             inherit nixpkgs tarball buildFun;
+            enableState = false;
           };
 
-          apache-webapplication-with-state = import ./tests/apache-webapplication-with-state.nix {
+          apache-webapplication-with-state = import ./tests/apache-webapplication.nix {
             inherit nixpkgs tarball buildFun;
+            enableState = true;
           };
 
           echo = import ./tests/echo.nix {
@@ -55,6 +57,12 @@ let
 
           nginx-webapplication = import ./tests/nginx-webapplication.nix {
             inherit nixpkgs tarball buildFun;
+            enableState = false;
+          };
+
+          nginx-webapplication-with-state = import ./tests/nginx-webapplication.nix {
+            inherit nixpkgs tarball buildFun;
+            enableState = true;
           };
 
           influx-database = import ./tests/influx-database.nix {

@@ -16,6 +16,10 @@ if BSD
     libexec_SCRIPTS += bsdrc-script
 endif
 
+if have_webserver
+    libexec_SCRIPTS += generic-webapplication
+endif
+
 if have_apache
     libexec_SCRIPTS += apache-webapplication
 endif
@@ -98,6 +102,7 @@ EXTRA_DIST = apache-webapplication.in \
 	echo \
 	ejabberd-dump.in \
 	fileset.in \
+	generic-webapplication.in \
 	iis-webapplication.in \
 	influx-database.in \
 	launchd-daemon.in \

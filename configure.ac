@@ -199,6 +199,7 @@ AM_CONDITIONAL(have_s6_rc, [test x$s6_rc != "x"])
 AM_CONDITIONAL(have_launchd, [test x$launchctl != "x"])
 AM_CONDITIONAL(have_cygrunsrv, [test x$cygrunsrv != "x"])
 AM_CONDITIONAL(have_docker, [test x$docker != "x"])
+AM_CONDITIONAL(have_webserver, [test x$have_apache != "xno" -o x$have_nginx != "xno" ])
 AM_CONDITIONAL(enable_legacy, [test x$enable_legacy = "xyes"])
 AM_CONDITIONAL(LINUX, [test x$build_linux = "xyes"])
 AM_CONDITIONAL(BSD, [test x$build_bsd = "xyes"])
@@ -290,6 +291,7 @@ scripts/freebsd/Makefile
 dysnomia-modules/apache-webapplication
 dysnomia-modules/nixos-configuration
 dysnomia-modules/fileset
+dysnomia-modules/generic-webapplication
 dysnomia-modules/process
 dysnomia-modules/wrapper
 dysnomia-modules/sysvinit-script
