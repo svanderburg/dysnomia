@@ -30,6 +30,7 @@ AC_ARG_WITH([systemd], AS_HELP_STRING([--without-systemd], [Ignore presence of s
 AC_ARG_WITH([launchd], AS_HELP_STRING([--without-launchd], [Ignore presence of launchd and disable it]))
 AC_ARG_WITH([cygrunsrv], AS_HELP_STRING([--without-cygrunsrv], [Ignore presence of cygrunsrv and disable it]))
 AC_ARG_WITH([docker], AS_HELP_STRING([--without-docker], [Ignore presence of docker and disable it]))
+AC_ARG_WITH([xinetd], AS_HELP_STRING([--without-xinetd], [Ignore presence of xinetd and disable it]))
 
 # Define enable options
 AC_ARG_ENABLE([legacy], AS_HELP_STRING([--enable-legacy]. [Enable legacy implemenations of the process and wrapper modules]), [enable_legacy=yes], [enable_legacy=no])
@@ -159,6 +160,9 @@ AS_IF([test "x$with_cygrunsrv" != "xno"],
 AS_IF([test "x$with_docker" != "xno"],
       [AC_PATH_PROG(docker, docker)])
 
+AS_IF([test "x$with_xinetd" != "xno"],
+      [AC_PATH_PROG(xinetd, xinetd)])
+
 # Check for which host we want to build and provide the corresponding scripts
 AC_CANONICAL_HOST
 
@@ -199,6 +203,7 @@ AM_CONDITIONAL(have_s6_rc, [test x$s6_rc != "x"])
 AM_CONDITIONAL(have_launchd, [test x$launchctl != "x"])
 AM_CONDITIONAL(have_cygrunsrv, [test x$cygrunsrv != "x"])
 AM_CONDITIONAL(have_docker, [test x$docker != "x"])
+AM_CONDITIONAL(have_xinetd, [test x$xinetd != "x"])
 AM_CONDITIONAL(have_webserver, [test x$have_apache != "xno" -o x$have_nginx != "xno" ])
 AM_CONDITIONAL(enable_legacy, [test x$enable_legacy = "xyes"])
 AM_CONDITIONAL(LINUX, [test x$build_linux = "xyes"])
@@ -263,6 +268,9 @@ AS_IF([test "x$cygrunsrv" != "x"],
 AS_IF([test "x$docker" != "x"],
       [docker_container=dysnomia-modules/docker-container])
 
+AS_IF([test "x$xinetd" != "x"],
+      [xinetd_service=dysnomia-modules/xinetd-service])
+
 AS_IF([test "x$s6_rc" != "x"],
       [s6_rc_service=dysnomia-modules/s6-rc-service])
 
@@ -321,5 +329,6 @@ $supervisord_program
 $launchd_daemon
 $cygrunsrv_service
 $s6_rc_service
+$xinetd_service
 ])
 AC_OUTPUT

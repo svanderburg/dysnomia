@@ -143,6 +143,8 @@ can be optionally enabled/disabled:
   repository dump into a Subversion working directory.
 * `tomcat-webapplication`. Deploys a Java Web Application ARchive (WAR) file
   inside an [Apache Tomcat](http://tomcat.apache.org) servlet container.
+* `xinetd-service`. Deploys an xinetd service configuration part into a
+  `xinetd.d` configuration directory.
 
 Additional configuration of for systemd
 ---------------------------------------

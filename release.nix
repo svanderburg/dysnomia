@@ -128,6 +128,10 @@ let
           docker-container = import ./tests/docker-container.nix {
             inherit nixpkgs tarball buildFun;
           };
+
+          xinetd-service = import ./tests/xinetd-service.nix {
+            inherit nixpkgs tarball buildFun;
+          };
         };
 
         snapshots = import ./tests/snapshots.nix {

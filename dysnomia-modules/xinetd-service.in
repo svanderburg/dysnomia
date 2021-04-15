@@ -1,0 +1,108 @@
+#!/bin/bash
+set -e
+set -o pipefail
+shopt -s nullglob
+
+# Activate or deactivate a service managed by xinetd.
+#
+# Files:
+# dysnomia-support/groups/*: Groups to add on activation
+# dysnomia-support/users/*: Users to add on activation
+#
+# Component properties (environment variables):
+# xinetdTargetDir: Directory where the service configuration parts are stored (defaults to: /var/lib/xinetd/xinetd.d)
+# xinetdPidFile: Directory where the PID file of xinetd is stored so that its configuration can be reloaded with the HUP signal (defaults to running pgrep for it)
+
+# Autoconf settings
+export prefix=@prefix@
+
+# Import utility functions
+source @datadir@/@PACKAGE@/util
+
+# Sets a number of common utility environment variables
+composeUtilityVariables $0 $2 $3
+
+export PATH=$prefix/bin:$PATH
+
+xinetdTargetDir="${xinetdTargetDir:-/var/lib/xinetd/xinetd.d}"
+
+detectXinetdPid()
+{
+    if [ "$xinetdPidFile" = "" ]
+    then
+        xinetdPid="$(pgrep -f @xinetd@)"
+
+        if [ "$xinetdPid" = "" ]
+        then
+            echo "Cannot detect a running xinetd instance!" >&2
+            exit 1
+        fi
+    else
+        xinetdPid="$(cat $xinetdPidFile)"
+    fi
+}
+
+cleanupResources()
+{
+    local storePath="$1"
+
+    detectXinetdPid
+
+    for i in $(ls $storePath/etc/xinetd.d)
+    do
+        rm -f $xinetdTargetDir/$i
+    done
+
+    kill -HUP "$xinetdPid"
+
+    dysnomia-delusers "$storePath"
+    dysnomia-delgroups "$storePath"
+}
+
+rollback()
+{
+    cleanupResources
+    exit 1
+}
+
+case "$1" in
+    activate)
+        (
+        dysnomia-addgroups "$2"
+        dysnomia-addusers "$2"
+
+        detectXinetdPid
+
+        mkdir -p $xinetdTargetDir
+
+        for i in $(ls $2/etc/xinetd.d)
+        do
+            ln -sfn $2/etc/xinetd.d/$i $xinetdTargetDir
+        done
+
+        kill -HUP "$xinetdPid"
+        ) || rollback "$2"
+
+        markComponentAsActive
+        ;;
+
+    deactivate)
+        cleanupResources "$2"
+        unmarkComponentAsActive
+        ;;
+
+    shell)
+        cat >&2 <<EOF
+This is a shell session that can be used to control the '$componentName'
+service managed by xinetd.
+EOF
+
+        if [ "$xinetdPidFile" != "" ]
+        then
+            cat >&2 <<EOF
+Some useful commands:
+kill -HUP \$(cat $xinetdPidFile)  # Reload the xinetd configuration
+EOF
+        fi
+        ;;
+esac

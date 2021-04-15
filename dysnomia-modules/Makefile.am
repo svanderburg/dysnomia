@@ -92,6 +92,10 @@ if have_docker
     libexec_SCRIPTS += docker-container
 endif
 
+if have_xinetd
+    libexec_SCRIPTS += xinetd-service
+endif
+
 pkgdata_SCRIPTS = util
 
 EXTRA_DIST = apache-webapplication.in \
@@ -121,6 +125,7 @@ EXTRA_DIST = apache-webapplication.in \
 	sysvinit-script.in \
 	tomcat-webapplication.in \
 	util.in \
-	wrapper.in
+	wrapper.in \
+	xinetd-service.in
 
 SUBDIRS = legacy
