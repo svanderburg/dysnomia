@@ -4,6 +4,7 @@ set -o pipefail
 
 # Autoconf settings
 export prefix=@prefix@
+export exec_prefix=@exec_prefix@
 
 # Provide generic web application module settings
 export moduleName="apache-webapplication"
