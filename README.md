@@ -49,6 +49,13 @@ $ make
 $ make install
 ```
 
+When building from the Git repository, you should run the bootstrap script
+first:
+
+```bash
+$ ./bootstrap
+```
+
 The Dysnomia package contains a collection of Dysnomia modules capable of
 executing the deployment steps for certain types of mutable components. The
 `configure` script tries to automatically detect which ones the system is able
