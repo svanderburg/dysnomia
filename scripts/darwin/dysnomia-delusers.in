@@ -27,9 +27,11 @@ shopt -s nullglob
 
 showUsage()
 {
+    me="$(basename "$0")"
+
     cat <<EOF
-Usage: $0 [OPTION] userfile
-  or: $0 [OPTION] userdir
+Usage: $me [OPTION] userfile
+  or: $me [OPTION] userdir
 
 The command \`dysnomia-delusers' automatically deletes users from configuration
 files consisting of key=value pairs.
@@ -42,8 +44,10 @@ EOF
 
 showVersion()
 {
+    me="$(basename "$0")"
+
     cat <<EOF
-$0 (@PACKAGE_NAME@ @PACKAGE_VERSION@)
+$me (@PACKAGE_NAME@ @PACKAGE_VERSION@)
 
 Copyright (C) 2009-2021 Sander van der Burg
 EOF

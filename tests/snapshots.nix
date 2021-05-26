@@ -122,7 +122,7 @@ makeTest {
       if int(result) == 3:
           print("We have three generation links!")
       else:
-          raise Excpetion("We should have three generation links!")
+          raise Exception("We should have three generation links!")
 
       # Print missing snapshot paths. The former path should exist, the latter
       # should not.

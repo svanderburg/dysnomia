@@ -26,8 +26,10 @@ set -o pipefail
 
 showUsage()
 {
+    me="$(basename "$0")"
+
     cat <<EOF
-Usage: $0 [OPTION] OPERATION
+Usage: $me [OPTION] OPERATION
 
 The command \`dysnomia-containers' can be used to manage all mutable components
 deployed to a set of containers.
@@ -87,8 +89,10 @@ EOF
 
 showVersion()
 {
+    me="$(basename "$0")"
+
     cat <<EOF
-$0 (@PACKAGE_NAME@ @PACKAGE_VERSION@)
+$me (@PACKAGE_NAME@ @PACKAGE_VERSION@)
 
 Copyright (C) 2009-2021 Sander van der Burg
 EOF

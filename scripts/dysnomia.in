@@ -26,11 +26,13 @@ set -o pipefail
 
 showUsage()
 {
+    me="$(basename "$0")"
+
     cat <<EOF
-Usage: $0 --operation OPERATION --component COMPONENT --container CONTAINER
-  or: $0 --operation OPERATION --component COMPONENT --type TYPE --environment
-  or: $0 --shell --component COMPONENT --container CONTAINER
-  or: $0 --shell --component COMPONENT --type TYPE --environment
+Usage: $me --operation OPERATION --component COMPONENT --container CONTAINER
+  or: $me --operation OPERATION --component COMPONENT --type TYPE --environment
+  or: $me --shell --component COMPONENT --container CONTAINER
+  or: $me --shell --component COMPONENT --type TYPE --environment
 
 The command \`dysnomia' modifies the state of a container in which a mutable
 component is hosted. This tool can be used to execute various deployment
@@ -81,8 +83,10 @@ EOF
 
 showVersion()
 {
+    me="$(basename "$0")"
+
     cat <<EOF
-$0 (@PACKAGE_NAME@ @PACKAGE_VERSION@)
+$me (@PACKAGE_NAME@ @PACKAGE_VERSION@)
 
 Copyright (C) 2009-2021 Sander van der Burg
 EOF
