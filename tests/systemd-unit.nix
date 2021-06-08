@@ -39,6 +39,8 @@ makeTest {
 
       environment.systemPackages = [ dysnomia ];
 
+      boot.extraSystemdUnitPaths = [ "/etc/systemd-mutable/system" ];
+
       system.activationScripts.dysnomia = ''
         mkdir -p /etc/systemd-mutable/system
         if [ ! -f /etc/systemd-mutable/system/dysnomia.target ]
