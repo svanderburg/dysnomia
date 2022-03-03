@@ -38,7 +38,7 @@ makeTest {
       virtualisation.memorySize = 1024;
       virtualisation.diskSize = 4096;
 
-      environment.systemPackages = [ dysnomia ];
+      environment.systemPackages = [ dysnomia pkgs.daemon ];
     };
   };
 
@@ -218,7 +218,7 @@ makeTest {
       # This test should succeed.
 
       machine.succeed(
-          "dysnomia --type process --operation activate --component ${process_unprivileged} --environment"
+          "daemon --inherit --unsafe -- dysnomia --type process --operation activate --component ${process_unprivileged} --environment"
       )
       check_unprivileged_process_running()
 
