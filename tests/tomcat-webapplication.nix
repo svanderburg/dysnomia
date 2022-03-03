@@ -26,6 +26,8 @@ makeTest {
       virtualisation.diskSize = 4096;
 
       services.tomcat.enable = true;
+      services.tomcat.package = pkgs.tomcat9;
+      users.users.tomcat.group = "tomcat";
 
       environment.systemPackages = [ dysnomia ];
     };

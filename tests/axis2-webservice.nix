@@ -32,6 +32,8 @@ makeTest {
 
       services.tomcat.enable = true;
       services.tomcat.axis2.enable = true;
+      services.tomcat.package = pkgs.tomcat9;
+      users.users.tomcat.group = "tomcat";
 
       environment.systemPackages = [ dysnomia ];
     };

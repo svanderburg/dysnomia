@@ -47,7 +47,7 @@ pkgs.releaseTools.nixBuild {
 
   buildInputs = [ pkgs.getopt pkgs.netcat ]
     ++ pkgs.lib.optional enableEjabberdDump pkgs.ejabberd
-    ++ pkgs.lib.optional enableMySQLDatabase pkgs.mysql
+    ++ pkgs.lib.optional enableMySQLDatabase pkgs.mariadb
     ++ pkgs.lib.optional enablePostgreSQLDatabase pkgs.postgresql
     ++ pkgs.lib.optional enableMongoDatabase pkgs.mongodb
     ++ pkgs.lib.optional enableMongoDatabase pkgs.mongodb-tools

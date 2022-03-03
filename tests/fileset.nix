@@ -157,12 +157,7 @@ makeTest {
           "dysnomia --type fileset --operation collect-garbage --component ${fileset} --environment"
       )
 
-      result = machine.succeed("ls /srv/fileset/files | wc -l")
-
-      if int(result) == 0:
-          print("We have 0 files!")
-      else:
-          raise Exception("We should have 0 files, instead we have: {}".format(result))
+      result = machine.succeed("[ ! -e /srv/fileset/files ]")
 
       # Activate again.
       machine.succeed(

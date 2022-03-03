@@ -30,7 +30,7 @@ makeTest {
     {
       services.mysql = {
         enable = true;
-        package = pkgs.mysql;
+        package = pkgs.mariadb;
       };
 
       environment.systemPackages = [ dysnomia ];
