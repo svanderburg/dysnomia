@@ -12,7 +12,7 @@
   ejabberdUser = config.services.ejabberd.user;
 }; }
 // lib.optionalAttrs (config.services.mysql.enable) { mysql-database = {
-    mysqlPort = config.services.mysql.port;
+    mysqlPort = config.services.mysql.settings.mysqld.port;
     mysqlSocket = "/run/mysqld/mysqld.sock";
   };
 }

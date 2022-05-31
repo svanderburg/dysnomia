@@ -51,7 +51,7 @@ makeTest {
           cp ${supervisordConf} /var/lib/supervisord/supervisord.conf
         '';
         serviceConfig = {
-          ExecStart = "${pkgs.pythonPackages.supervisor}/bin/supervisord -n -c /var/lib/supervisord/supervisord.conf";
+          ExecStart = "${pkgs.python3Packages.supervisor}/bin/supervisord -n -c /var/lib/supervisord/supervisord.conf";
         };
       };
 
