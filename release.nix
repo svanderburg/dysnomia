@@ -65,6 +65,10 @@ let
             enableState = true;
           };
 
+          nixos-container = import ./tests/nixos-container.nix {
+            inherit nixpkgs tarball buildFun;
+          };
+
           influx-database = import ./tests/influx-database.nix {
             inherit nixpkgs tarball buildFun;
           };

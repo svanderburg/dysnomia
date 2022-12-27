@@ -72,6 +72,7 @@ let
     enableDockerContainer = config.virtualisation.docker.enable;
     enableEjabberdDump = config.services.ejabberd.enable;
     enableMySQLDatabase = config.services.mysql.enable;
+    enableNixosContainer = config.boot.enableContainers;
     enablePostgreSQLDatabase = config.services.postgresql.enable;
     enableTomcatWebApplication = config.services.tomcat.enable;
     enableMongoDatabase = config.services.mongodb.enable;
@@ -183,6 +184,7 @@ in
       ++ optional (dysnomiaFlags.enableEjabberdDump) "ejabberd-dump"
       ++ optional (dysnomiaFlags.enableInfluxDatabase) "influx-database"
       ++ optional (dysnomiaFlags.enableMySQLDatabase) "mysql-database"
+      ++ optional (dysnomiaFlags.enableNixosContainer) "nixos-container"
       ++ optional (dysnomiaFlags.enablePostgreSQLDatabase) "postgresql-database"
       ++ optional (dysnomiaFlags.enableTomcatWebApplication) "tomcat-webapplication"
       ++ optional (dysnomiaFlags.enableMongoDatabase) "mongo-database"
