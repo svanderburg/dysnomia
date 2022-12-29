@@ -39,7 +39,7 @@ destroyContainer()
 case "$1" in
     activate)
         # Create the container if it does not exist yet
-        if [ "$(@nixos_container_bin@ status "$containerName")" = "gone" ]
+        if [ "$(@nixos_container_bin@ status "$containerName" 2> /dev/null)" = "gone" ]
         then
             (
             echo "$containerName"
