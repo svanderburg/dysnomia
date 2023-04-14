@@ -55,7 +55,7 @@ pkgs.releaseTools.nixBuild {
     ++ pkgs.lib.optional enableSubversionRepository pkgs.subversion
     ++ pkgs.lib.optional enableInfluxDatabase pkgs.influxdb
     ++ pkgs.lib.optional enableSystemdUnit pkgs.systemd
-    ++ pkgs.lib.optional enableSupervisordProgram pkgs.pythonPackages.supervisor
+    ++ pkgs.lib.optional enableSupervisordProgram pkgs.python3Packages.supervisor
     ++ pkgs.lib.optional enableDockerContainer pkgs.docker
     ++ pkgs.lib.optional enableS6RCService pkgs.s6-rc
     ++ pkgs.lib.optional enableXinetdService pkgs.xinetd;
