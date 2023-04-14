@@ -23,6 +23,8 @@ let
   };
 in
 makeTest {
+  name = "xinetd-service";
+
   nodes = {
     machine = {config, pkgs, ...}:
 

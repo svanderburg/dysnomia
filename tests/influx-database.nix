@@ -17,6 +17,8 @@ let
   };
 in
 makeTest {
+  name = "influx-database";
+
   nodes = {
     machine = {config, pkgs, ...}:
 

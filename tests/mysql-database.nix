@@ -18,6 +18,8 @@ let
   };
 in
 makeTest {
+  name = "mysql-database";
+
   nodes = {
     machine = {config, pkgs, ...}:
 

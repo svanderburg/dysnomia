@@ -22,6 +22,8 @@ let
   };
 in
 makeTest {
+  name = "echo";
+
   nodes = {
     machine = {config, pkgs, ...}:
 

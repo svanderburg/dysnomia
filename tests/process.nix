@@ -22,6 +22,8 @@ let
   };
 in
 makeTest {
+  name = "process";
+
   nodes = {
     machine = {config, pkgs, ...}:
 

@@ -3,6 +3,7 @@
 import ./generic-webapplication.nix {
   inherit nixpkgs tarball buildFun enableState;
 
+  name = "apache-webapplication";
   type = "apache-webapplication";
   unitName = "httpd";
 

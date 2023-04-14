@@ -18,6 +18,8 @@ let
   };
 in
 makeTest {
+  name = "postgresql-database";
+
   nodes = {
     machine = {config, pkgs, ...}:
 

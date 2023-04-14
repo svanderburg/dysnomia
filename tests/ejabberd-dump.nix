@@ -18,6 +18,8 @@ let
   };
 in
 makeTest {
+  name = "ejabberd-dump.nix";
+
   nodes = {
     machine = {config, pkgs, ...}:
 

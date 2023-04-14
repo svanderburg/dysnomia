@@ -35,6 +35,8 @@ let
   };
 in
 makeTest {
+  name = "processes-systemd";
+
   nodes = {
     machine = {config, pkgs, ...}:
 

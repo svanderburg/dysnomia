@@ -16,6 +16,8 @@ let
   };
 in
 makeTest {
+  name = "wrapper";
+
   nodes = {
     machine = {config, pkgs, ...}:
 

@@ -18,6 +18,8 @@ let
   };
 in
 makeTest {
+  name = "docker-container.nix";
+
   nodes = {
     machine = {config, pkgs, ...}:
 

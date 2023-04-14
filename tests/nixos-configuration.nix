@@ -10,6 +10,8 @@ with import nixpkgs {};
 with import "${nixpkgs}/nixos/lib/testing-python.nix" { system = builtins.currentSystem; };
 
 makeTest {
+  name = "nixos-configuration";
+
   nodes = {
     machine = {config, pkgs, ...}:
 

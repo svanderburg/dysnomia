@@ -2,6 +2,8 @@
 
 import ./generic-webapplication.nix {
   inherit nixpkgs tarball buildFun enableState;
+
+  name = "nginx-webapplication";
   type = "nginx-webapplication";
   unitName = "nginx";
 

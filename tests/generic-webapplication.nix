@@ -1,4 +1,6 @@
-{ nixpkgs, tarball, buildFun, dysnomiaParameters, machineConfig, unitName, enableState, type }:
+{ nixpkgs, tarball, buildFun, dysnomiaParameters, machineConfig, unitName, enableState, type, system,
+  name ? "generic-webapplication"
+}:
 
 let
   dysnomia = buildFun ({
@@ -17,6 +19,8 @@ let
   };
 in
 makeTest {
+  inherit name;
+
   nodes = {
     machine = {
       imports = [ machineConfig ];

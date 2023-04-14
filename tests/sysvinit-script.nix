@@ -22,6 +22,8 @@ let
   };
 in
 makeTest {
+  name = "sysvinit-script";
+
   nodes = {
     machine = {config, pkgs, ...}:
 

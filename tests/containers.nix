@@ -4,6 +4,8 @@ with import nixpkgs {};
 with import "${nixpkgs}/nixos/lib/testing-python.nix" { system = builtins.currentSystem; };
 
 makeTest {
+  name = "containers";
+
   nodes = {
     machine = {config, pkgs, ...}:
 

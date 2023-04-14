@@ -34,6 +34,8 @@ let
   };
 in
 makeTest {
+  name = "supervisord-program";
+
   nodes = {
     machine = {config, pkgs, ...}:
 

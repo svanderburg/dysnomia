@@ -19,6 +19,8 @@ let
   };
 in
 makeTest {
+  name = "users";
+
   nodes = {
     machine = {config, pkgs, ...}:
 

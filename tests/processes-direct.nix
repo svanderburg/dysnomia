@@ -31,6 +31,8 @@ let
   };
 in
 makeTest {
+  name = "processes-direct";
+
   nodes = {
     machine = {config, pkgs, ...}:
 
