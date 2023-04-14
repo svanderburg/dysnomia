@@ -1,17 +1,24 @@
-{ nixpkgs, tarball, buildFun, dysnomiaParameters, machineConfig, unitName, enableState, type, system,
-  name ? "generic-webapplication"
+{
+  buildFun,
+  dysnomiaParameters,
+  enableState,
+  lib,
+  machineConfig,
+  makeTest,
+  name ? "generic-webapplication",
+  pkgs,
+  stdenv,
+  system,
+  tarball,
+  type,
+  unitName,
 }:
 
 let
   dysnomia = buildFun ({
-    pkgs = import nixpkgs {};
-    inherit tarball;
+    inherit pkgs tarball;
   } // dysnomiaParameters);
-in
-with import nixpkgs {};
-with import "${nixpkgs}/nixos/lib/testing-python.nix" { system = builtins.currentSystem; };
 
-let
   # Test services
 
   generic_webapplication = import ./deployment/generic-webapplication.nix {

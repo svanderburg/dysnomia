@@ -1,18 +1,16 @@
-{ nixpkgs, tarball, buildFun }:
+{ buildFun,
+  makeTest,
+  pkgs,
+  stdenv,
+  tarball
+}:
 
 let
   dysnomia = buildFun {
-    pkgs = import nixpkgs {};
-    inherit tarball;
+    inherit pkgs tarball;
     enableSupervisordProgram = true;
   };
 
-  pkgs = import nixpkgs {};
-in
-with import "${nixpkgs}/nixos/lib/testing-python.nix" { system = builtins.currentSystem; };
-with pkgs;
-
-let
   supervisord-program = import ./deployment/supervisord-program.nix {
     inherit (pkgs) stdenv coreutils;
   };
