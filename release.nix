@@ -1,20 +1,13 @@
 { nixpkgs ? <nixpkgs>
-, system ? builtins.currentSystem
-, pkgs ? import nixpkgs { inherit system; }
+, systems ? [ "i686-linux" "x86_64-linux" "x86_64-darwin" "x86_64-freebsd" "x86_64-cygwin" ]
 , dysnomia ? { outPath = ./.; rev = 1234; }
 , officialRelease ? false
 }:
 
 let
+  pkgs = import nixpkgs {};
+
   buildFun = import ./build.nix;
-
-  testing = import (nixpkgs + "/nixos/lib/testing-python.nix") { inherit pkgs system; };
-
-  callPackage = pkgs.lib.callPackageWith (pkgs // {
-    inherit buildFun;
-    inherit (jobs) tarball;
-    inherit (testing) makeTest;
-  });
 
   jobs = rec {
     tarball = pkgs.releaseTools.sourceTarball {
@@ -26,11 +19,26 @@ let
       buildInputs = [ pkgs.getopt pkgs.help2man ];
     };
 
-    build = buildFun {
-      inherit tarball pkgs;
-    };
+    build = pkgs.lib.genAttrs systems (system:
+      buildFun {
+        inherit tarball;
+        pkgs = import nixpkgs { inherit system; };
+      }
+    );
 
     tests =
+      let
+        testing = import (nixpkgs + "/nixos/lib/testing-python.nix") {
+          inherit pkgs;
+          system = builtins.currentSystem;
+        };
+
+        callPackage = pkgs.lib.callPackageWith (pkgs // {
+          inherit buildFun;
+          inherit (jobs) tarball;
+          inherit (testing) makeTest;
+        });
+      in
       {
         modules = {
           apache-webapplication = callPackage ./tests/apache-webapplication.nix {
@@ -107,8 +115,8 @@ let
       name = "dysnomia-${tarball.version}";
       constituents = [
         tarball
-        build
       ]
+      ++ map (system: builtins.getAttr system build) systems
       ++ map (module: builtins.getAttr module tests.modules) (builtins.attrNames tests.modules)
       ++ [
         tests.snapshots
