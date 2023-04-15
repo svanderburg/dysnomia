@@ -1,9 +1,8 @@
-{ nixpkgs, tarball, buildFun }:
-
-with import nixpkgs {};
-with import "${nixpkgs}/nixos/lib/testing-python.nix" { system = builtins.currentSystem; };
+{ pkgs, tarball, buildFun, stdenv, jdk, makeTest }:
 
 makeTest {
+  name = "containers";
+
   nodes = {
     machine = {config, pkgs, ...}:
 

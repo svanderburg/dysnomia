@@ -1,16 +1,17 @@
-{ nixpkgs, tarball, buildFun }:
+{ buildFun,
+  jdk,
+  makeTest,
+  pkgs,
+  stdenv,
+  tarball
+}:
 
 let
   dysnomia = buildFun {
-    pkgs = import nixpkgs {};
-    inherit tarball;
+    inherit pkgs tarball;
     enableTomcatWebApplication = true;
   };
-in
-with import nixpkgs {};
-with import "${nixpkgs}/nixos/lib/testing-python.nix" { system = builtins.currentSystem; };
 
-let
   # Test services
 
   tomcat_webapplication = import ./deployment/tomcat-webapplication.nix {
@@ -18,6 +19,8 @@ let
   };
 in
 makeTest {
+  name = "tomcat-webapplication";
+
   nodes = {
     machine = {config, pkgs, ...}:
 

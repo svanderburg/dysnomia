@@ -1,23 +1,18 @@
-{ nixpkgs, tarball, buildFun }:
+{ pkgs, tarball, buildFun, stdenv, jdk, makeTest }:
 
 let
   dysnomia = buildFun {
-    pkgs = import nixpkgs {};
-    inherit tarball;
+    inherit pkgs tarball;
     enableDockerContainer = true;
   };
 
-  pkgs = import nixpkgs {};
-in
-with import "${nixpkgs}/nixos/lib/testing-python.nix" { system = builtins.currentSystem; };
-with pkgs;
-
-let
   docker-container = import ./deployment/docker-container {
     inherit (pkgs) stdenv dockerTools nginx;
   };
 in
 makeTest {
+  name = "docker-container.nix";
+
   nodes = {
     machine = {config, pkgs, ...}:
 

@@ -1,16 +1,16 @@
-{ nixpkgs, tarball, buildFun }:
+{ buildFun,
+  makeTest,
+  pkgs,
+  stdenv,
+  tarball
+}:
 
 let
   dysnomia = buildFun {
-    pkgs = import nixpkgs {};
-    inherit tarball;
+    inherit pkgs tarball;
     enableXinetdService = true;
   };
-in
-with import nixpkgs {};
-with import "${nixpkgs}/nixos/lib/testing-python.nix" { system = builtins.currentSystem; };
 
-let
   xinetd-service = import ./deployment/xinetd-service.nix {
     inherit (pkgs) stdenv inetutils;
   };
@@ -23,6 +23,8 @@ let
   };
 in
 makeTest {
+  name = "xinetd-service";
+
   nodes = {
     machine = {config, pkgs, ...}:
 

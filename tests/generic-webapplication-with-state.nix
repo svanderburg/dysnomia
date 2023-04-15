@@ -1,15 +1,20 @@
-{ nixpkgs, tarball, buildFun, dysnomiaParameters, machineConfig, type }:
+{ buildFun,
+  dysnomiaParameters,
+  jdk,
+  lib,
+  machineConfig,
+  makeTest,
+  pkgs,
+  stdenv,
+  tarball,
+  type,
+}:
 
 let
   dysnomia = buildFun ({
-    pkgs = import nixpkgs {};
-    inherit tarball;
+    inherit pkgs tarball;
   } // dysnomiaParameters);
-in
-with import nixpkgs {};
-with import "${nixpkgs}/nixos/lib/testing-python.nix" { system = builtins.currentSystem; };
 
-let
   # Test services
 
   generic_webapplication = import ./deployment/generic-webapplication.nix {
@@ -18,6 +23,8 @@ let
   };
 in
 makeTest {
+  name = "generic-webapplication-with-state";
+
   nodes = {
     machine = machineConfig;
   };

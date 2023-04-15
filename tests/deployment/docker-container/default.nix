@@ -4,7 +4,7 @@ let
   dockerImage = dockerTools.buildImage {
     name = "nginxexp";
     tag = "test";
-    contents = nginx;
+    copyToRoot = nginx;
 
     runAsRoot = ''
       ${dockerTools.shadowSetup}

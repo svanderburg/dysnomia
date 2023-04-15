@@ -1,21 +1,23 @@
-{ nixpkgs, tarball, buildFun }:
+{ buildFun,
+  makeTest,
+  pkgs,
+  stdenv,
+  tarball
+}:
 
 let
   dysnomia = buildFun {
-    pkgs = import nixpkgs {};
-    inherit tarball;
+    inherit pkgs tarball;
     jobTemplate = "direct";
   };
-in
-with import nixpkgs {};
-with import "${nixpkgs}/nixos/lib/testing-python.nix" { system = builtins.currentSystem; };
 
-let
   wrapper = import ./deployment/wrapper.nix {
     inherit stdenv;
   };
 in
 makeTest {
+  name = "wrapper";
+
   nodes = {
     machine = {config, pkgs, ...}:
 

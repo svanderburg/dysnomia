@@ -1,7 +1,17 @@
-{ nixpkgs, tarball, buildFun, enableState }:
+{ buildFun,
+  enableState,
+  lib,
+  makeTest,
+  pkgs,
+  stdenv,
+  system,
+  tarball,
+}:
 
 import ./generic-webapplication.nix {
-  inherit nixpkgs tarball buildFun enableState;
+  inherit pkgs tarball buildFun stdenv lib makeTest enableState system;
+
+  name = "nginx-webapplication";
   type = "nginx-webapplication";
   unitName = "nginx";
 

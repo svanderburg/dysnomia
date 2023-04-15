@@ -1,16 +1,11 @@
-{ nixpkgs, tarball, buildFun }:
+{ pkgs, tarball, buildFun, stdenv, jdk, makeTest }:
 
 let
   dysnomia = buildFun {
-    pkgs = import nixpkgs {};
-    inherit tarball;
+    inherit pkgs tarball;
     enableEjabberdDump = true;
   };
-in
-with import nixpkgs {};
-with import "${nixpkgs}/nixos/lib/testing-python.nix" { system = builtins.currentSystem; };
 
-let
   # Test services
 
   ejabberd_dump = import ./deployment/ejabberd-dump.nix {
@@ -18,6 +13,8 @@ let
   };
 in
 makeTest {
+  name = "ejabberd-dump.nix";
+
   nodes = {
     machine = {config, pkgs, ...}:
 

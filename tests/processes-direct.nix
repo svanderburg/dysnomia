@@ -1,17 +1,17 @@
-{ nixpkgs, tarball, buildFun }:
+{ buildFun,
+  makeTest,
+  pkgs,
+  stdenv,
+  tarball
+}:
 
 let
   dysnomia = buildFun {
-    pkgs = import nixpkgs {};
-    inherit tarball;
+    inherit pkgs tarball;
     jobTemplate = "direct";
     enableLegacy = true;
   };
-in
-with import nixpkgs {};
-with import "${nixpkgs}/nixos/lib/testing-python.nix" { system = builtins.currentSystem; };
 
-let
   # Test services
 
   wrapper = import ./deployment/wrapper.nix {
@@ -31,6 +31,8 @@ let
   };
 in
 makeTest {
+  name = "processes-direct";
+
   nodes = {
     machine = {config, pkgs, ...}:
 

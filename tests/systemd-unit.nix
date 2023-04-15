@@ -1,18 +1,16 @@
-{ nixpkgs, tarball, buildFun }:
+{ buildFun,
+  makeTest,
+  pkgs,
+  stdenv,
+  tarball
+}:
 
 let
   dysnomia = buildFun {
-    pkgs = import nixpkgs {};
-    inherit tarball;
+    inherit pkgs tarball;
     enableSystemdUnit = true;
   };
 
-  pkgs = import nixpkgs {};
-in
-with import "${nixpkgs}/nixos/lib/testing-python.nix" { system = builtins.currentSystem; };
-with pkgs;
-
-let
   systemd-unit = import ./deployment/systemd-unit.nix {
     inherit (pkgs) stdenv coreutils;
   };
@@ -30,6 +28,8 @@ let
   };
 in
 makeTest {
+  name = "systemd-unit";
+
   nodes = {
     machine = {config, pkgs, ...}:
 

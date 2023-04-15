@@ -1,23 +1,23 @@
-{ nixpkgs, tarball, buildFun }:
+{ buildFun,
+  makeTest,
+  pkgs,
+  stdenv,
+  tarball
+}:
 
 let
   dysnomia = buildFun {
-    pkgs = import nixpkgs {};
-    inherit tarball;
+    inherit pkgs tarball;
     enableS6RCService = true;
   };
 
-  pkgs = import nixpkgs {};
-in
-with import "${nixpkgs}/nixos/lib/testing-python.nix" { system = builtins.currentSystem; };
-with pkgs;
-
-let
   s6-rc-service = import ./deployment/s6-rc-service.nix {
     inherit (pkgs) stdenv writeTextFile coreutils execline;
   };
 in
 makeTest {
+  name = "s6-rc-service";
+
   nodes = {
     machine = {config, pkgs, ...}:
 

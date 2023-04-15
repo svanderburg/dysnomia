@@ -1,16 +1,16 @@
-{ nixpkgs, tarball, buildFun }:
+{ buildFun,
+  makeTest,
+  pkgs,
+  stdenv,
+  tarball
+}:
 
 let
   dysnomia = buildFun {
-    pkgs = import nixpkgs {};
-    inherit tarball;
+    inherit pkgs tarball;
     enableMySQLDatabase = true;
   };
-in
-with import nixpkgs {};
-with import "${nixpkgs}/nixos/lib/testing-python.nix" { system = builtins.currentSystem; };
 
-let
   # Test services
 
   mysql_database = import ./deployment/mysql-database.nix {
@@ -18,6 +18,8 @@ let
   };
 in
 makeTest {
+  name = "mysql-database";
+
   nodes = {
     machine = {config, pkgs, ...}:
 
