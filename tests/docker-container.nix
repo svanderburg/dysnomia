@@ -14,10 +14,12 @@ with pkgs;
 
 let
   docker-container = import ./deployment/docker-container {
-    inherit (pkgs) stdenv dockerTools nginx;
+    inherit (pkgs) stdenv dockerTools buildEnv nginx;
   };
 in
 makeTest {
+  name = "docker-container";
+
   nodes = {
     machine = {config, pkgs, ...}:
 

@@ -18,6 +18,8 @@ let
   };
 in
 makeTest {
+  name = "s6-rc-service";
+
   nodes = {
     machine = {config, pkgs, ...}:
 

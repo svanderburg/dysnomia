@@ -17,6 +17,8 @@ let
   };
 in
 makeTest {
+  name = "webapplication";
+
   nodes = {
     machine = {
       imports = [ machineConfig ];

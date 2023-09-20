@@ -18,6 +18,8 @@ let
   };
 in
 makeTest {
+  name = "tomcat-webapplication";
+
   nodes = {
     machine = {config, pkgs, ...}:
 

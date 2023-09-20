@@ -19,6 +19,8 @@ let
 
 in
 makeTest {
+  name = "subversion-repository";
+
   nodes = {
     machine = {config, pkgs, ...}:
 

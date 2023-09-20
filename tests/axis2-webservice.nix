@@ -23,6 +23,8 @@ let
   };
 in
 makeTest {
+  name = "axis2-webservice";
+
   nodes = {
     machine = {config, pkgs, ...}:
 

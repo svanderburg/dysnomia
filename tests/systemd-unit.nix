@@ -30,6 +30,8 @@ let
   };
 in
 makeTest {
+  name = "systemd-unit";
+
   nodes = {
     machine = {config, pkgs, ...}:
 

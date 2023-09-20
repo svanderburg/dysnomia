@@ -1,15 +1,19 @@
-{dockerTools, stdenv, nginx}:
+{dockerTools, stdenv, buildEnv, nginx}:
 
 let
   dockerImage = dockerTools.buildImage {
     name = "nginxexp";
     tag = "test";
-    contents = nginx;
+    copyToRoot = buildEnv {
+      name = "docker-packages";
+      paths = [ nginx ];
+    };
 
     runAsRoot = ''
       ${dockerTools.shadowSetup}
       groupadd -r nogroup
       useradd -r nobody -g nogroup -d /dev/null
+      mkdir -p /tmp
       mkdir -p /var/log/nginx
       mkdir -p /var/cache/nginx
       mkdir -p /var/www

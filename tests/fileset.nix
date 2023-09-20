@@ -17,6 +17,8 @@ let
   };
 in
 makeTest {
+  name = "fileset";
+
   nodes = {
     machine = {config, pkgs, ...}:
 

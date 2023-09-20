@@ -24,6 +24,8 @@ let
   };
 in
 makeTest {
+  name = "snapshots";
+
   nodes = {
     machine = {config, pkgs, ...}:
 

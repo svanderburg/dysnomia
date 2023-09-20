@@ -18,6 +18,8 @@ let
   };
 in
 makeTest {
+  name = "generic-webapplication-with-state";
+
   nodes = {
     machine = machineConfig;
   };

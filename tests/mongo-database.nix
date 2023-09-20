@@ -18,6 +18,8 @@ let
   };
 in
 makeTest {
+  name = "mongo-database";
+
   nodes = {
     machine = {config, pkgs, ...}:
 
