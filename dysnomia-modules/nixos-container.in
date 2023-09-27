@@ -1,0 +1,106 @@
+#!/bin/bash
+set -e
+shopt -s nullglob
+
+# Activates or deactivates a NixOS container
+#
+# Files:
+# *-container-settings: Containing global container configuration settings
+# *-container-createparams: Linefeed delimited configuration file containing additional command-line arguments passed to: nixos-container create
+#
+# A settings file is key=value pair based, and supports the following properties:
+# containerName: Name of the container (defaults to: $componentName)
+# statelessDeployment: If enabled, the container will be removed if it is no
+#   longer used by any other containers (defaults to: 1)
+
+# Autoconf settings
+export prefix=@prefix@
+
+# Import utility functions
+source @datadir@/@PACKAGE@/util
+
+# Sets a number of common utility environment variables
+composeUtilityVariables $0 $2 $3
+
+source $2/*-container-settings
+
+# Provide default settings
+containerName=${containerName:-"$componentName"}
+statelessDeployment=${statelessDeployment:-1}
+
+destroyContainer()
+{
+    if [ "$(@nixos_container_bin@ status "$containerName")" = "down" ]
+    then
+        @nixos_container_bin@ destroy $containerName
+    fi
+}
+
+case "$1" in
+    activate)
+        # Create the container if it does not exist yet
+        if [ "$(@nixos_container_bin@ status "$containerName" 2> /dev/null)" = "gone" ]
+        then
+            (
+            echo "$containerName"
+            cat $2/*-container-createparams
+            echo ""
+
+            # If a flake ref has been specified, use that
+            if [ -n "$flakeRef" ]
+            then
+                echo "--flake"
+                echo "$flakeRef"
+            else
+                echo "--config-file"
+                echo "$2/configuration.nix"
+            fi
+            ) | @xargs@ -d '\n' @nixos_container_bin@ create
+        fi
+
+        @nixos_container_bin@ start $containerName
+
+        if [ "$statelessDeployment" != "1" ]
+        then
+            markComponentAsActive
+        fi
+        ;;
+    deactivate)
+        # Stop the container if it is still running
+        if [ "$(@nixos_container_bin@ status "$containerName")" = "up" ]
+        then
+            @nixos_container_bin@ stop $containerName
+        fi
+
+        if [ "$statelessDeployment" = "1" ]
+        then
+            destroyContainer
+        else
+            markComponentAsGarbage
+        fi
+        ;;
+    collect-garbage)
+        if componentMarkedAsGarbage
+        then
+            destroyContainer
+            unmarkComponentAsGarbage
+        fi
+        ;;
+    shell)
+        cat >&2 <<EOF
+This is a shell session that can be used to control the '$componentName' NixOS container.
+
+Module specific environment variables:
+containerName  Name of the container
+
+Some useful commands:
+nixos-container status $containerName # Check status of the container
+nixos-container start $containerName # Start the container
+nixos-container stop $containerName # Stop the container
+nixos-container terminate $containerName # Stop the container forcibly
+nixos-container login $containerName # Run a diagnostic shell inside the container as a regular user
+nixos-container root-login $containerName # Run a diagnostic shell inside the container as root
+nixos-container run $containerName -- <command> # Run <command> inside the container
+EOF
+        ;;
+esac

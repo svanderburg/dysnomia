@@ -48,6 +48,10 @@ if have_nginx
     libexec_SCRIPTS += nginx-webapplication
 endif
 
+if have_nixos_container
+    libexec_SCRIPTS += nixos-container
+endif
+
 if have_postgresql
     libexec_SCRIPTS += postgresql-database
 endif
@@ -116,6 +120,7 @@ EXTRA_DIST = apache-webapplication.in \
 	mysql-database.in \
 	nginx-webapplication.in \
 	nixos-configuration.in \
+	nixos-container.in \
 	postgresql-database.in \
 	process.in \
 	s6-rc-service.in \

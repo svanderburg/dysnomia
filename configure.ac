@@ -17,6 +17,7 @@ AC_ARG_WITH([mysql], AS_HELP_STRING([--without-mysql], [Ignore presence of MySQL
 AC_ARG_WITH([postgresql], AS_HELP_STRING([--without-postgresql], [Ignore presence of PostgreSQL and disable it]))
 AC_ARG_WITH([mongodb], AS_HELP_STRING([--without-mongodb], [Ignore presence of MongoDB and disable it]))
 AC_ARG_WITH([nginx], AS_HELP_STRING([--without-nginx], [Ignore presence of Nginx and disable it]))
+AC_ARG_WITH([nixos-container], AS_HELP_STRING([--without-nixos-container], [Ignore presence of support for NixOS containers]))
 AC_ARG_WITH([influxdb], AS_HELP_STRING([--without-influxdb], [Ignore presence of InfluxDB and disable it]))
 AC_ARG_WITH([tomcat], AS_HELP_STRING([--with-tomcat], [Enable Apache Tomcat module and specifies location of the Apache Tomcat base directory]))
 AC_ARG_WITH([subversion], AS_HELP_STRING([--with-subversion], [Enable subversion repository module]))
@@ -93,6 +94,9 @@ AC_PATH_PROG(mysqldump, mysqldump)
 AS_IF([test "x$with_nginx" != "x" && test "x$with_nginx" != "xno"],
       [have_nginx=yes],
       [have_nginx=no])
+
+AS_IF([test "x$with_nixos_container" != "xno"],
+      [AC_PATH_PROG(nixos_container_bin, nixos-container)])
 
 AS_IF([test "x$with_postgresql" != "xno"],
       [AC_PATH_PROG(createdb, createdb)])
@@ -194,6 +198,7 @@ AM_CONDITIONAL(have_mysql, [test x$mysql != "x"])
 AM_CONDITIONAL(have_postgresql, [test x$psql != "x"])
 AM_CONDITIONAL(have_mongodb, [test x$mongo != "x"])
 AM_CONDITIONAL(have_nginx, [test x$have_nginx != "xno"])
+AM_CONDITIONAL(have_nixos_container, [test x$nixos_container_bin != "x"])
 AM_CONDITIONAL(have_influxdb, [test x$influx != "x"])
 AM_CONDITIONAL(have_tomcat, [test x$have_tomcat != "xno"])
 AM_CONDITIONAL(have_subversion, [test x$svnadmin != "x"])
@@ -240,6 +245,9 @@ AS_IF([test "x$mongo" != "x"],
 
 AS_IF([test "x$have_nginx" != "xno"],
       [nginx_webapplication=dysnomia-modules/nginx-webapplication])
+
+AS_IF([test "x$nixos_container_bin" != "x"],
+      [nixos_container=dysnomia-modules/nixos-container])
 
 AS_IF([test "x$influx" != "x"],
       [influx_database=dysnomia-modules/influx-database])
@@ -321,6 +329,7 @@ $mysql_database
 $postgresql_database
 $mongo_database
 $nginx_webapplication
+$nixos_container
 $influx_database
 $tomcat_webapplication
 $subversion_repository
